@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>다이어리 글 목록</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="p-5 mb-4 text-center bg-light">
+    <h1 class="mb-3">My Diary</h1>
+    <h4 class="mb-3">다이어리에 오신 것을 환영합니다.</h4>
+</div>
+
+<div class="container my-5">
+    <button type="button" id="create-btn"
+            th:onclick="|location.href='@{/new-diary}'|"
+            class="btn btn-secondary btn-sm mb-3">New Entry</button>
+    <div class="row row-cols-1 row-cols-md-2 g-4" th:each="item : ${diaries}">
+        <div class="col">
+            <div class="card">
+                <div class="card-header" th:text="${item.id}">
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${item.title}"></h5>
+                    <p class="card-text" th:text="${item.content}"></p>
+                    <a th:href="@{/diaries/{id}(id=${item.id})}" class="btn btn-primary">Read More</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="/logout" class="btn btn-secondary mt-3">Logout</a>
+</div>
+
+<script src="/js/diary.js"></script>
+</body>
+</html>
