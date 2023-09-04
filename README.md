@@ -7,4 +7,4 @@
 - suji Bae (201620984) majoring in software <br />
 - Seok Won Choi (201720710) majoring in software, Rustacean. <br />
 - Yoon Wook Cho(201720730) majoring in software<br />
-- Hee sang Kwak(202022311) majoring in sotfware
+- Heesang Kwak(202022311) majoring in sotfware
