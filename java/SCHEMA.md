@@ -1,10 +1,4 @@
-# beautyMinder
-2023-2 capstone design project
-
-# Java or Rust
-![demo](https://github.com/LeeZEun/beautyMinder/assets/2356749/88d8eb9b-1091-473d-96b5-a293f78ea337)
-
-# 데이터베이스 스키마 (진행중)
+# BeautyMinder 앱 데이터베이스 스키마
 
 > TODO: MySQL or PostgreSQL
 

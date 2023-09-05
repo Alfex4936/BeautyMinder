@@ -72,7 +72,7 @@ class TokenApiControllerTest {
                 .build()
                 .createToken(jwtProperties);
 
-        refreshTokenRepository.save(new RefreshToken(testUser.getId(), refreshToekn));
+        refreshTokenRepository.save(new RefreshToken(testUser, refreshToekn));
 
         CreateAccessTokenRequest request = new CreateAccessTokenRequest();
         request.setRefreshToken(refreshToekn);

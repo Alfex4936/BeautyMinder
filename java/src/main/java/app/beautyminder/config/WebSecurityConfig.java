@@ -2,6 +2,7 @@ package app.beautyminder.config;
 
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.RefreshToken;
+import app.beautyminder.domain.User;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.service.UserDetailService;
 import app.beautyminder.service.UserService;
@@ -82,7 +83,7 @@ public class WebSecurityConfig {
 
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(mvcMatcherBuilder.pattern("/")).permitAll()
-                .requestMatchers(mvcMatcherBuilder.pattern("/login")).permitAll()
+//                .requestMatchers(mvcMatcherBuilder.pattern("/login")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/logout")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/signup")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/user")).permitAll()
@@ -93,11 +94,12 @@ public class WebSecurityConfig {
 
         http.formLogin(f -> f
                         .loginPage("/login")
+                        .permitAll()
 //                .defaultSuccessUrl("/articles")
                         .successHandler(((request, response, authentication) -> {
                             app.beautyminder.domain.User user = (app.beautyminder.domain.User) authentication.getPrincipal();
                             String refreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
-                            saveRefreshToken(user.getId(), refreshToken);
+                            saveRefreshToken(user, refreshToken);
                             addRefreshTokenToCookie(request, response, refreshToken);
 
                             // Generate access token
@@ -172,10 +174,10 @@ public class WebSecurityConfig {
         return authConfig.getAuthenticationManager();
     }
 
-    private void saveRefreshToken(Long userId, String newRefreshToken) {
-        RefreshToken refreshToken = refreshTokenRepository.findByUserId(userId)
+    private void saveRefreshToken(User user, String newRefreshToken) {
+        RefreshToken refreshToken = refreshTokenRepository.findByUserId(user.getId())
                 .map(entity -> entity.update(newRefreshToken))
-                .orElse(new RefreshToken(userId, newRefreshToken));
+                .orElse(new RefreshToken(user, newRefreshToken));
 
         refreshTokenRepository.save(refreshToken);
     }

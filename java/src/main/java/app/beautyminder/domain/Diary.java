@@ -31,7 +31,7 @@ public class Diary {
     @Column(name = "author", nullable = false)
     private String author;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
