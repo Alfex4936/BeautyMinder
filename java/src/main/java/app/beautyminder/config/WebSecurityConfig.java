@@ -84,11 +84,13 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(mvcMatcherBuilder.pattern("/")).permitAll()
 //                .requestMatchers(mvcMatcherBuilder.pattern("/login")).permitAll()
-                .requestMatchers(mvcMatcherBuilder.pattern("/logout")).permitAll()
+//                .requestMatchers(mvcMatcherBuilder.pattern("/logout")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/signup")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/user")).permitAll()
+                .requestMatchers(mvcMatcherBuilder.pattern("/admin")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/api/token")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/api/**")).authenticated()
+                .requestMatchers(mvcMatcherBuilder.pattern("/admin/**")).hasAuthority("ROLE_ADMIN")
                 .requestMatchers(mvcMatcherBuilder.pattern("/diaries")).authenticated()
                 .anyRequest().permitAll());
 
@@ -118,6 +120,7 @@ public class WebSecurityConfig {
 
 
         http.logout(l -> l
+                .permitAll()
                 .logoutUrl("/logout")
                 .invalidateHttpSession(true)
                 .logoutSuccessHandler(((request, response, authentication) -> {

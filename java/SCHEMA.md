@@ -1,4 +1,4 @@
-# BeautyMinder 앱 데이터베이스 스키마
+# BeautyMinder 데이터베이스 스키마
 
 > TODO: MySQL or PostgreSQL
 
@@ -8,16 +8,25 @@
 
 ### 1. User (사용자)
 
-| 칼럼 이름       | 타입           | 설명                 | Nullable |
-| -------------- | -------------- | -------------------- | -------- |
-| id             | `BIGINT`       | 고유 아이디          | 아니오   |
-| email          | `VARCHAR(255)` | 이메일               | 아니오   |
-| password       | `VARCHAR(255)` | 암호화된 비밀번호    | 아니오   |
-| nickname       | `VARCHAR(255)` | 닉네임               | 예       |
-| profileImage   | `VARCHAR(255)` | 프로필 이미지 URL    | 예       |
-| createdAt      | `LocalDateTime`| 생성 일시            | 아니오   |
+| 칼럼 이름        | 타입              | 설명                 | Nullable |
+|--------------|-----------------| -------------------- | -------- |
+| id           | `BIGINT`        | 고유 아이디          | 아니오   |
+| email        | `VARCHAR(255)`  | 이메일               | 아니오   |
+| password     | `VARCHAR(255)`  | 암호화된 비밀번호    | 아니오   |
+| nickname     | `VARCHAR(100)`  | 닉네임               | 예       |
+| profileImage | `VARCHAR(255)`  | 프로필 이미지 URL    | 예       |
+| createdAt    | `LocalDateTime` | 생성 일시            | 아니오   |
 
-🔗 **연관 테이블**: `Cosmetic`, `RefreshToken`, `Todo`
+🔗 **연관 테이블**: `Cosmetic`, `RefreshToken`, `Todo`, `UserAuthorities`
+
+### 1.1 UserAuthorities (사용자 권한)
+
+| 칼럼 이름        | 타입              | 설명                 | Nullable |
+|--------------|-----------------| -------------------- | -------- |
+| user_id      | `BIGINT`        | User 테이블의 FK     | 아니오   |
+| authority    | `VARCHAR(50)`   | 권한                 | 아니오   |
+
+🔗 **연관 테이블**: `User`
 
 ### 2. Cosmetic (화장품)
 
@@ -68,8 +77,9 @@ status          ENUM('개봉', '미개봉')
 User 1 ----< Cosmetic
      1 ----< RefreshToken
      1 ----< Todo
+     1 ----< UserAuthorities
 ```
 
 > `User` 테이블과 다른 테이블 간의 1:다 관계를 나타냄.
 
-> 각 사용자는 여러 개의 `Cosmetic`, `RefreshToken`, `Todo` 엔트리를 가질 수 있음.
+> 각 사용자는 여러 개의 `Cosmetic`, `RefreshToken`, `Todo`, `UserAuthorities` 엔트리를 가질 수 있음.

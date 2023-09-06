@@ -12,8 +12,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Table(name = "users")
 @EntityListeners(AuditingEntityListener.class)
@@ -43,12 +43,25 @@ public class User implements UserDetails {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_authorities", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "authority")
+    private Set<String> authorities = new HashSet<>();
 
     @Builder
     public User(String email, String password, String nickname) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
+        this.authorities = new HashSet<>(Collections.singletonList("ROLE_USER"));
+    }
+
+    @Builder
+    public User(String email, String password, String nickname, Set<String> authorities) {
+        this.email = email;
+        this.password = password;
+        this.nickname = nickname;
+        this.authorities = authorities;
     }
 
     public User update(String nickname) {
@@ -59,10 +72,26 @@ public class User implements UserDetails {
 
 
     // UserDetails methods
+//    @Override
+//    public Collection<? extends GrantedAuthority> getAuthorities() {
+//        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+//    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        return authorities.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
     }
+
+    public void addAuthority(String authority) {
+        this.authorities.add(authority);
+    }
+
+    public void removeAuthority(String authority) {
+        this.authorities.remove(authority);
+    }
+
 
     @Override
     public String getUsername() {
@@ -94,3 +123,8 @@ public class User implements UserDetails {
         return true;
     }
 }
+
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public void adminOnlyMethod() {
+//        // ...
+//    }

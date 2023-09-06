@@ -19,11 +19,29 @@ public class UserService {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email already in use");
         }
-        return userRepository.save(User.builder()
+        User user = User.builder()
                 .email(dto.getEmail())
                 .password(encoder.encode(dto.getPassword()))
-                .build()).getId();
+//                .nickname(dto.getNickname())
+                .build();
+
+        user.addAuthority("ROLE_USER"); // "ROLE_USER" 권한을 기본으로 설정
+        return userRepository.save(user).getId();
     }
+
+    public Long saveAdmin(AddUserRequest dto) {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+        User admin = User.builder()
+                .email(dto.getEmail())
+                .password(encoder.encode(dto.getPassword()))
+                .build();
+        admin.addAuthority("ROLE_ADMIN");  // 관리자 권한 추가
+        return userRepository.save(admin).getId();
+    }
+
 
     public User findById(Long userId) {
         return userRepository.findById(userId)

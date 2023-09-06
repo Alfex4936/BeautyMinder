@@ -1,13 +1,17 @@
 package app.beautyminder.domain;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 
 import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "todos")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Todo {
 

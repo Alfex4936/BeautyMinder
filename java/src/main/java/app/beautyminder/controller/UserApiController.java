@@ -21,6 +21,11 @@ public class UserApiController {
     @PostMapping("/user")
     public String signup(AddUserRequest request, RedirectAttributes redirectAttributes) {
         try {
+            // 권한 추가 예시
+//            user.getAuthorities().add("ROLE_ADMIN");
+            // 권한 삭제 예시
+//            user.getAuthorities().remove("ROLE_USER");
+
             userService.save(request);
             return "redirect:/diaries";
         } catch (IllegalArgumentException e) {
@@ -29,6 +34,16 @@ public class UserApiController {
         }
     }
 
+    @PostMapping("/admin")
+    public String signupAdmin(AddUserRequest request, RedirectAttributes redirectAttributes) {
+        try {
+            userService.saveAdmin(request);
+            return "redirect:/admin/dashboard";
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/login";
+        }
+    }
 
     @GetMapping("/logout")
     public String logout(HttpServletRequest request, HttpServletResponse response) {

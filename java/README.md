@@ -8,11 +8,23 @@ Spring Boot v3.1 버전 (대충 로그인/회원가입/JWT 기능)
 -- Create the `users` table
 CREATE TABLE users
 (
-    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
-    email      VARCHAR(255) NOT NULL UNIQUE,
-    password   VARCHAR(255) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email         VARCHAR(255) NOT NULL UNIQUE,
+    password      VARCHAR(255) NOT NULL,
+    nickname      VARCHAR(100) UNIQUE,
+    profile_image VARCHAR(255),
+    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
     INDEX (email)
+);
+
+-- Create the `user_authorities` table
+CREATE TABLE user_authorities
+(
+    user_id   BIGINT      NOT NULL,
+    authority VARCHAR(50) NOT NULL,
+    PRIMARY KEY (user_id, authority),
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    INDEX (authority)
 );
 
 -- Create the `refresh_token` table
@@ -32,7 +44,7 @@ CREATE TABLE refresh_token
 CREATE TABLE cosmetics
 (
     id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name            VARCHAR(100),
+    name            VARCHAR(50),
     expiration_date DATE,
     created_date    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     purchased_date  DATE,
