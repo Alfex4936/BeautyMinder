@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,26 +25,21 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
 
-        // Skip filtering for login and signup
-//        if ("/login".equals(path)) {
-//            filterChain.doFilter(request, response);
-//            return;
-//        }
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            String token = getAccessToken(request);
 
-        String token = getAccessToken(request);
-
-        if (tokenProvider.validToken(token)) {
-            Authentication authentication = tokenProvider.getAuthentication(token);
-            System.out.println("Setting authentication: " + authentication);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        } else {
-            SecurityContextHolder.getContext().setAuthentication(null);
+            if (tokenProvider.validToken(token)) {
+                Authentication auth = tokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            } else {
+                SecurityContextHolder.getContext().setAuthentication(null);
+                SecurityContextHolder.clearContext();
+            }
         }
-
 
         filterChain.doFilter(request, response);
     }

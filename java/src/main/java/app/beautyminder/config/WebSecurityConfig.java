@@ -3,10 +3,13 @@ package app.beautyminder.config;
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
+import app.beautyminder.dto.LoginResponse;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.service.UserDetailService;
 import app.beautyminder.service.UserService;
 import app.beautyminder.util.CookieUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +51,8 @@ public class WebSecurityConfig {
     private final UserService userService;
     private final UserDetailService userDetailsService;
 
+    private ObjectMapper objectMapper = new ObjectMapper();
+
     @Bean
     public StrictHttpFirewall httpFirewall() {
         StrictHttpFirewall firewall = new StrictHttpFirewall();
@@ -73,6 +78,8 @@ public class WebSecurityConfig {
         MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector).servletPath("/path");
 
         http.csrf(AbstractHttpConfigurer::disable);
+        http.anonymous(AbstractHttpConfigurer::disable);
+
 //                http.httpBasic(AbstractHttpConfigurer::disable);
 
         http.sessionManagement(s -> s
@@ -92,10 +99,13 @@ public class WebSecurityConfig {
                 .requestMatchers(mvcMatcherBuilder.pattern("/api/**")).authenticated()
                 .requestMatchers(mvcMatcherBuilder.pattern("/admin/**")).hasAuthority("ROLE_ADMIN")
                 .requestMatchers(mvcMatcherBuilder.pattern("/diaries")).authenticated()
+                .requestMatchers(mvcMatcherBuilder.pattern("/protected")).authenticated()
                 .anyRequest().permitAll());
 
         http.formLogin(f -> f
                         .loginPage("/login")
+                        .usernameParameter("username")
+                        .passwordParameter("password")
                         .permitAll()
 //                .defaultSuccessUrl("/articles")
                         .successHandler(((request, response, authentication) -> {
@@ -112,8 +122,14 @@ public class WebSecurityConfig {
                             // Add the Bearer token as a cookie
                             CookieUtil.addCookie(response, "BEARER_TOKEN", accessToken, (int) ACCESS_TOKEN_DURATION.toSeconds());
 
-                            response.sendRedirect("/diaries");
+                            response.setContentType("application/json");
+                            response.setCharacterEncoding("utf-8");
+                            LoginResponse login = new LoginResponse(accessToken, refreshToken, user);
 
+                            String result = objectMapper.registerModule(new JavaTimeModule()).writeValueAsString(login);
+
+                            response.addHeader("Authorization", "Bearer " + accessToken);
+                            response.getWriter().write(result);
                         }))
 
         );
