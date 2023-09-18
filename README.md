@@ -84,7 +84,7 @@ status          ENUM('개봉', '미개봉')
 | -------------- | -------------- | -------------------- | -------- |
 | grade          | `BIGINT`       | 평점 1~5사이           | 아니오 |
 | Title          | `VARCHAR(255)`  |제목        | 아니오   |
-| id             | `VARCHAR(255)` | ID(pk)           | 아니오   |
+| id             | `BIGINT` | ID(pk)           | 아니오   |
 | detail         | `TEXT`       | 내용     | 아니오   |
 | created_at     | `DATETIME`       | 생성날짜     | 아니오   |
 | repiled_at      | `DATETIME`       | 수정날짜     | 아니오   |
