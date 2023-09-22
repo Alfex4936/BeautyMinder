@@ -1,35 +1,30 @@
 package app.beautyminder.domain;
 
-import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@EntityListeners(AuditingEntityListener.class)
+@Document(collection = "refresh_tokens")
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@Entity
 public class RefreshToken {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", updatable = false)
-    private Long id;
+    private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @DBRef
     private User user;
 
-    @Column(name = "refresh_token", nullable = false)
     private String refreshToken;
 
     @CreatedDate
-    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
     @Builder
@@ -40,7 +35,6 @@ public class RefreshToken {
 
     public RefreshToken update(String newRefreshToken) {
         this.refreshToken = newRefreshToken;
-
         return this;
     }
 }

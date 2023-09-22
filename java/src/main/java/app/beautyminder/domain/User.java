@@ -1,12 +1,9 @@
 package app.beautyminder.domain;
 
-import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,37 +12,23 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Table(name = "users")
-@EntityListeners(AuditingEntityListener.class)
+@Document(collection = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 @Getter
-@Entity
 public class User implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", updatable = false)
-    private Long id;
+    private String id;
 
-    @Column(name = "email", nullable = false, unique = true)
     private String email;
-
-    @Column(name = "password")
     private String password;
-
-    @Column(name = "nickname", unique = true)
     private String nickname;
-
-    @Column(name = "profile_image")
     private String profileImage;
 
     @CreatedDate
-    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_authorities", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "authority")
     private Set<String> authorities = new HashSet<>();
 
     @Builder
@@ -66,16 +49,8 @@ public class User implements UserDetails {
 
     public User update(String nickname) {
         this.nickname = nickname;
-
         return this;
     }
-
-
-    // UserDetails methods
-//    @Override
-//    public Collection<? extends GrantedAuthority> getAuthorities() {
-//        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
-//    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -91,7 +66,6 @@ public class User implements UserDetails {
     public void removeAuthority(String authority) {
         this.authorities.remove(authority);
     }
-
 
     @Override
     public String getUsername() {
@@ -123,8 +97,3 @@ public class User implements UserDetails {
         return true;
     }
 }
-
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public void adminOnlyMethod() {
-//        // ...
-//    }

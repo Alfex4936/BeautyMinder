@@ -1,4 +1,4 @@
-package app.beautyminder.dto;
+package app.beautyminder.dto.user;
 
 import lombok.Getter;
 import lombok.Setter;

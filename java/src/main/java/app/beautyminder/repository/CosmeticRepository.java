@@ -1,41 +1,30 @@
 package app.beautyminder.repository;
 
 import app.beautyminder.domain.Cosmetic;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface CosmeticRepository extends JpaRepository<Cosmetic, Long> {
+public interface CosmeticRepository extends MongoRepository<Cosmetic, String> {
 
-    // 기본 CRUD 메서드는 JpaRepository에서 이미 제공
+    List<Cosmetic> findByUserId(String userId);
 
-    // 사용자 ID로 화장품 목록 조회
-    List<Cosmetic> findByUserId(Long userId);
-
-    // 카테고리로 화장품 목록 조회
     List<Cosmetic> findByCategory(Cosmetic.Category category);
 
-    // 상태로 화장품 목록 조회
     List<Cosmetic> findByStatus(Cosmetic.Status status);
 
-    // 만료일이 임박한 화장품 목록 조회
-    @Query("SELECT c FROM Cosmetic c WHERE c.expirationDate <= :date")
-    List<Cosmetic> findExpiringSoon(@Param("date") LocalDate date);
+    @Query("{'expirationDate': {'$lte': ?0}}")
+    List<Cosmetic> findExpiringSoon(LocalDate date);
 
-    // 특정 사용자의 만료일이 임박한 화장품 목록 조회
-    @Query("SELECT c FROM Cosmetic c WHERE c.user.id = :userId AND c.expirationDate <= :date")
-    List<Cosmetic> findExpiringSoonByUserId(@Param("userId") Long userId, @Param("date") LocalDate date);
+    @Query("{'user.id': ?0, 'expirationDate': {'$lte': ?1}}")
+    List<Cosmetic> findExpiringSoonByUserId(String userId, LocalDate date);
 
-    // 특정 이름의 화장품 조회
-    Optional<Cosmetic> findByNameAndUserId(String name, Long userId);
+    Optional<Cosmetic> findByNameAndUserId(String name, String userId);
 
-    // 화장품 구매일로 조회
     List<Cosmetic> findByPurchasedDate(LocalDate purchasedDate);
 
-    // 화장품 만료일로 조회
     List<Cosmetic> findByExpirationDate(LocalDate expirationDate);
 }

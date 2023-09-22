@@ -1,49 +1,32 @@
 package app.beautyminder.domain;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-
-import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "cosmetics")
+@Document(collection = "cosmetics")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
 @Getter
 public class Cosmetic {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", updatable = false)
-    private Long id;
+    private String id;
 
-    @Column(nullable = false)
     private String name;
-
-    @Column(name = "expiration_date")
     private LocalDate expirationDate;
-
-    @Column(name = "created_date", nullable = false, updatable = false)
     private LocalDateTime createdDate;
-
-    @Column(name = "purchased_date")
     private LocalDate purchasedDate;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Category category;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Status status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @DBRef
     private User user;
 
     @Builder

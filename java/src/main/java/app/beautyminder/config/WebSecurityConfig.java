@@ -3,16 +3,19 @@ package app.beautyminder.config;
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
-import app.beautyminder.dto.LoginResponse;
+import app.beautyminder.dto.user.LoginResponse;
 import app.beautyminder.repository.RefreshTokenRepository;
+import app.beautyminder.service.RefreshTokenService;
 import app.beautyminder.service.UserDetailService;
 import app.beautyminder.service.UserService;
 import app.beautyminder.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -34,6 +37,8 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.Optional;
 
 import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
@@ -44,14 +49,15 @@ public class WebSecurityConfig {
 
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
     public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
-    public static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+    public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
 
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenService refreshTokenService;
     private final UserService userService;
     private final UserDetailService userDetailsService;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Bean
     public StrictHttpFirewall httpFirewall() {
@@ -90,8 +96,6 @@ public class WebSecurityConfig {
 
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(mvcMatcherBuilder.pattern("/")).permitAll()
-//                .requestMatchers(mvcMatcherBuilder.pattern("/login")).permitAll()
-//                .requestMatchers(mvcMatcherBuilder.pattern("/logout")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/signup")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/user")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/admin")).permitAll()
@@ -104,10 +108,19 @@ public class WebSecurityConfig {
 
         http.formLogin(f -> f
                         .loginPage("/login")
-                        .usernameParameter("username")
+                        .usernameParameter("email")
                         .passwordParameter("password")
                         .permitAll()
 //                .defaultSuccessUrl("/articles")
+                        .failureHandler((request, response, exception) -> {
+                            Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);
+
+                            optionalRefreshToken
+                                    .filter(tokenProvider::validToken)
+                                    .flatMap(refreshTokenService::findUserByRefreshToken)
+                                    .map(user -> generateNewAccessTokenAndRespond(user, request, response))
+                                    .orElseGet(() -> handleFailure(response));
+                        })
                         .successHandler(((request, response, authentication) -> {
                             app.beautyminder.domain.User user = (app.beautyminder.domain.User) authentication.getPrincipal();
                             String refreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
@@ -116,11 +129,12 @@ public class WebSecurityConfig {
 
                             // Generate access token
                             String accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
+//                            saveAccessToken(user, accessToken);
 
                             System.out.println("WHAT IS TOKEN: " + accessToken);
 
                             // Add the Bearer token as a cookie
-                            CookieUtil.addCookie(response, "BEARER_TOKEN", accessToken, (int) ACCESS_TOKEN_DURATION.toSeconds());
+//                            CookieUtil.addCookie(response, "BEARER_TOKEN", accessToken, (int) ACCESS_TOKEN_DURATION.toSeconds());
 
                             response.setContentType("application/json");
                             response.setCharacterEncoding("utf-8");
@@ -142,7 +156,7 @@ public class WebSecurityConfig {
                 .logoutSuccessHandler(((request, response, authentication) -> {
                     if (authentication != null && authentication.getPrincipal() instanceof app.beautyminder.domain.User user) {
                         try {
-                            refreshTokenRepository.revokeRefreshToken(user.getId());
+                            refreshTokenRepository.deleteByUserId(user.getId());
                             // Optionally, clear the cookie
                             CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
                         } catch (Exception e) {
@@ -150,7 +164,7 @@ public class WebSecurityConfig {
                         }
                     }
 
-                    CookieUtil.deleteCookie(request, response, "BEARER_TOKEN");
+//                    CookieUtil.deleteCookie(request, response, "BEARER_TOKEN");
                     SecurityContextHolder.getContext().setAuthentication(null);
 
                     response.sendRedirect("/login");
@@ -201,6 +215,14 @@ public class WebSecurityConfig {
         refreshTokenRepository.save(refreshToken);
     }
 
+    private void saveAccessToken(User user, String accessToken) {
+        RefreshToken refreshToken = refreshTokenRepository.findByUserId(user.getId())
+                .map(entity -> entity.update(accessToken))
+                .orElse(new RefreshToken(user, accessToken));
+
+        refreshTokenRepository.save(refreshToken);
+    }
+
     private void addRefreshTokenToCookie(HttpServletRequest request, HttpServletResponse response, String refreshToken) {
         int cookieMaxAge = (int) REFRESH_TOKEN_DURATION.toSeconds();
 
@@ -212,4 +234,31 @@ public class WebSecurityConfig {
         int cookieMaxAge = (int) ACCESS_TOKEN_DURATION.toSeconds();
         CookieUtil.addCookie(response, "access_token", accessToken, cookieMaxAge);
     }
+
+    private Optional<String> getRefreshTokenFromRequest(@NotNull HttpServletRequest request) {
+        // Retrieve the refresh token from a cookie, database, or other source
+        return Optional.ofNullable(request.getCookies())
+                .flatMap(cookies -> Arrays.stream(cookies)
+                        .filter(c -> REFRESH_TOKEN_COOKIE_NAME.equals(c.getName()))
+                        .findFirst())
+                .map(Cookie::getValue);
+    }
+
+    private boolean generateNewAccessTokenAndRespond(User user, HttpServletRequest request, HttpServletResponse response) {
+        String newAccessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
+
+        String newRefreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
+        saveRefreshToken(user, newRefreshToken);
+        addRefreshTokenToCookie(request, response, newRefreshToken);
+
+        response.addHeader("Authorization", "Bearer " + newAccessToken);
+        response.setStatus(HttpServletResponse.SC_OK);
+        return true;
+    }
+
+    private boolean handleFailure(HttpServletResponse response) {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        return false;
+    }
+
 }

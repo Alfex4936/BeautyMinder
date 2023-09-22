@@ -1,40 +1,29 @@
 package app.beautyminder.repository;
 
 import app.beautyminder.domain.Todo;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
-public interface TodoRepository extends JpaRepository<Todo, Long> {
+public interface TodoRepository extends MongoRepository<Todo, String> {
 
-    // 기본 CRUD 메서드는 JpaRepository에서 이미 제공
-
-    // 사용자 ID로 할 일 목록 조회
-    List<Todo> findByUserId(Long userId);
-
-    // 특정 날짜의 할 일 목록 조회
+    List<Todo> findByUserId(String userId);
     List<Todo> findByDate(LocalDate date);
 
-    // 특정 사용자의 특정 날짜의 할 일 목록 조회
-    List<Todo> findByUserIdAndDate(Long userId, LocalDate date);
+    @Query("{'user.id': ?0, 'date': ?1}")
+    List<Todo> findByUserIdAndDate(String userId, LocalDate date);
 
-    // 특정 기간동안의 할 일 목록 조회
-    @Query("SELECT t FROM Todo t WHERE t.date BETWEEN :startDate AND :endDate")
-    List<Todo> findBetweenDates(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    @Query("{'date': {'$gte': ?0, '$lte': ?1}}")
+    List<Todo> findBetweenDates(LocalDate startDate, LocalDate endDate);
 
-    // 특정 사용자의 특정 기간동안의 할 일 목록 조회
-    @Query("SELECT t FROM Todo t WHERE t.user.id = :userId AND t.date BETWEEN :startDate AND :endDate")
-    List<Todo> findBetweenDatesByUserId(@Param("userId") Long userId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    @Query("{'user.id': ?0, 'date': {'$gte': ?1, '$lte': ?2}}")
+    List<Todo> findBetweenDatesByUserId(String userId, LocalDate startDate, LocalDate endDate);
 
-    // 할 일 내용으로 조회 (LIKE 검색)
-    @Query("SELECT t FROM Todo t WHERE t.tasks LIKE %:keyword%")
-    List<Todo> findByTaskKeyword(@Param("keyword") String keyword);
+    @Query("{'tasks': {'$regex': ?0, '$options': 'i'}}")
+    List<Todo> findByTaskKeyword(String keyword);
 
-    // 특정 사용자의 할 일 내용으로 조회 (LIKE 검색)
-    @Query("SELECT t FROM Todo t WHERE t.user.id = :userId AND t.tasks LIKE %:keyword%")
-    List<Todo> findByTaskKeywordAndUserId(@Param("userId") Long userId, @Param("keyword") String keyword);
+    @Query("{'user.id': ?0, 'tasks': {'$regex': ?1, '$options': 'i'}}")
+    List<Todo> findByTaskKeywordAndUserId(String userId, String keyword);
 }

@@ -1,7 +1,7 @@
 package app.beautyminder.service;
 
 import app.beautyminder.domain.User;
-import app.beautyminder.dto.AddUserRequest;
+import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -19,7 +19,7 @@ public class UserService {
 
 
     // 일반 사용자 저장
-    public Long saveUser(AddUserRequest dto) {
+    public String saveUser(AddUserRequest dto) {
         // 이메일 중복 체크
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("이메일이 이미 사용 중입니다.");
@@ -36,7 +36,7 @@ public class UserService {
     }
 
     // 관리자 저장
-    public Long saveAdmin(AddUserRequest dto) {
+    public String saveAdmin(AddUserRequest dto) {
         // 이메일 중복 체크
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("이메일이 이미 사용 중입니다.");
@@ -53,7 +53,7 @@ public class UserService {
     }
 
     // 사용자 ID로 조회
-    public User findById(Long userId) {
+    public User findById(String userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
     }
