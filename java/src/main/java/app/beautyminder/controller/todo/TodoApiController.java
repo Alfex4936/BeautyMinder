@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/todo")
@@ -23,6 +25,14 @@ public class TodoApiController {
     public ResponseEntity<AddTodoResponse> addTodo(@RequestBody AddTodoRequest request) {
         try {
             User user = userService.findById(request.getUserId());
+
+            // Check if a Todo already exists for this user with the same date
+            List<Todo> existingTodos = todoService.findTodosByUserIdAndDate(user.getId(), request.getDate());
+            if (!existingTodos.isEmpty()) {
+                return ResponseEntity.badRequest().body(new AddTodoResponse("Todo already exists for this date", null));
+            }
+
+            
             Todo todo = Todo.builder()
                     .date(request.getDate())
                     .morningTasks(request.getMorningTasks())

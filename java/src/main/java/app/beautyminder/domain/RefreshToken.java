@@ -33,8 +33,19 @@ public class RefreshToken {
         this.refreshToken = refreshToken;
     }
 
+    @Builder
+    public RefreshToken(User user, String refreshToken, LocalDateTime expiresAt) {
+        this.user = user;
+        this.refreshToken = refreshToken;
+        this.expiresAt = expiresAt;
+    }
+
     public RefreshToken update(String newRefreshToken) {
         this.refreshToken = newRefreshToken;
         return this;
+    }
+
+    public void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
     }
 }

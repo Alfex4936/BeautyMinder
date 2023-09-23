@@ -36,7 +36,9 @@ import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
+import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -118,8 +120,10 @@ public class WebSecurityConfig {
                             optionalRefreshToken
                                     .filter(tokenProvider::validToken)
                                     .flatMap(refreshTokenService::findUserByRefreshToken)
-                                    .map(user -> generateNewAccessTokenAndRespond(user, request, response))
-                                    .orElseGet(() -> handleFailure(response));
+                                    .ifPresentOrElse(
+                                            user -> generateNewAccessTokenAndRespond(user, request, response),
+                                            () -> handleFailure(response)
+                                    );
                         })
                         .successHandler(((request, response, authentication) -> {
                             app.beautyminder.domain.User user = (app.beautyminder.domain.User) authentication.getPrincipal();
@@ -150,25 +154,25 @@ public class WebSecurityConfig {
 
 
         http.logout(l -> l
-                .permitAll()
-                .logoutUrl("/logout")
-                .invalidateHttpSession(true)
-                .logoutSuccessHandler(((request, response, authentication) -> {
-                    if (authentication != null && authentication.getPrincipal() instanceof app.beautyminder.domain.User user) {
-                        try {
-                            refreshTokenRepository.deleteByUserId(user.getId());
-                            // Optionally, clear the cookie
-                            CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
-                        } catch (Exception e) {
-                            // log the error
-                        }
-                    }
+                        .permitAll()
+                        .logoutUrl("/logout")
+                        .invalidateHttpSession(true)
+                        .logoutSuccessHandler(((request, response, authentication) -> {
+                            if (authentication != null && authentication.getPrincipal() instanceof app.beautyminder.domain.User user) {
+                                try {
+                                    refreshTokenRepository.deleteByUserId(user.getId());
+                                    // Optionally, clear the cookie
+                                    CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
+                                } catch (Exception e) {
+                                    // log the error
+                                }
+                            }
 
 //                    CookieUtil.deleteCookie(request, response, "BEARER_TOKEN");
-                    SecurityContextHolder.getContext().setAuthentication(null);
+                            SecurityContextHolder.getContext().setAuthentication(null);
 
-                    response.sendRedirect("/login");
-                }))
+                            response.sendRedirect("/login");
+                        }))
         );
 
 
@@ -208,9 +212,15 @@ public class WebSecurityConfig {
     }
 
     private void saveRefreshToken(User user, String newRefreshToken) {
+        LocalDateTime expiresAt = LocalDateTime.now().plus(REFRESH_TOKEN_DURATION);
+
         RefreshToken refreshToken = refreshTokenRepository.findByUserId(user.getId())
-                .map(entity -> entity.update(newRefreshToken))
-                .orElse(new RefreshToken(user, newRefreshToken));
+                .map(entity -> {
+                    entity.update(newRefreshToken);
+                    entity.setExpiresAt(expiresAt);
+                    return entity;
+                })
+                .orElse(new RefreshToken(user, newRefreshToken, expiresAt));
 
         refreshTokenRepository.save(refreshToken);
     }
@@ -244,21 +254,23 @@ public class WebSecurityConfig {
                 .map(Cookie::getValue);
     }
 
-    private boolean generateNewAccessTokenAndRespond(User user, HttpServletRequest request, HttpServletResponse response) {
+    private void generateNewAccessTokenAndRespond(User user, HttpServletRequest request, HttpServletResponse response) {
         String newAccessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
-
         String newRefreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
+
         saveRefreshToken(user, newRefreshToken);
         addRefreshTokenToCookie(request, response, newRefreshToken);
 
         response.addHeader("Authorization", "Bearer " + newAccessToken);
         response.setStatus(HttpServletResponse.SC_OK);
-        return true;
     }
 
-    private boolean handleFailure(HttpServletResponse response) {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        return false;
+    private void handleFailure(HttpServletResponse response) {
+        try {
+            response.sendRedirect("/login?error");
+        } catch (IOException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        }
     }
 
 }
