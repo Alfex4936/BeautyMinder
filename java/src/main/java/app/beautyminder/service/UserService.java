@@ -2,10 +2,13 @@ package app.beautyminder.service;
 
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.AddUserRequest;
+import app.beautyminder.repository.RefreshTokenRepository;
+import app.beautyminder.repository.TodoRepository;
 import app.beautyminder.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,6 +18,9 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final TodoRepository todoRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
 
 
@@ -95,5 +101,22 @@ public class UserService {
     public User findByEmailAndPassword(String email, String password) {
         return userRepository.findByEmailAndPassword(email, password)
                 .orElseThrow(() -> new IllegalArgumentException("이메일 혹은 비밀번호가 틀립니다."));
+    }
+
+    /*
+    Cascading
+        If a User is deleted, consider what should happen to their Todo items.
+        Should they be deleted as well, or should they remain in the database?
+     */
+    @Transactional
+    public void deleteUserAndRelatedData(String userId) {
+        // Delete all Todo entries related to the user
+        todoRepository.deleteByUserId(userId);
+
+        // Delete all RefreshToken entries related to the user
+        refreshTokenRepository.deleteByUserId(userId);
+
+        // Delete the User
+        userRepository.deleteById(userId);
     }
 }

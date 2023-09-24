@@ -56,4 +56,10 @@ public class UserApiController {
     public ResponseEntity<String> adminProtected() {
         return ResponseEntity.ok("Admin protected route accessed");
     }
+
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable String userId) {
+        userService.deleteUserAndRelatedData(userId);
+        return ResponseEntity.ok("a user is deleted successfully");
+    }
 }

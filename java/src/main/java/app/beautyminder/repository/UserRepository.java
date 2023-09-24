@@ -22,4 +22,7 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     @Query("{'authorities': ?0}")
     List<User> findByAuthority(String authority);
+
+    void deleteUserByEmail(String email);
+
 }

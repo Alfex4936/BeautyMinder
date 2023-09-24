@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - UserApiControllerTest</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>UserApiControllerTest</h1>
+<div class="breadcrumbs">
+<a href="../index.html">all</a> &gt; 
+<a href="../packages/app.beautyminder.controller.html">app.beautyminder.controller</a> &gt; UserApiControllerTest</div>
+<div id="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox" id="tests">
+<div class="counter">4</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="failures">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="ignored">
+<div class="counter">0</div>
+<p>ignored</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="duration">
+<div class="counter">2.207s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success" id="successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="tabs">
+<ul class="tabLinks">
+<li>
+<a href="#tab0">Tests</a>
+</li>
+<li>
+<a href="#tab1">Standard output</a>
+</li>
+</ul>
+<div id="tab0" class="tab">
+<h2>Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Method name</th>
+<th>Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td class="success">Test Add Todo</td>
+<td class="success">testAddTodo()</td>
+<td class="success">0.182s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">Delete a user</td>
+<td class="success">testDeleteUser()</td>
+<td class="success">0.258s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">Test Login</td>
+<td class="success">testLogin()</td>
+<td class="success">0.290s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">Test Registration</td>
+<td class="success">testSignup()</td>
+<td class="success">1.477s</td>
+<td class="success">passed</td>
+</tr>
+</table>
+</div>
+<div id="tab1" class="tab">
+<h2>Standard output</h2>
+<span class="code">
+<pre>00:02:48.070 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [app.beautyminder.controller.UserApiControllerTest]: UserApiControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+00:02:48.181 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration app.beautyminder.SpringBootDeveloperApplication for test class app.beautyminder.controller.UserApiControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.1.3)
+
+2023-09-25T00:02:48.588+09:00  INFO 21784 --- [    Test worker] a.b.controller.UserApiControllerTest     : Starting UserApiControllerTest using Java 17.0.7 with PID 21784 (started by dev in D:\Dev\Java\beautyminder_mongo)
+2023-09-25T00:02:48.589+09:00  INFO 21784 --- [    Test worker] a.b.controller.UserApiControllerTest     : No active profile set, falling back to 1 default profile: &quot;default&quot;
+2023-09-25T00:02:49.161+09:00  INFO 21784 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data MongoDB repositories in DEFAULT mode.
+2023-09-25T00:02:49.215+09:00  INFO 21784 --- [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 51 ms. Found 4 MongoDB repository interfaces.
+2023-09-25T00:02:49.686+09:00  INFO 21784 --- [off.mongodb.net] org.mongodb.driver.cluster               : Adding discovered server seokzero-shard-00-02.udoff.mongodb.net:27017 to client view of cluster
+2023-09-25T00:02:49.693+09:00  INFO 21784 --- [    Test worker] org.mongodb.driver.client                : MongoClient with metadata {&quot;driver&quot;: {&quot;name&quot;: &quot;mongo-java-driver|sync|spring-boot&quot;, &quot;version&quot;: &quot;4.9.1&quot;}, &quot;os&quot;: {&quot;type&quot;: &quot;Windows&quot;, &quot;name&quot;: &quot;Windows 11&quot;, &quot;architecture&quot;: &quot;amd64&quot;, &quot;version&quot;: &quot;10.0&quot;}, &quot;platform&quot;: &quot;Java/Oracle Corporation/17.0.7+8-LTS-224&quot;} created with settings MongoClientSettings{readPreference=primary, writeConcern=WriteConcern{w=majority, wTimeout=null ms, journal=null}, retryWrites=true, retryReads=true, readConcern=ReadConcern{level=null}, credential=MongoCredential{mechanism=null, userName='beauty', source='admin', password=&lt;hidden&gt;, mechanismProperties=&lt;hidden&gt;}, streamFactoryFactory=null, commandListeners=[], codecRegistry=ProvidersCodecRegistry{codecProviders=[ValueCodecProvider{}, BsonValueCodecProvider{}, DBRefCodecProvider{}, DBObjectCodecProvider{}, DocumentCodecProvider{}, CollectionCodecProvider{}, IterableCodecProvider{}, MapCodecProvider{}, GeoJsonCodecProvider{}, GridFSFileCodecProvider{}, Jsr310CodecProvider{}, JsonObjectCodecProvider{}, BsonCodecProvider{}, EnumCodecProvider{}, com.mongodb.client.model.mql.ExpressionCodecProvider@707865bd, com.mongodb.Jep395RecordCodecProvider@31f77791]}, loggerSettings=LoggerSettings{maxDocumentLength=1000}, clusterSettings={hosts=[127.0.0.1:27017], srvHost=seokzero.udoff.mongodb.net, srvServiceName=mongodb, mode=MULTIPLE, requiredClusterType=REPLICA_SET, requiredReplicaSetName='atlas-132diy-shard-0', serverSelector='null', clusterListeners='[]', serverSelectionTimeout='30000 ms', localThreshold='30000 ms'}, socketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=0, receiveBufferSize=0, sendBufferSize=0}, heartbeatSocketSettings=SocketSettings{connectTimeoutMS=10000, readTimeoutMS=10000, receiveBufferSize=0, sendBufferSize=0}, connectionPoolSettings=ConnectionPoolSettings{maxSize=100, minSize=0, maxWaitTimeMS=120000, maxConnectionLifeTimeMS=0, maxConnectionIdleTimeMS=0, maintenanceInitialDelayMS=0, maintenanceFrequencyMS=60000, connectionPoolListeners=[], maxConnecting=2}, serverSettings=ServerSettings{heartbeatFrequencyMS=10000, minHeartbeatFrequencyMS=500, serverListeners='[]', serverMonitorListeners='[]'}, sslSettings=SslSettings{enabled=true, invalidHostNameAllowed=false, context=null}, applicationName='null', compressorList=[], uuidRepresentation=JAVA_LEGACY, serverApi=null, autoEncryptionSettings=null, contextProvider=null}
+2023-09-25T00:02:49.717+09:00  INFO 21784 --- [off.mongodb.net] org.mongodb.driver.cluster               : Adding discovered server seokzero-shard-00-01.udoff.mongodb.net:27017 to client view of cluster
+2023-09-25T00:02:49.719+09:00  INFO 21784 --- [off.mongodb.net] org.mongodb.driver.cluster               : Adding discovered server seokzero-shard-00-00.udoff.mongodb.net:27017 to client view of cluster
+2023-09-25T00:02:50.173+09:00  INFO 21784 --- [ngodb.net:27017] org.mongodb.driver.cluster               : Monitor thread successfully connected to server with description ServerDescription{address=seokzero-shard-00-01.udoff.mongodb.net:27017, type=REPLICA_SET_PRIMARY, state=CONNECTED, ok=true, minWireVersion=0, maxWireVersion=17, maxDocumentSize=16777216, logicalSessionTimeoutMinutes=30, roundTripTimeNanos=242744900, setName='atlas-132diy-shard-0', canonicalAddress=seokzero-shard-00-01.udoff.mongodb.net:27017, hosts=[seokzero-shard-00-00.udoff.mongodb.net:27017, seokzero-shard-00-01.udoff.mongodb.net:27017, seokzero-shard-00-02.udoff.mongodb.net:27017], passives=[], arbiters=[], primary='seokzero-shard-00-01.udoff.mongodb.net:27017', tagSet=TagSet{[Tag{name='nodeType', value='ELECTABLE'}, Tag{name='provider', value='GCP'}, Tag{name='region', value='NORTHEASTERN_ASIA_PACIFIC'}, Tag{name='workloadType', value='OPERATIONAL'}]}, electionId=7fffffff00000000000000df, setVersion=7, topologyVersion=TopologyVersion{processId=6504abf6547444e6dd892898, counter=6}, lastWriteDate=Mon Sep 25 00:02:49 KST 2023, lastUpdateTimeNanos=50472944528000}
+2023-09-25T00:02:50.173+09:00  INFO 21784 --- [ngodb.net:27017] org.mongodb.driver.cluster               : Monitor thread successfully connected to server with description ServerDescription{address=seokzero-shard-00-00.udoff.mongodb.net:27017, type=REPLICA_SET_SECONDARY, state=CONNECTED, ok=true, minWireVersion=0, maxWireVersion=17, maxDocumentSize=16777216, logicalSessionTimeoutMinutes=30, roundTripTimeNanos=242764300, setName='atlas-132diy-shard-0', canonicalAddress=seokzero-shard-00-00.udoff.mongodb.net:27017, hosts=[seokzero-shard-00-00.udoff.mongodb.net:27017, seokzero-shard-00-01.udoff.mongodb.net:27017, seokzero-shard-00-02.udoff.mongodb.net:27017], passives=[], arbiters=[], primary='seokzero-shard-00-01.udoff.mongodb.net:27017', tagSet=TagSet{[Tag{name='nodeType', value='ELECTABLE'}, Tag{name='provider', value='GCP'}, Tag{name='region', value='NORTHEASTERN_ASIA_PACIFIC'}, Tag{name='workloadType', value='OPERATIONAL'}]}, electionId=null, setVersion=7, topologyVersion=TopologyVersion{processId=6504aba459928ad98fd79be3, counter=4}, lastWriteDate=Mon Sep 25 00:02:49 KST 2023, lastUpdateTimeNanos=50472944528000}
+2023-09-25T00:02:50.173+09:00  INFO 21784 --- [ngodb.net:27017] org.mongodb.driver.cluster               : Monitor thread successfully connected to server with description ServerDescription{address=seokzero-shard-00-02.udoff.mongodb.net:27017, type=REPLICA_SET_SECONDARY, state=CONNECTED, ok=true, minWireVersion=0, maxWireVersion=17, maxDocumentSize=16777216, logicalSessionTimeoutMinutes=30, roundTripTimeNanos=242291300, setName='atlas-132diy-shard-0', canonicalAddress=seokzero-shard-00-02.udoff.mongodb.net:27017, hosts=[seokzero-shard-00-00.udoff.mongodb.net:27017, seokzero-shard-00-01.udoff.mongodb.net:27017, seokzero-shard-00-02.udoff.mongodb.net:27017], passives=[], arbiters=[], primary='seokzero-shard-00-01.udoff.mongodb.net:27017', tagSet=TagSet{[Tag{name='nodeType', value='ELECTABLE'}, Tag{name='provider', value='GCP'}, Tag{name='region', value='NORTHEASTERN_ASIA_PACIFIC'}, Tag{name='workloadType', value='OPERATIONAL'}]}, electionId=null, setVersion=7, topologyVersion=TopologyVersion{processId=6504ac48dea34a7fc56da0a0, counter=3}, lastWriteDate=Mon Sep 25 00:02:49 KST 2023, lastUpdateTimeNanos=50472944527900}
+2023-09-25T00:02:50.176+09:00  INFO 21784 --- [ngodb.net:27017] org.mongodb.driver.cluster               : Discovered replica set primary seokzero-shard-00-01.udoff.mongodb.net:27017 with max election id 7fffffff00000000000000df and max set version 7
+2023-09-25T00:02:50.532+09:00  INFO 21784 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@6233c6c2, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@312a738d, org.springframework.security.web.context.SecurityContextHolderFilter@1c6ac73c, org.springframework.security.web.header.HeaderWriterFilter@2bc0b8c8, org.springframework.security.web.authentication.logout.LogoutFilter@10d98940, app.beautyminder.config.TokenAuthenticationFilter@7e50eeb9, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter@4d8056bf, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@5341e71a, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@365bfc5f, org.springframework.security.web.session.SessionManagementFilter@3f1158ee, org.springframework.security.web.access.ExceptionTranslationFilter@4540c7, org.springframework.security.web.access.intercept.AuthorizationFilter@5a51336a]
+2023-09-25T00:02:50.768+09:00  WARN 21784 --- [    Test worker] o.s.s.c.a.web.builders.WebSecurity       : You are asking Spring Security to ignore Ant [pattern='org.springframework.boot.autoconfigure.security.servlet.PathRequest$H2ConsoleRequestMatcher@5310e451']. This is not recommended -- please use permitAll via HttpSecurity#authorizeHttpRequests instead.
+2023-09-25T00:02:50.769+09:00  INFO 21784 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will not secure Ant [pattern='org.springframework.boot.autoconfigure.security.servlet.PathRequest$H2ConsoleRequestMatcher@5310e451']
+2023-09-25T00:02:50.769+09:00  WARN 21784 --- [    Test worker] o.s.s.c.a.web.builders.WebSecurity       : You are asking Spring Security to ignore Ant [pattern='/img/**']. This is not recommended -- please use permitAll via HttpSecurity#authorizeHttpRequests instead.
+2023-09-25T00:02:50.769+09:00  INFO 21784 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will not secure Ant [pattern='/img/**']
+2023-09-25T00:02:50.769+09:00  WARN 21784 --- [    Test worker] o.s.s.c.a.web.builders.WebSecurity       : You are asking Spring Security to ignore Ant [pattern='/css/**']. This is not recommended -- please use permitAll via HttpSecurity#authorizeHttpRequests instead.
+2023-09-25T00:02:50.769+09:00  INFO 21784 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will not secure Ant [pattern='/css/**']
+2023-09-25T00:02:50.770+09:00  WARN 21784 --- [    Test worker] o.s.s.c.a.web.builders.WebSecurity       : You are asking Spring Security to ignore Ant [pattern='/js/**']. This is not recommended -- please use permitAll via HttpSecurity#authorizeHttpRequests instead.
+2023-09-25T00:02:50.770+09:00  INFO 21784 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will not secure Ant [pattern='/js/**']
+2023-09-25T00:02:50.770+09:00  WARN 21784 --- [    Test worker] o.s.s.c.a.web.builders.WebSecurity       : You are asking Spring Security to ignore Ant [pattern='/static/**']. This is not recommended -- please use permitAll via HttpSecurity#authorizeHttpRequests instead.
+2023-09-25T00:02:50.770+09:00  INFO 21784 --- [    Test worker] o.s.s.web.DefaultSecurityFilterChain     : Will not secure Ant [pattern='/static/**']
+2023-09-25T00:02:50.815+09:00  INFO 21784 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2023-09-25T00:02:50.815+09:00  INFO 21784 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2023-09-25T00:02:50.817+09:00  INFO 21784 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2023-09-25T00:02:50.841+09:00  INFO 21784 --- [    Test worker] a.b.controller.UserApiControllerTest     : Started UserApiControllerTest in 2.51 seconds (process running for 3.777)
+2023-09-25T00:02:51.623+09:00  INFO 21784 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2023-09-25T00:02:51.623+09:00  INFO 21784 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2023-09-25T00:02:51.624+09:00  INFO 21784 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2023-09-25T00:02:51.633+09:00 DEBUG 21784 --- [    Test worker] o.s.security.web.FilterChainProxy        : Securing POST /user/signup
+====== None
+2023-09-25T00:02:51.652+09:00 DEBUG 21784 --- [    Test worker] o.s.security.web.FilterChainProxy        : Secured POST /user/signup
+2023-09-25T00:02:52.341+09:00  INFO 21784 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2023-09-25T00:02:52.341+09:00  INFO 21784 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2023-09-25T00:02:52.341+09:00  INFO 21784 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2023-09-25T00:02:52.348+09:00 DEBUG 21784 --- [    Test worker] o.s.security.web.FilterChainProxy        : Securing POST /login
+====== None
+======= test@com
+2023-09-25T00:02:52.499+09:00 DEBUG 21784 --- [    Test worker] o.s.s.a.dao.DaoAuthenticationProvider    : Authenticated user
+2023-09-25T00:02:52.499+09:00 DEBUG 21784 --- [    Test worker] w.a.UsernamePasswordAuthenticationFilter : Set SecurityContextHolder to UsernamePasswordAuthenticationToken [Principal=app.beautyminder.domain.User@e47637c, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=127.0.0.1, SessionId=null], Granted Authorities=[ROLE_USER]]
+WHAT IS TOKEN: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJiZWF1dHltaW5kZXIiLCJpYXQiOjE2OTU1Njc3NzIsImV4cCI6MTY5NTU2NzgzMiwic3ViIjoidGVzdEBjb20iLCJpZCI6IjY1MTA0ZjljNDkxZmFhNTNiYjBhZmExYiJ9.tFbUo7_F6WLsB385tBxBp9oD2wjJzQEEleTDj2rrBlI
+
+MockHttpServletRequest:
+      HTTP Method = POST
+      Request URI = /login
+       Parameters = {email=[test@com], password=[1234], _csrf=[_NBQVeIegLWeTH1V3AeD3wiREw4w8vp9LsTHhKUYBuxMDKiJxORgY9d44YezfU1m7Sq3vWqoPm8AkclQS_eis5Z6PtUuO5_v]}
+          Headers = [Accept:&quot;application/x-www-form-urlencoded&quot;]
+             Body = &lt;no character encoding set&gt;
+    Session Attrs = {}
+
+Handler:
+             Type = null
+
+Async:
+    Async started = false
+     Async result = null
+
+Resolved Exception:
+             Type = null
+
+ModelAndView:
+        View name = null
+             View = null
+            Model = null
+
+FlashMap:
+       Attributes = null
+
+MockHttpServletResponse:
+           Status = 200
+    Error message = null
+          Headers = [Set-Cookie:&quot;XRT=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJiZWF1dHltaW5kZXIiLCJpYXQiOjE2OTU1Njc3NzIsImV4cCI6MTY5Njc3NzM3Miwic3ViIjoidGVzdEBjb20iLCJpZCI6IjY1MTA0ZjljNDkxZmFhNTNiYjBhZmExYiJ9.hb08dg3yxRsQGaBsHVD8dVj2CpiDsSSuuQ69mjSVED0; Path=/; Max-Age=1209600; Expires=Sun, 08 Oct 2023 15:02:52 GMT&quot;, Content-Type:&quot;application/json;charset=utf-8&quot;, Authorization:&quot;Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJiZWF1dHltaW5kZXIiLCJpYXQiOjE2OTU1Njc3NzIsImV4cCI6MTY5NTU2NzgzMiwic3ViIjoidGVzdEBjb20iLCJpZCI6IjY1MTA0ZjljNDkxZmFhNTNiYjBhZmExYiJ9.tFbUo7_F6WLsB385tBxBp9oD2wjJzQEEleTDj2rrBlI&quot;, X-Content-Type-Options:&quot;nosniff&quot;, X-XSS-Protection:&quot;0&quot;, Cache-Control:&quot;no-cache, no-store, max-age=0, must-revalidate&quot;, Pragma:&quot;no-cache&quot;, Expires:&quot;0&quot;, X-Frame-Options:&quot;DENY&quot;]
+     Content type = application/json;charset=utf-8
+             Body = {&quot;accessToken&quot;:&quot;eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJiZWF1dHltaW5kZXIiLCJpYXQiOjE2OTU1Njc3NzIsImV4cCI6MTY5NTU2NzgzMiwic3ViIjoidGVzdEBjb20iLCJpZCI6IjY1MTA0ZjljNDkxZmFhNTNiYjBhZmExYiJ9.tFbUo7_F6WLsB385tBxBp9oD2wjJzQEEleTDj2rrBlI&quot;,&quot;refreshToken&quot;:&quot;eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJiZWF1dHltaW5kZXIiLCJpYXQiOjE2OTU1Njc3NzIsImV4cCI6MTY5Njc3NzM3Miwic3ViIjoidGVzdEBjb20iLCJpZCI6IjY1MTA0ZjljNDkxZmFhNTNiYjBhZmExYiJ9.hb08dg3yxRsQGaBsHVD8dVj2CpiDsSSuuQ69mjSVED0&quot;,&quot;user&quot;:{&quot;id&quot;:&quot;65104f9c491faa53bb0afa1b&quot;,&quot;email&quot;:&quot;test@com&quot;,&quot;password&quot;:&quot;$2a$10$LjxhJOCWUzRi8WKqJxjPc.IgOqzzVn6clyqCTnSASyrpITqEvgfRa&quot;,&quot;nickname&quot;:null,&quot;profileImage&quot;:null,&quot;createdAt&quot;:[2023,9,25,0,2,52,148000000],&quot;updatedAt&quot;:[2023,9,25,0,2,52,148000000],&quot;authorities&quot;:[{&quot;authority&quot;:&quot;ROLE_USER&quot;}],&quot;enabled&quot;:true,&quot;username&quot;:&quot;test@com&quot;,&quot;accountNonLocked&quot;:true,&quot;credentialsNonExpired&quot;:true,&quot;accountNonExpired&quot;:true}}
+    Forwarded URL = null
+   Redirected URL = null
+          Cookies = [[Cookie@6b529d42 name = 'XRT', value = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJiZWF1dHltaW5kZXIiLCJpYXQiOjE2OTU1Njc3NzIsImV4cCI6MTY5Njc3NzM3Miwic3ViIjoidGVzdEBjb20iLCJpZCI6IjY1MTA0ZjljNDkxZmFhNTNiYjBhZmExYiJ9.hb08dg3yxRsQGaBsHVD8dVj2CpiDsSSuuQ69mjSVED0', comment = [null], domain = [null], maxAge = 1209600, path = '/', secure = false, version = 0, httpOnly = false]]
+2023-09-25T00:02:52.632+09:00  INFO 21784 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2023-09-25T00:02:52.632+09:00  INFO 21784 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2023-09-25T00:02:52.632+09:00  INFO 21784 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2023-09-25T00:02:52.672+09:00 DEBUG 21784 --- [    Test worker] o.s.security.web.FilterChainProxy        : Securing POST /todo/add
+====== None
+2023-09-25T00:02:52.672+09:00 DEBUG 21784 --- [    Test worker] o.s.security.web.FilterChainProxy        : Secured POST /todo/add
+2023-09-25T00:02:52.815+09:00  INFO 21784 --- [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2023-09-25T00:02:52.815+09:00  INFO 21784 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2023-09-25T00:02:52.815+09:00  INFO 21784 --- [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
+2023-09-25T00:02:52.854+09:00 DEBUG 21784 --- [    Test worker] o.s.security.web.FilterChainProxy        : Securing DELETE /user/delete/65104f9c491faa53bb0afa1b
+====== None
+2023-09-25T00:02:52.855+09:00 DEBUG 21784 --- [    Test worker] o.s.security.web.FilterChainProxy        : Secured DELETE /user/delete/65104f9c491faa53bb0afa1b
+</pre>
+</span>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="http://www.gradle.org">Gradle 7.5.1</a> at 2023. 9. 25. 오전 12:02:53</p>
+</div>
+</div>
+</body>
+</html>

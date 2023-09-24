@@ -26,4 +26,6 @@ public interface TodoRepository extends MongoRepository<Todo, String> {
 
     @Query("{'user.id': ?0, 'tasks': {'$regex': ?1, '$options': 'i'}}")
     List<Todo> findByTaskKeywordAndUserId(String userId, String keyword);
+
+    void deleteByUserId(String userId);
 }

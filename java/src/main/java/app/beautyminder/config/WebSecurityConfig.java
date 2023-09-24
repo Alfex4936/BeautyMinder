@@ -50,9 +50,9 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 public class WebSecurityConfig {
 
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
-    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
+//    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
+    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(1);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
-
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService;
@@ -115,6 +115,7 @@ public class WebSecurityConfig {
                         .permitAll()
 //                .defaultSuccessUrl("/articles")
                         .failureHandler((request, response, exception) -> {
+                            System.out.println("============== login failed");
                             Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);
 
                             optionalRefreshToken
@@ -188,7 +189,7 @@ public class WebSecurityConfig {
 
     @Bean
     public TokenAuthenticationFilter tokenAuthenticationFilter() {
-        return new TokenAuthenticationFilter(tokenProvider);
+        return new TokenAuthenticationFilter(tokenProvider, refreshTokenService, refreshTokenRepository);
     }
 
     @Bean
@@ -255,6 +256,7 @@ public class WebSecurityConfig {
     }
 
     private void generateNewAccessTokenAndRespond(User user, HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("============== Using refresh token XRT");
         String newAccessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
         String newRefreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
 

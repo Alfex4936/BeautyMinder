@@ -35,8 +35,6 @@ public class CookieUtil {
 
         response.addHeader("Set-Cookie", cookieValue.toString());
     }
-
-
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
         Cookie[] cookies = request.getCookies();
 
