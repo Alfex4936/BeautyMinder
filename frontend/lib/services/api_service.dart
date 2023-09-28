@@ -1,108 +1,129 @@
-import 'dart:convert';
-
-import 'package:beautyminder/models/login_request_model.dart';
-import 'package:beautyminder/models/login_response_model.dart';
-import 'package:beautyminder/models/register_request_model.dart';
-import 'package:beautyminder/models/register_response_model.dart';
-import 'package:http/http.dart' as http;
+import 'package:beautyminder/dto/login_request_model.dart';
+import 'package:beautyminder/dto/login_response_model.dart';
+import 'package:beautyminder/dto/register_request_model.dart';
+import 'package:beautyminder/dto/register_response_model.dart';
+import 'package:dio/dio.dart';  // DIO 패키지를 이용해 HTTP 통신
 
 import '../../config.dart';
+import '../dto/user_model.dart';
 import 'shared_service.dart';
 
 class APIService {
-  static var client = http.Client();
+  // Dio 객체 생성
+  static final Dio client = Dio();
 
-  static Future<bool> login(
-    LoginRequestModel model,
-  ) async {
-    Map<String, String> requestHeaders = {
-      // 'Content-Type': 'application/x-www-urlencoded',
-    };
+  // JSON 헤더 설정
+  static const Map<String, String> jsonHeaders = {
+    'Content-Type': 'application/json',
+  };
 
-    // Prepare data
-    Map<String, String> body = {
-      'username': model.username ?? '',
-      'password': model.password ?? '',
-    };
-
-    var url = Uri.http(
-      Config.apiURL,
-      Config.loginAPI,
+  // 공통 HTTP 옵션 설정 함수
+  static Options _httpOptions(String method, Map<String, String>? headers) {
+    return Options(
+      method: method,
+      headers: headers,
     );
+  }
 
-    var test = Uri(queryParameters: body).query;
-
-    print("====Sending request to $url with body: $body and headers: $requestHeaders"); // Sending request to http://10.0.2.2/login with body: {username: a@com, password: 1234} and headers: {Content-Type: application/x-www-urlencoded}
-    print("Sending request to $test"); // Sending request to http://10.0.2.2/login with body: {username: a@com, password: 1234} and headers: {Content-Type: application/x-www-urlencoded}
-
-    var response = await client.post(
+  // POST 방식으로 JSON 데이터 전송하는 일반 함수
+  static Future<Response> _postJson(String url, Map<String, dynamic> body,
+      {Map<String, String>? headers}) {
+    return client.post(
       url,
-      headers: requestHeaders,
-      encoding: Encoding.getByName('utf-8'),
-      // body: jsonEncode(model.toJson()),
-      // body: Uri(queryParameters: body).query,  // URL encode the body,
-      body: body,  // URL encode the body,
+      options: _httpOptions('POST', headers),
+      data: body,
     );
+  }
 
+  // POST 방식으로 FormData 데이터 전송하는 일반 함수
+  static Future<Response> _postForm(
+      String url, FormData body, {Map<String, String>? headers}) {
+    return client.post(
+      url,
+      options: _httpOptions('POST', headers),
+      data: body,
+    );
+  }
 
+  // 로그인 함수
+  static Future<Result<bool>> login(LoginRequestModel model) async {
+    // URL 생성
+    final url = Uri.http(Config.apiURL, Config.loginAPI).toString();
+    // FormData 생성
+    final formData = FormData.fromMap({
+      'email': model.email ?? '',
+      'password': model.password ?? '',
+    });
 
-    if (response.statusCode == 200) {
-      print("===== body: ${response.body}");
+    try {
+      // POST 요청
+      final response = await _postForm(url, formData);
+      if (response.statusCode == 200) {
+        await SharedService.setLoginDetails(loginResponseJson(response.data));
+        return Result.success(true);
+      }
+      return Result.failure("Login failed");
+    } catch (e) {
+      return Result.failure("An error occurred: $e");
+    }
+  }
 
-      await SharedService.setLoginDetails(
-        loginResponseJson(
-          response.body,
-        ),
+  // 회원가입 함수
+  static Future<Result<RegisterResponseModel>> register(RegisterRequestModel model) async {
+    // URL 생성
+    final url = Uri.http(Config.apiURL, Config.registerAPI).toString();
+
+    try {
+      // POST 요청
+      final response = await _postJson(url, model.toJson());
+      return Result.success(
+          registerResponseJson(response.data as Map<String, dynamic>));
+    } catch (e) {
+      return Result.failure("An error occurred: $e");
+    }
+  }
+
+  // 사용자 프로필 조회 함수
+  static Future<Result<User>> getUserProfile() async {
+    // 로그인 상세 정보 가져오기
+    final user = await SharedService.getUser();
+    final accessToken = await SharedService.getAccessToken();
+    final refreshToken = await SharedService.getRefreshToken();
+    final userId = user?.id ?? '-1';
+
+    // URL 생성
+    final url = Uri.http(Config.apiURL, Config.userProfileAPI + userId).toString();
+
+    // 헤더 설정
+    final headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',  // 리프레시 토큰 적용
+    };
+
+    try {
+      // GET 요청
+      final response = await client.get(
+        url,
+        options: _httpOptions('GET', headers),
       );
 
-      return true;
-    } else {
-      return false;
+      if (response.statusCode == 200) {
+        // 사용자 정보 파싱
+        final user = User.fromJson(response.data as Map<String, dynamic>);
+        return Result.success(user);
+      }
+      return Result.failure("Failed to get user profile");
+    } catch (e) {
+      return Result.failure("An error occurred: $e");
     }
   }
+}
 
-  static Future<RegisterResponseModel> register(
-    RegisterRequestModel model,
-  ) async {
-    Map<String, String> requestHeaders = {
-      'Content-Type': 'application/json',
-    };
+// 결과 클래스
+class Result<T> {
+  final T? value;
+  final String? error;
 
-    var url = Uri.http(
-      Config.apiURL,
-      Config.registerAPI,
-    );
-
-    var response = await client.post(
-      url,
-      headers: requestHeaders,
-      body: jsonEncode(model.toJson()),
-    );
-
-    return registerResponseJson(
-      response.body,
-    );
-  }
-
-  static Future<String> getUserProfile() async {
-    var loginDetails = await SharedService.loginDetails();
-
-    Map<String, String> requestHeaders = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ${loginDetails!.accessToken}'
-    };
-
-    var url = Uri.http(Config.apiURL, Config.userProfileAPI);
-
-    var response = await client.get(
-      url,
-      headers: requestHeaders,
-    );
-
-    if (response.statusCode == 200) {
-      return response.body;
-    } else {
-      return "";
-    }
-  }
+  Result.success(this.value) : error = null;  // 성공
+  Result.failure(this.error) : value = null;  // 실패
 }

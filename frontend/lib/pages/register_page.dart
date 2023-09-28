@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:beautyminder/models/login_request_model.dart';
-import 'package:beautyminder/models/register_request_model.dart';
+import 'package:beautyminder/dto/login_request_model.dart';
+import 'package:beautyminder/dto/register_request_model.dart';
 import 'package:beautyminder/services/api_service.dart';
 import 'package:snippet_coder_utils/FormHelper.dart';
 import 'package:snippet_coder_utils/ProgressHUD.dart';
@@ -19,9 +19,10 @@ class _RegisterPageState extends State<RegisterPage> {
   bool isApiCallProcess = false;
   bool hidePassword = true;
   static final GlobalKey<FormState> globalFormKey = GlobalKey<FormState>();
-  // String? userName;
-  String? password;
+
   String? email;
+  String? password;
+  String? nickname;
 
   @override
   void initState() {
@@ -107,47 +108,20 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ),
-          // Padding(
-          //   padding: const EdgeInsets.only(bottom: 10),
-          //   child: FormHelper.inputFieldWidget(
-          //     context,
-          //     "Username",
-          //     "Username",
-          //     (onValidateVal) {
-          //       if (onValidateVal.isEmpty) {
-          //         return 'Username can\'t be empty.';
-          //       }
-          //
-          //       return null;
-          //     },
-          //     (onSavedVal) => {
-          //       userName = onSavedVal,
-          //     },
-          //     initialValue: "",
-          //     obscureText: false,
-          //     borderFocusColor: Colors.white,
-          //     prefixIconColor: Colors.white,
-          //     borderColor: Colors.white,
-          //     textColor: Colors.white,
-          //     hintColor: Colors.white.withOpacity(0.7),
-          //     borderRadius: 10,
-          //     prefixIcon: const Icon(Icons.person),
-          //   ),
-          // ),
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: FormHelper.inputFieldWidget(
               context,
               "email",
               "Email",
-                  (onValidateVal) {
+              (onValidateVal) {
                 if (onValidateVal.isEmpty) {
                   return 'Email can\'t be empty.';
                 }
 
                 return null;
               },
-                  (onSavedVal) => {
+              (onSavedVal) => {
                 email = onSavedVal,
               },
               initialValue: "",
@@ -198,6 +172,27 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ),
+          // Adding Nickname field
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: FormHelper.inputFieldWidget(
+              context,
+              "nickName",
+              "Nickname (Optional)",
+                  (onValidateVal) => null,
+                  (onSavedVal) => {
+                nickname = onSavedVal,
+              },
+              initialValue: "",
+              borderFocusColor: Colors.white,
+              prefixIconColor: Colors.white,
+              borderColor: Colors.white,
+              textColor: Colors.white,
+              hintColor: Colors.white.withOpacity(0.7),
+              borderRadius: 10,
+              prefixIcon: const Icon(Icons.person),
+            ),
+          ),
 
           const SizedBox(
             height: 20,
@@ -218,12 +213,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   );
 
                   APIService.register(model).then(
-                    (response) {
+                    (result) {
                       setState(() {
                         isApiCallProcess = false;
                       });
 
-                      if (response.user != null) {
+                      if (result.value != null) {
                         FormHelper.showSimpleAlertDialog(
                           context,
                           Config.appName,
@@ -241,7 +236,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         FormHelper.showSimpleAlertDialog(
                           context,
                           Config.appName,
-                          response.message,
+                          result.error ?? "Registration Failed",
                           "OK",
                           () {
                             Navigator.of(context).pop();

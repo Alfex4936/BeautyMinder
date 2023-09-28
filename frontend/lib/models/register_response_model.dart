@@ -20,7 +20,9 @@ class RegisterResponseModel {
   Map<String, dynamic> toJson() {
     final _data = <String, dynamic>{};
     _data['message'] = message;
-    _data['user'] = user!.toJson();
+    if (user != null) {
+      _data['user'] = user!.toJson();
+    }
     return _data;
   }
 }
@@ -42,7 +44,7 @@ class User {
   late final String? nickname;
   late final String? profileImage;
   late final String createdAt;
-  late final List<String> authorities;
+  late final List<Authorities> authorities;
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -52,7 +54,12 @@ class User {
       nickname: json['nickname'],
       profileImage: json['profileImage'],
       createdAt: json['createdAt'],
-      authorities: List<String>.from(json['authorities'].map((obj) => obj.toString())),
+      if (json['authorities'] != null) {
+        authorities = <Authorities>[];
+        json['authorities'].forEach((v) {
+          authorities!.add(new Authorities.fromJson(v));
+        });
+      }
     );
   }
 
@@ -66,5 +73,21 @@ class User {
       'createdAt': createdAt,
       'authorities': authorities,
     };
+  }
+}
+
+class Authorities {
+  Authorities({this.authority});
+
+  late final String? authority;
+
+  Authorities.fromJson(Map<String, dynamic> json) {
+    authority = json['authority'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['authority'] = authority;
+    return data;
   }
 }
