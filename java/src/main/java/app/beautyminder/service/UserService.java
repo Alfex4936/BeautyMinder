@@ -30,11 +30,20 @@ public class UserService {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("이메일이 이미 사용 중입니다.");
         }
+
         // 사용자 생성
         User user = User.builder()
                 .email(dto.getEmail())
                 .password(encoder.encode(dto.getPassword()))
-                .build();
+                .build();  // build the user first
+
+        // Add nickname and profileImage only if they are not null
+        if (dto.getNickname() != null) {
+            user.setNickname(dto.getNickname());
+        }
+        if (dto.getProfileImage() != null) {
+            user.setProfileImage(dto.getProfileImage());
+        }
 
         // 기본 권한 설정 ("ROLE_USER")
         user.addAuthority("ROLE_USER");
@@ -52,6 +61,14 @@ public class UserService {
                 .email(dto.getEmail())
                 .password(encoder.encode(dto.getPassword()))
                 .build();
+
+        // Add nickname and profileImage only if they are not null
+        if (dto.getNickname() != null) {
+            admin.setNickname(dto.getNickname());
+        }
+        if (dto.getProfileImage() != null) {
+            admin.setProfileImage(dto.getProfileImage());
+        }
 
         // 관리자 권한 추가
         admin.addAuthority("ROLE_ADMIN");

@@ -3,6 +3,7 @@ package app.beautyminder.controller.user;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.dto.user.SignUpResponse;
+import app.beautyminder.dto.user.UserProfileResponse;
 import app.beautyminder.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,13 +34,14 @@ public class UserApiController {
     }
 
     // Admin sign-up
-    @PostMapping("/admin")
-    public ResponseEntity<String> signUpAdmin(@RequestBody AddUserRequest request) {
+    @PostMapping("/signup-admin")
+    public ResponseEntity<SignUpResponse> signUpAdmin(@RequestBody AddUserRequest request) {
         try {
-            userService.saveAdmin(request);
-            return ResponseEntity.ok("Admin created successfully");
+            String userId = userService.saveAdmin(request);
+            User user = userService.findById(userId);
+            return ResponseEntity.ok(new SignUpResponse("A user is created", user));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new SignUpResponse(e.getMessage(), null));
         }
     }
 
@@ -61,5 +63,16 @@ public class UserApiController {
     public ResponseEntity<?> deleteUser(@PathVariable String userId) {
         userService.deleteUserAndRelatedData(userId);
         return ResponseEntity.ok("a user is deleted successfully");
+    }
+
+
+    @GetMapping("/me/{userId}")
+    public ResponseEntity<User> getProfile(@PathVariable String userId) {
+        try {
+            User user = userService.findById(userId);
+            return ResponseEntity.ok(user);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

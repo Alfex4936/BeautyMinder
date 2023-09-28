@@ -16,8 +16,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -34,15 +37,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
+import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
 @RequiredArgsConstructor
@@ -50,7 +58,7 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 public class WebSecurityConfig {
 
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
-//    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
+    //    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
     public static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(1);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
     private final TokenProvider tokenProvider;
@@ -60,6 +68,9 @@ public class WebSecurityConfig {
     private final UserDetailService userDetailsService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final Logger logger = LoggerFactory.getLogger(WebSecurityConfig.class);
+
 
     @Bean
     public StrictHttpFirewall httpFirewall() {
@@ -82,10 +93,22 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
         MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector).servletPath("/path");
 
         http.csrf(AbstractHttpConfigurer::disable);
+        http.cors(withDefaults());
         http.anonymous(AbstractHttpConfigurer::disable);
 
 //                http.httpBasic(AbstractHttpConfigurer::disable);
@@ -97,14 +120,15 @@ public class WebSecurityConfig {
 
 
         http.authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/*").permitAll() // preflight request: ex) POST -> OPTIONS -> POST
                 .requestMatchers(mvcMatcherBuilder.pattern("/")).permitAll()
-                .requestMatchers(mvcMatcherBuilder.pattern("/signup")).permitAll()
-                .requestMatchers(mvcMatcherBuilder.pattern("/user")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/admin")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/api/token")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/api/**")).authenticated()
+                .requestMatchers(mvcMatcherBuilder.pattern("/todo/**")).authenticated()
                 .requestMatchers(mvcMatcherBuilder.pattern("/admin/**")).hasAuthority("ROLE_ADMIN")
-                .requestMatchers(mvcMatcherBuilder.pattern("/diaries")).authenticated()
+                .requestMatchers(mvcMatcherBuilder.pattern("/user/signup")).permitAll()
+                .requestMatchers(mvcMatcherBuilder.pattern("/user/**")).authenticated()
                 .requestMatchers(mvcMatcherBuilder.pattern("/protected")).authenticated()
                 .anyRequest().permitAll());
 
@@ -115,7 +139,8 @@ public class WebSecurityConfig {
                         .permitAll()
 //                .defaultSuccessUrl("/articles")
                         .failureHandler((request, response, exception) -> {
-                            System.out.println("============== login failed");
+                            logger.warn("Login failed: {}", exception.getMessage());
+
                             Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);
 
                             optionalRefreshToken
@@ -127,6 +152,8 @@ public class WebSecurityConfig {
                                     );
                         })
                         .successHandler(((request, response, authentication) -> {
+                            logger.info("Login successful for user: {}", authentication.getName());
+
                             app.beautyminder.domain.User user = (app.beautyminder.domain.User) authentication.getPrincipal();
                             String refreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
                             saveRefreshToken(user, refreshToken);
@@ -136,7 +163,7 @@ public class WebSecurityConfig {
                             String accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
 //                            saveAccessToken(user, accessToken);
 
-                            System.out.println("WHAT IS TOKEN: " + accessToken);
+                            logger.info("ACCESS TOKEN: {}", accessToken);
 
                             // Add the Bearer token as a cookie
 //                            CookieUtil.addCookie(response, "BEARER_TOKEN", accessToken, (int) ACCESS_TOKEN_DURATION.toSeconds());
@@ -159,6 +186,8 @@ public class WebSecurityConfig {
                         .logoutUrl("/logout")
                         .invalidateHttpSession(true)
                         .logoutSuccessHandler(((request, response, authentication) -> {
+                            logger.info("Logout successful for user: {}", authentication != null ? authentication.getName() : "Unknown");
+
                             if (authentication != null && authentication.getPrincipal() instanceof app.beautyminder.domain.User user) {
                                 try {
                                     refreshTokenRepository.deleteByUserId(user.getId());
@@ -213,6 +242,8 @@ public class WebSecurityConfig {
     }
 
     private void saveRefreshToken(User user, String newRefreshToken) {
+        logger.debug("Saving refresh token for user: {}", user.getUsername());
+
         LocalDateTime expiresAt = LocalDateTime.now().plus(REFRESH_TOKEN_DURATION);
 
         RefreshToken refreshToken = refreshTokenRepository.findByUserId(user.getId())
@@ -227,6 +258,8 @@ public class WebSecurityConfig {
     }
 
     private void saveAccessToken(User user, String accessToken) {
+        logger.debug("Saving access token for user: {}", user.getUsername());
+
         RefreshToken refreshToken = refreshTokenRepository.findByUserId(user.getId())
                 .map(entity -> entity.update(accessToken))
                 .orElse(new RefreshToken(user, accessToken));
@@ -235,6 +268,8 @@ public class WebSecurityConfig {
     }
 
     private void addRefreshTokenToCookie(HttpServletRequest request, HttpServletResponse response, String refreshToken) {
+        logger.debug("Adding refresh token to cookie.");
+
         int cookieMaxAge = (int) REFRESH_TOKEN_DURATION.toSeconds();
 
         CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
@@ -256,7 +291,8 @@ public class WebSecurityConfig {
     }
 
     private void generateNewAccessTokenAndRespond(User user, HttpServletRequest request, HttpServletResponse response) {
-        System.out.println("============== Using refresh token XRT");
+        logger.info("Generating new access token using refresh token for user: {}", user.getUsername());
+
         String newAccessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
         String newRefreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
 
@@ -268,6 +304,8 @@ public class WebSecurityConfig {
     }
 
     private void handleFailure(HttpServletResponse response) {
+        logger.warn("Handling failure, redirecting to login page.");
+
         try {
             response.sendRedirect("/login?error");
         } catch (IOException e) {

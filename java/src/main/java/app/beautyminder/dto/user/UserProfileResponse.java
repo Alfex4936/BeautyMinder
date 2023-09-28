@@ -5,9 +5,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class AddUserRequest {
+public class UserProfileResponse {
     private String email;
     private String password;
-    private String nickname;
-    private String profileImage;
 }

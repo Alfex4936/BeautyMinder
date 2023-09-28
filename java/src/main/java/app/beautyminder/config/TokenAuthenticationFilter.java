@@ -13,6 +13,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,6 +24,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static app.beautyminder.config.WebSecurityConfig.*;
 
@@ -33,6 +37,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private final static String HEADER_AUTHORIZATION = "Authorization";
     private final static String TOKEN_PREFIX = "Bearer ";
 
+    private static final Logger logger = LoggerFactory.getLogger(TokenAuthenticationFilter.class);
+
+    @Value("${unprotected.routes}")
+    private String[] unprotectedRoutes;
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -41,13 +50,19 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
 //        String path = request.getRequestURI();
 
+        AtomicBoolean isAuth = new AtomicBoolean(true);
+
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             String token = getAccessToken(request);
 
             if (tokenProvider.validToken(token)) {
+                logger.debug("Valid access token found, setting the authentication.");
+
                 Authentication auth = tokenProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } else {
+                logger.debug("Invalid access token. Attempting refresh.");
+
                 // Attempt to use refresh token
                 Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);
 
@@ -56,7 +71,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                         .flatMap(refreshTokenService::findUserByRefreshToken)
                         .ifPresentOrElse(
                                 user -> {
-                                    System.out.println("====== New token");
+                                    logger.info("Valid refresh token found, generating new access tokens.");
+
                                     // Generate new access token and refresh token
                                     String newAccessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
                                     String newRefreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
@@ -76,14 +92,45 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                     saveRefreshToken(user, newRefreshToken);
                                 },
                                 () -> {
-                                    System.out.println("====== None");
+                                    logger.warn("Invalid refresh token. Clearing the security context.");
+
                                     SecurityContextHolder.getContext().setAuthentication(null);
                                     SecurityContextHolder.clearContext();
+
+                                    // block to explicitly handle unauthorized requests
+                                    if (isProtectedRoute(request.getRequestURI())) {
+                                        logger.warn("Unauthorized request, returning 401");
+                                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+                                        // Set the content type of the response to JSON
+                                        response.setContentType("application/json");
+                                        response.setCharacterEncoding("UTF-8");
+
+                                        // Create a JSON object with the error message
+                                        String jsonMessage = "{\"msg\":\"Unauthorized. Please provide a valid token.\"}";
+
+                                        // Write the JSON message to the response
+                                        try {
+                                            response.getWriter().write(jsonMessage);
+                                        } catch (IOException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                        // Don't continue the filter chain
+                                        isAuth.set(false);
+                                    }
                                 });
             }
+
+
         }
 
-        filterChain.doFilter(request, response);
+        if (isAuth.get()) {
+            filterChain.doFilter(request, response);
+        }
+    }
+
+    private boolean isProtectedRoute(String uri) {
+        return Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
     }
 
     private String getAccessToken(HttpServletRequest request) {

@@ -8,10 +8,14 @@ import app.beautyminder.dto.todo.UpdateTaskRequest;
 import app.beautyminder.service.TodoService;
 import app.beautyminder.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -20,6 +24,13 @@ public class TodoApiController {
 
     private final TodoService todoService;
     private final UserService userService;
+
+    @GetMapping("/all")
+    public Map<String, Object> getTodos(@RequestParam("userId") String userId) {
+        User user = userService.findById(userId);
+        List<Todo> existingTodos = todoService.findTodosByUserId(user.getId());
+        return createResponse("Here are the todos", existingTodos.isEmpty() ? Collections.emptyList() : existingTodos);
+    }
 
     @PostMapping("/add")
     public ResponseEntity<AddTodoResponse> addTodo(@RequestBody AddTodoRequest request) {
@@ -75,5 +86,24 @@ public class TodoApiController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new AddTodoResponse(e.getMessage(), null));
         }
+    }
+
+    private Map<String, Object> createResponse(String message, Object data) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("msg", message);
+        response.put("todos", data);
+        return response;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, Object> handleUserNotFound(IllegalArgumentException e) {
+        return createResponse("No such user", Collections.emptyList());
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public AddTodoResponse handleException(Exception e) {
+        return new AddTodoResponse(e.getMessage(), null);
     }
 }
