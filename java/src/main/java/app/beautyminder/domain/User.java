@@ -81,6 +81,10 @@ public class User implements UserDetails {
         return this;
     }
 
+    public void setPassword(String newPassword) {
+        this.password = newPassword;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities.stream()
@@ -125,4 +129,6 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+
 }

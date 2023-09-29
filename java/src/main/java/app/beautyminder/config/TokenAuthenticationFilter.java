@@ -3,9 +3,13 @@ package app.beautyminder.config;
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
+import app.beautyminder.dto.user.LoginResponse;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.service.RefreshTokenService;
 import app.beautyminder.util.CookieUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -33,6 +37,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final static String HEADER_AUTHORIZATION = "Authorization";
     private final static String TOKEN_PREFIX = "Bearer ";
@@ -71,6 +76,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                         .flatMap(refreshTokenService::findUserByRefreshToken)
                         .ifPresentOrElse(
                                 user -> {
+                                    // here should I call /token/refresh ?
                                     logger.info("Valid refresh token found, generating new access tokens.");
 
                                     // Generate new access token and refresh token
@@ -90,6 +96,18 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
                                     // Optionally, update the refresh token in the database
                                     saveRefreshToken(user, newRefreshToken);
+//                                    response.addHeader("Authorization", "Bearer " + newAccessToken);
+
+                                    response.setContentType("application/json");
+                                    response.setCharacterEncoding("utf-8");
+                                    LoginResponse login = new LoginResponse(newAccessToken, newRefreshToken, user);
+
+                                    try {
+                                        String result = objectMapper.registerModule(new JavaTimeModule()).writeValueAsString(login);
+                                        response.getWriter().write(result);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
                                 },
                                 () -> {
                                     logger.warn("Invalid refresh token. Clearing the security context.");
@@ -115,6 +133,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                         } catch (IOException e) {
                                             throw new RuntimeException(e);
                                         }
+
                                         // Don't continue the filter chain
                                         isAuth.set(false);
                                     }
@@ -153,13 +172,20 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private Optional<String> getRefreshTokenFromRequest(HttpServletRequest request) {
-        // Similar to your existing `getRefreshTokenFromRequest` method
+        // First, try to get the refresh token from the header
+        String headerToken = request.getHeader("XRT");
+        if (headerToken != null && !headerToken.isEmpty()) {
+            return Optional.of(headerToken);
+        }
+
+        // If the header didn't contain the token, try to get it from the cookies
         return Optional.ofNullable(request.getCookies())
                 .flatMap(cookies -> Arrays.stream(cookies)
                         .filter(c -> REFRESH_TOKEN_COOKIE_NAME.equals(c.getName()))
                         .findFirst())
                 .map(Cookie::getValue);
     }
+
 
     private void saveRefreshToken(User user, String newRefreshToken) {
         LocalDateTime expiresAt = LocalDateTime.now().plus(REFRESH_TOKEN_DURATION);

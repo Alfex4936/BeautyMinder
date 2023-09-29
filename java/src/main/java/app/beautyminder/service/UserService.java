@@ -1,17 +1,21 @@
 package app.beautyminder.service;
 
+import app.beautyminder.domain.PasswordResetToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.AddUserRequest;
+import app.beautyminder.repository.PasswordResetTokenRepository;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.TodoRepository;
 import app.beautyminder.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -20,6 +24,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final TodoRepository todoRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final EmailService emailService;  // Assume you have an EmailService to send emails
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
 
@@ -135,5 +141,53 @@ public class UserService {
 
         // Delete the User
         userRepository.deleteById(userId);
+    }
+
+    public void requestPasswordReset(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        PasswordResetToken token = createPasswordResetToken(user);
+        emailService.sendPasswordResetEmail(user.getEmail(), token.getToken());
+    }
+
+    private PasswordResetToken createPasswordResetToken(User user) {
+        String token = UUID.randomUUID().toString();
+
+        PasswordResetToken passwordResetToken = PasswordResetToken.builder()
+                .email(user.getEmail())
+                .token(token)
+                .expiryDate(LocalDateTime.now().plusHours(2))
+                .build();
+
+        passwordResetTokenRepository.save(passwordResetToken);
+
+        return passwordResetToken;
+    }
+
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
+
+        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            passwordResetTokenRepository.delete(resetToken);
+            throw new IllegalArgumentException("Token has expired");
+        }
+
+        User user = userRepository.findByEmail(resetToken.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        user.setPassword(encoder.encode(newPassword));
+        userRepository.save(user);
+        passwordResetTokenRepository.delete(resetToken);
+    }
+
+    public void validateResetToken(String token) {
+        PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));
+
+        if (passwordResetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Reset token has expired");
+        }
     }
 }
