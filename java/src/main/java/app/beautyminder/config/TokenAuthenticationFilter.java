@@ -5,9 +5,8 @@ import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.LoginResponse;
 import app.beautyminder.repository.RefreshTokenRepository;
-import app.beautyminder.service.RefreshTokenService;
+import app.beautyminder.service.auth.RefreshTokenService;
 import app.beautyminder.util.CookieUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.FilterChain;
@@ -17,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 import static app.beautyminder.config.WebSecurityConfig.*;
 
@@ -47,15 +48,22 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Value("${unprotected.routes}")
     private String[] unprotectedRoutes;
 
+    private static final Pattern UNPROTECTED_REVIEW_API = Pattern.compile("^/review(/.*)?$");
+
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
+            @NotNull HttpServletRequest request,
+            @NotNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
 //        String path = request.getRequestURI();
 
-        AtomicBoolean isAuth = new AtomicBoolean(true);
+        if (!isProtectedRoute(request.getRequestURI())) { // early return
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+//        AtomicBoolean isAuth = new AtomicBoolean(true);
 
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             String token = getAccessToken(request);
@@ -116,40 +124,33 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                     SecurityContextHolder.clearContext();
 
                                     // block to explicitly handle unauthorized requests
-                                    if (isProtectedRoute(request.getRequestURI())) {
-                                        logger.warn("Unauthorized request, returning 401");
-                                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                    logger.warn("Unauthorized request, returning 401");
+                                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-                                        // Set the content type of the response to JSON
-                                        response.setContentType("application/json");
-                                        response.setCharacterEncoding("UTF-8");
+                                    // Set the content type of the response to JSON
+                                    response.setContentType("application/json");
+                                    response.setCharacterEncoding("UTF-8");
 
-                                        // Create a JSON object with the error message
-                                        String jsonMessage = "{\"msg\":\"Unauthorized. Please provide a valid token.\"}";
+                                    // Create a JSON object with the error message
+                                    String jsonMessage = "{\"msg\":\"Unauthorized. Please provide a valid token.\"}";
 
-                                        // Write the JSON message to the response
-                                        try {
-                                            response.getWriter().write(jsonMessage);
-                                        } catch (IOException e) {
-                                            throw new RuntimeException(e);
-                                        }
-
-                                        // Don't continue the filter chain
-                                        isAuth.set(false);
+                                    // Write the JSON message to the response
+                                    try {
+                                        response.getWriter().write(jsonMessage);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
                                     }
+
                                 });
             }
-
-
         }
 
-        if (isAuth.get()) {
-            filterChain.doFilter(request, response);
-        }
+        filterChain.doFilter(request, response);
     }
 
     private boolean isProtectedRoute(String uri) {
-        return Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
+        return !UNPROTECTED_REVIEW_API.matcher(uri).matches()
+                && Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
     }
 
     private String getAccessToken(HttpServletRequest request) {

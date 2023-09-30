@@ -5,9 +5,9 @@ import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.LoginResponse;
 import app.beautyminder.repository.RefreshTokenRepository;
-import app.beautyminder.service.RefreshTokenService;
-import app.beautyminder.service.UserDetailService;
-import app.beautyminder.service.UserService;
+import app.beautyminder.service.auth.RefreshTokenService;
+import app.beautyminder.service.auth.UserDetailService;
+import app.beautyminder.service.auth.UserService;
 import app.beautyminder.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -59,7 +59,7 @@ public class WebSecurityConfig {
 
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
     //    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
-    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(1);
+    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -129,6 +129,7 @@ public class WebSecurityConfig {
                 .requestMatchers(mvcMatcherBuilder.pattern("/admin/**")).hasAuthority("ROLE_ADMIN")
                 .requestMatchers(mvcMatcherBuilder.pattern("/user/signup")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/user/**")).authenticated()
+                .requestMatchers(mvcMatcherBuilder.pattern("/review/**")).authenticated()
                 .requestMatchers(mvcMatcherBuilder.pattern("/protected")).authenticated()
                 .anyRequest().permitAll());
 
@@ -161,12 +162,7 @@ public class WebSecurityConfig {
 
                             // Generate access token
                             String accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
-//                            saveAccessToken(user, accessToken);
-
                             logger.info("ACCESS TOKEN: {}", accessToken);
-
-                            // Add the Bearer token as a cookie
-//                            CookieUtil.addCookie(response, "BEARER_TOKEN", accessToken, (int) ACCESS_TOKEN_DURATION.toSeconds());
 
                             response.setContentType("application/json");
                             response.setCharacterEncoding("utf-8");
@@ -195,10 +191,10 @@ public class WebSecurityConfig {
                                     CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
                                 } catch (Exception e) {
                                     // log the error
+                                    logger.error(e.getMessage());
                                 }
                             }
 
-//                    CookieUtil.deleteCookie(request, response, "BEARER_TOKEN");
                             SecurityContextHolder.getContext().setAuthentication(null);
 
                             response.sendRedirect("/login");

@@ -6,11 +6,10 @@ import app.beautyminder.domain.User;
 import app.beautyminder.dto.CreateAccessTokenRequest;
 import app.beautyminder.dto.CreateAccessTokenResponse;
 import app.beautyminder.repository.RefreshTokenRepository;
-import app.beautyminder.service.RefreshTokenService;
-import app.beautyminder.service.TokenService;
+import app.beautyminder.service.auth.RefreshTokenService;
+import app.beautyminder.service.auth.TokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +28,7 @@ import static app.beautyminder.config.WebSecurityConfig.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/token") // Base path for all routes in this controller
+@RequestMapping("/token") // /token/api
 public class TokenApiController {
 
     private final TokenService tokenService;
@@ -71,7 +70,6 @@ public class TokenApiController {
     }
 
     private Optional<String> getRefreshTokenFromRequest(HttpServletRequest request) {
-        // Similar to your existing `getRefreshTokenFromRequest` method in your filter
         return Optional.ofNullable(request.getCookies())
                 .flatMap(cookies -> Arrays.stream(cookies)
                         .filter(c -> REFRESH_TOKEN_COOKIE_NAME.equals(c.getName()))

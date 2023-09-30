@@ -6,7 +6,7 @@ import app.beautyminder.dto.todo.AddTodoRequest;
 import app.beautyminder.dto.todo.AddTodoResponse;
 import app.beautyminder.dto.todo.UpdateTaskRequest;
 import app.beautyminder.service.TodoService;
-import app.beautyminder.service.UserService;
+import app.beautyminder.service.auth.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

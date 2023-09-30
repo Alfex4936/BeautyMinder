@@ -4,7 +4,7 @@ import app.beautyminder.config.jwt.JwtProperties;
 import app.beautyminder.domain.User;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.UserRepository;
-import app.beautyminder.service.UserService;
+import app.beautyminder.service.auth.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.*;
