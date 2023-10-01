@@ -15,16 +15,22 @@ public class CosmeticService {
 
     private final CosmeticRepository cosmeticRepository;
 
+    public List<Cosmetic> getAllCosmetics() {
+        return cosmeticRepository.findAll();
+    }
+
     public Cosmetic createCosmetic(Cosmetic cosmetic) {
         return cosmeticRepository.save(cosmetic);
     }
+
 
     public Cosmetic updateCosmetic(Cosmetic cosmetic) {
         return cosmeticRepository.save(cosmetic);
     }
 
-    public void deleteCosmetic(String id) {
-        cosmeticRepository.deleteById(id);
+
+    public Cosmetic getCosmeticById(String id) {
+        return cosmeticRepository.findById(id).orElse(null);
     }
 
     public List<Cosmetic> findCosmeticsByUserId(String userId) {
@@ -57,5 +63,24 @@ public class CosmeticService {
 
     public List<Cosmetic> findCosmeticsByExpirationDate(LocalDate expirationDate) {
         return cosmeticRepository.findByExpirationDate(expirationDate);
+    }
+
+    public Cosmetic saveCosmetic(Cosmetic cosmetic) {
+        return cosmeticRepository.save(cosmetic);
+    }
+
+    public Cosmetic updateCosmetic(String id, Cosmetic cosmeticDetails) {
+        if (cosmeticRepository.existsById(id)) {
+            return cosmeticRepository.save(cosmeticDetails);
+        }
+        return null;
+    }
+
+    public boolean deleteCosmetic(String id) {
+        if (cosmeticRepository.existsById(id)) {
+            cosmeticRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }

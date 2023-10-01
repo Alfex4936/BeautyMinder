@@ -26,6 +26,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -55,6 +56,7 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 
 @RequiredArgsConstructor
 @Configuration
+//@EnableWebSecurity
 public class WebSecurityConfig {
 
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
@@ -127,6 +129,7 @@ public class WebSecurityConfig {
                 .requestMatchers(mvcMatcherBuilder.pattern("/api/**")).authenticated()
                 .requestMatchers(mvcMatcherBuilder.pattern("/todo/**")).authenticated()
                 .requestMatchers(mvcMatcherBuilder.pattern("/admin/**")).hasAuthority("ROLE_ADMIN")
+                .requestMatchers(mvcMatcherBuilder.pattern("/actuator/**")).hasRole("ADMIN")
                 .requestMatchers(mvcMatcherBuilder.pattern("/user/signup")).permitAll()
                 .requestMatchers(mvcMatcherBuilder.pattern("/user/**")).authenticated()
                 .requestMatchers(mvcMatcherBuilder.pattern("/review/**")).authenticated()

@@ -1,6 +1,7 @@
 package app.beautyminder.config.jwt;
 
 import app.beautyminder.domain.User;
+import app.beautyminder.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
@@ -8,10 +9,13 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
@@ -21,6 +25,7 @@ import java.util.Set;
 public class TokenProvider {
 
     private final JwtProperties jwtProperties;
+    private final UserRepository userRepository;
 
     public String generateToken(User user, Duration expiredAt) {
         Date now = new Date();
@@ -56,10 +61,20 @@ public class TokenProvider {
 
     public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token);
-        Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+//        Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+        
+        // Fetch the user from the database using the email (or id, or whatever identifies the user in your token)
+        User user = userRepository.findByEmail(claims.getSubject()).orElse(null);
 
-        return new UsernamePasswordAuthenticationToken(new org.springframework.security.core.userdetails.User(claims.getSubject
-                (), "", authorities), token, authorities);
+
+        // Handle the scenario when the user is not found
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found with email: " + claims.getSubject());
+        }
+
+        Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
+
+        return new UsernamePasswordAuthenticationToken(new org.springframework.security.core.userdetails.User(claims.getSubject(), "", authorities), token, authorities);
     }
 
     public Long getUserId(String token) {

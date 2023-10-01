@@ -24,7 +24,6 @@ public class RefreshToken {
 
     @CreatedDate
     private LocalDateTime createdAt;
-
     private LocalDateTime expiresAt;
 
     @Builder

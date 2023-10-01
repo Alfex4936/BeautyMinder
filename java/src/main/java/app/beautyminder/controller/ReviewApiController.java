@@ -2,7 +2,6 @@ package app.beautyminder.controller;
 
 import app.beautyminder.domain.Review;
 import app.beautyminder.dto.ReviewDTO;
-import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.service.FileStorageService;
 import app.beautyminder.service.ReviewService;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class ReviewApiController {
 
     private final ReviewService reviewService;
-    private final ReviewRepository reviewRepository;
     private final FileStorageService fileStorageService;
 
     @PostMapping("/new")
@@ -38,8 +36,8 @@ public class ReviewApiController {
     @PutMapping("/update/{id}")
     public ResponseEntity<Review> updateReview(
             @PathVariable("id") String id,
-            @RequestBody Review reviewDetails,
-            @RequestParam(value = "images", required = false) MultipartFile[] images) {
+            @RequestPart Review reviewDetails,
+            @RequestPart(value = "images", required = false) MultipartFile[] images) {
         try {
             Review updatedReview = reviewService.updateReview(id, reviewDetails, images);
             return ResponseEntity.ok(updatedReview);

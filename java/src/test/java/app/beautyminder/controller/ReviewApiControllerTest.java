@@ -49,20 +49,13 @@ class ReviewApiControllerTest {
     @Autowired
     RefreshTokenRepository refreshTokenRepository;
 
-    private String accessToken;
-    private String refreshToken;
 
 
     @BeforeEach
-    public void mockMvcSetUp() throws InterruptedException {
+    public void mockMvcSetUp() {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();
-
-//        Thread.sleep(1000);
-
-//        userRepository.deleteUserByEmail("test@com");
-//        refreshTokenRepository.deleteByRefreshToken(refreshToken);
     }
 
     @Order(1)

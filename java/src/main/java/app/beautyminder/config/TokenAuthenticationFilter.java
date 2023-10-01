@@ -21,12 +21,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
@@ -49,30 +51,37 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private String[] unprotectedRoutes;
 
     private static final Pattern UNPROTECTED_REVIEW_API = Pattern.compile("^/review(/.*)?$");
+//    private static final Pattern UNPROTECTED_ACTUATOR_API = Pattern.compile("^/actuator(/.*)?$");
 
     @Override
     protected void doFilterInternal(
-            @NotNull HttpServletRequest request,
-            @NotNull HttpServletResponse response,
-            @NonNull FilterChain filterChain) throws ServletException, IOException {
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
 //        String path = request.getRequestURI();
 
+        logger.debug("Hello token filter?");
+
         if (!isProtectedRoute(request.getRequestURI())) { // early return
+            logger.debug("Yes! " + request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
 
-//        AtomicBoolean isAuth = new AtomicBoolean(true);
+        AtomicBoolean isAuth = new AtomicBoolean(true);
 
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+//        if (SecurityContextHolder.getContext().getAuthentication() == null) {
             String token = getAccessToken(request);
 
             if (tokenProvider.validToken(token)) {
                 logger.debug("Valid access token found, setting the authentication.");
-
                 Authentication auth = tokenProvider.getAuthentication(token);
+                Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
+                logger.debug("User Authorities: {}", authorities);
+
                 SecurityContextHolder.getContext().setAuthentication(auth);
+
             } else {
                 logger.debug("Invalid access token. Attempting refresh.");
 
@@ -93,7 +102,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
                                     // Update the Security Context
                                     Authentication newAuth = tokenProvider.getAuthentication(newAccessToken);
+                                    user.getAuthorities();
                                     SecurityContextHolder.getContext().setAuthentication(newAuth);
+
+                                    Collection<? extends GrantedAuthority> authorities = newAuth.getAuthorities();
+                                    logger.debug("Ref User Authorities: {}", authorities);
 
                                     // Update the HTTP headers and cookies
                                     response.addHeader(HEADER_AUTHORIZATION, TOKEN_PREFIX + newAccessToken);
@@ -112,7 +125,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
                                     try {
                                         String result = objectMapper.registerModule(new JavaTimeModule()).writeValueAsString(login);
-                                        response.getWriter().write(result);
+//                                        objectMapper.writeValue(response.getWriter(), result);
+                                        response.getOutputStream().write(result.getBytes());
                                     } catch (IOException e) {
                                         throw new RuntimeException(e);
                                     }
@@ -135,22 +149,30 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                     String jsonMessage = "{\"msg\":\"Unauthorized. Please provide a valid token.\"}";
 
                                     // Write the JSON message to the response
+
                                     try {
-                                        response.getWriter().write(jsonMessage);
+//                                        response.getWriter().write(jsonMessage);
+
+                                        response.getOutputStream().write(jsonMessage.getBytes());
                                     } catch (IOException e) {
                                         throw new RuntimeException(e);
                                     }
 
+                                    isAuth.set(false);
                                 });
             }
-        }
+//        }
 
-        filterChain.doFilter(request, response);
+        if (isAuth.get()) {
+            filterChain.doFilter(request, response);
+        }
     }
 
     private boolean isProtectedRoute(String uri) {
-        return !UNPROTECTED_REVIEW_API.matcher(uri).matches()
-                && Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
+        return
+        !UNPROTECTED_REVIEW_API.matcher(uri).matches() &&
+//        !UNPROTECTED_ACTUATOR_API.matcher(uri).matches() &&
+                Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
     }
 
     private String getAccessToken(HttpServletRequest request) {
@@ -201,6 +223,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
         refreshTokenRepository.save(refreshToken);
     }
+
 
 }
 

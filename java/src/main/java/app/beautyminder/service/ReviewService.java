@@ -1,5 +1,6 @@
 package app.beautyminder.service;
 
+import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
 import app.beautyminder.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -49,4 +51,11 @@ public class ReviewService {
     }
 
 
+    public List<Review> getAllReviewsByCosmetic(Cosmetic cosmetic) {
+        return reviewRepository.findByCosmetic(cosmetic);
+    }
+
+    public Optional<Review> getReviewById(String id) {
+        return reviewRepository.findById(id);
+    }
 }

@@ -1,15 +1,14 @@
 package app.beautyminder.domain;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document(collection = "cosmetics")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -20,6 +19,10 @@ public class Cosmetic {
     private String id;
 
     private String name;
+
+    @Setter
+    private List<String> images = new ArrayList<>();
+
     private LocalDate expirationDate;
     private LocalDateTime createdDate;
     private LocalDate purchasedDate;

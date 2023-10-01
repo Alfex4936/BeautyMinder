@@ -12,6 +12,11 @@ repositories {
     mavenCentral()
 }
 
+bootJar {
+    mainClass = 'app.beautyminder.BeautyMinderApplication'
+    archiveFileName = "beautyminder-${version}.${archiveExtension.get()}"
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'

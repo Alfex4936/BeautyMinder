@@ -62,7 +62,6 @@ public class TokenApiController {
             tokens.put("accessToken", newAccessToken);
             tokens.put("refreshToken", newRefreshToken);
 
-
             return new ResponseEntity<>(tokens, HttpStatus.OK);
         }
 
