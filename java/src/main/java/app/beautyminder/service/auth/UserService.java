@@ -25,12 +25,9 @@ public class UserService {
     private final TodoRepository todoRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
-    private final EmailService emailService;  // Assume you have an EmailService to send emails
+    private final EmailService emailService;
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
-
-//    private final BCryptPasswordEncoder bCryptPasswordEncoder;  // 비용이 높은 작업
-
 
     // 일반 사용자 저장
     public String saveUser(AddUserRequest dto) {

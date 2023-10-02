@@ -43,7 +43,6 @@ public class TodoApiController {
                 return ResponseEntity.badRequest().body(new AddTodoResponse("Todo already exists for this date", null));
             }
 
-
             Todo todo = Todo.builder()
                     .date(request.getDate())
                     .morningTasks(request.getMorningTasks())

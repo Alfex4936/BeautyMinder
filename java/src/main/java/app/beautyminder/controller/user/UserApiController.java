@@ -54,13 +54,6 @@ public class UserApiController {
         return ResponseEntity.ok("Logged out successfully");
     }
 
-    // Protected endpoint for admin only
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @GetMapping("/protected")
-    public ResponseEntity<String> adminProtected() {
-        return ResponseEntity.ok("Admin protected route accessed");
-    }
-
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable String userId) {
         userService.deleteUserAndRelatedData(userId);

@@ -62,7 +62,7 @@ public class TokenProvider {
     public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token);
 //        Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
-        
+
         // Fetch the user from the database using the email (or id, or whatever identifies the user in your token)
         User user = userRepository.findByEmail(claims.getSubject()).orElse(null);
 

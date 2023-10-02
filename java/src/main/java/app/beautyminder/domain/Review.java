@@ -3,12 +3,10 @@ package app.beautyminder.domain;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +21,6 @@ public class Review {
     @Id
     private String id;
 
-    private String title;
     private String content;
     private Integer rating;
 
@@ -42,8 +39,7 @@ public class Review {
     private LocalDateTime createdAt;
 
     @Builder
-    public Review(String title, String content, Integer rating){
-        this.title = title;
+    public Review(String content, Integer rating) {
         this.content = content;
         this.rating = rating;
     }

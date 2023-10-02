@@ -3,6 +3,7 @@ package app.beautyminder.config.error;
 import app.beautyminder.config.error.exception.BusinessBaseException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,6 +23,12 @@ public class GlobalExceptionHandler {
     protected ResponseEntity<ErrorResponse> handle(BusinessBaseException e) {
         log.error("BusinessException", e);
         return createErrorResponseEntity(e.getErrorCode());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    protected ResponseEntity<ErrorResponse> handle(AccessDeniedException e) {
+        log.error("AccessBaseException", e);
+        return createErrorResponseEntity(ErrorCode.ACCESS_DENIED_ERROR);
     }
 
     @ExceptionHandler(Exception.class)

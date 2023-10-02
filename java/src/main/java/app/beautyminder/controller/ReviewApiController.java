@@ -26,7 +26,6 @@ public class ReviewApiController {
             @RequestPart("images") MultipartFile[] images) {
 
         Review review = Review.builder()
-                .title(reviewDTO.getTitle())
                 .content(reviewDTO.getContent())
                 .rating(reviewDTO.getRating())
                 .build();

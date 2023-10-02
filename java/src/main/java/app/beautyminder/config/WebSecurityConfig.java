@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -56,12 +57,13 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 
 @RequiredArgsConstructor
 @Configuration
-//@EnableWebSecurity
+@EnableMethodSecurity
+@EnableWebSecurity
 public class WebSecurityConfig {
 
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
     //    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
-    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
+    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofSeconds(3000);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -112,29 +114,21 @@ public class WebSecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable);
         http.cors(withDefaults());
         http.anonymous(AbstractHttpConfigurer::disable);
-
 //                http.httpBasic(AbstractHttpConfigurer::disable);
 
         http.sessionManagement(s -> s
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        http.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-
-
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/*").permitAll() // preflight request: ex) POST -> OPTIONS -> POST
-                .requestMatchers(mvcMatcherBuilder.pattern("/")).permitAll()
-                .requestMatchers(mvcMatcherBuilder.pattern("/admin")).permitAll()
-                .requestMatchers(mvcMatcherBuilder.pattern("/api/token")).permitAll()
-                .requestMatchers(mvcMatcherBuilder.pattern("/api/**")).authenticated()
-                .requestMatchers(mvcMatcherBuilder.pattern("/todo/**")).authenticated()
-                .requestMatchers(mvcMatcherBuilder.pattern("/admin/**")).hasAuthority("ROLE_ADMIN")
-                .requestMatchers(mvcMatcherBuilder.pattern("/actuator/**")).hasRole("ADMIN")
-                .requestMatchers(mvcMatcherBuilder.pattern("/user/signup")).permitAll()
-                .requestMatchers(mvcMatcherBuilder.pattern("/user/**")).authenticated()
-                .requestMatchers(mvcMatcherBuilder.pattern("/review/**")).authenticated()
-                .requestMatchers(mvcMatcherBuilder.pattern("/protected")).authenticated()
-                .anyRequest().permitAll());
+                .requestMatchers(antMatcher("/")).permitAll()
+//                .requestMatchers(antMatcher("/api/**")).permitAll()
+                .requestMatchers(antMatcher(HttpMethod.POST, "/user/forgot-password")).permitAll()
+                .requestMatchers(antMatcher(HttpMethod.GET, "/user/reset-password")).permitAll()
+                .requestMatchers(antMatcher(HttpMethod.POST, "/user/reset-password")).permitAll()
+                .requestMatchers(antMatcher("/gpt/**")).permitAll()
+                .requestMatchers(antMatcher("/login")).permitAll()
+                .anyRequest().authenticated());
 
         http.formLogin(f -> f
                         .loginPage("/login")
@@ -210,6 +204,7 @@ public class WebSecurityConfig {
                         new AntPathRequestMatcher("/api/**")));
 
         http.authenticationProvider(authenticationProvider());
+        http.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

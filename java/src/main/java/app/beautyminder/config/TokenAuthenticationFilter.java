@@ -50,14 +50,14 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Value("${unprotected.routes}")
     private String[] unprotectedRoutes;
 
-    private static final Pattern UNPROTECTED_REVIEW_API = Pattern.compile("^/review(/.*)?$");
+//    private static final Pattern UNPROTECTED_REVIEW_API = Pattern.compile("^/review(/.*)?$");
 //    private static final Pattern UNPROTECTED_ACTUATOR_API = Pattern.compile("^/actuator(/.*)?$");
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
+            @NotNull HttpServletResponse response,
+            @NotNull FilterChain filterChain) throws ServletException, IOException {
 
 //        String path = request.getRequestURI();
 
@@ -81,7 +81,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                 logger.debug("User Authorities: {}", authorities);
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
-
             } else {
                 logger.debug("Invalid access token. Attempting refresh.");
 
@@ -102,9 +101,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
                                     // Update the Security Context
                                     Authentication newAuth = tokenProvider.getAuthentication(newAccessToken);
-                                    user.getAuthorities();
                                     SecurityContextHolder.getContext().setAuthentication(newAuth);
-
                                     Collection<? extends GrantedAuthority> authorities = newAuth.getAuthorities();
                                     logger.debug("Ref User Authorities: {}", authorities);
 
@@ -170,7 +167,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isProtectedRoute(String uri) {
         return
-        !UNPROTECTED_REVIEW_API.matcher(uri).matches() &&
+//        !UNPROTECTED_REVIEW_API.matcher(uri).matches() &&
 //        !UNPROTECTED_ACTUATOR_API.matcher(uri).matches() &&
                 Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
     }

@@ -2,17 +2,11 @@ package app.beautyminder.controller;
 
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
-import app.beautyminder.dto.ReviewDTO;
-import app.beautyminder.service.CosmeticService;
-import app.beautyminder.service.FileStorageService;
+import app.beautyminder.service.cosmetic.CosmeticService;
 import app.beautyminder.service.ReviewService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
