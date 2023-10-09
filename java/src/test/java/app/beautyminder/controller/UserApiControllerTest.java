@@ -60,7 +60,7 @@ class UserApiControllerTest {
 
 
     @BeforeEach
-    public void mockMvcSetUp() throws InterruptedException {
+    public void mockMvcSetUp() {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(context)
                 .apply(springSecurity())
                 .build();

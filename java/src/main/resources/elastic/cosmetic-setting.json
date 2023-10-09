@@ -1,0 +1,63 @@
+{
+  "analysis": {
+    "char_filter": {
+      "whitespace_remove": {
+        "type": "pattern_replace",
+        "pattern": " ",
+        "replacement": ""
+      }
+    },
+    "filter": {
+      "synonym": {
+        "type": "synonym",
+        "synonyms": [
+          "게하, 게스트하우스"
+        ]
+      }
+    },
+    "tokenizer": {
+      "seunjeon_tokenizer": {
+        "type": "seunjeon_tokenizer",
+        "index_eojeol": false,
+        "decompound": true,
+        "pos_tagging": false,
+        "index_poses": [
+          "UNK",
+          "EP",
+          "I",
+          "M",
+          "N",
+          "SL",
+          "SH",
+          "SN",
+          "V",
+          "VCP",
+          "XP",
+          "XS",
+          "XR"
+        ]
+      }
+    },
+    "analyzer": {
+      "seunjeon": {
+        "type": "custom",
+        "tokenizer": "seunjeon_tokenizer"
+      },
+      "seunjeon_search": {
+        "tokenizer": "seunjeon_tokenizer",
+        "filter": [
+          "synonym"
+        ]
+      },
+      "keyword": {
+        "char_filter": [
+          "whitespace_remove"
+        ],
+        "tokenizer": "keyword",
+        "filter": [
+          "lowercase"
+        ]
+      }
+    }
+  }
+}

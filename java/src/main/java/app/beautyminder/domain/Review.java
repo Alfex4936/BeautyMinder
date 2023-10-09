@@ -24,7 +24,7 @@ public class Review {
     private String content;
     private Integer rating;
 
-    @Setter
+    @Builder.Default
     private List<String> images = new ArrayList<>();
 
     @DBRef

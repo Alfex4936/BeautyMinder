@@ -17,7 +17,6 @@ public class EmailService {
 
     private String FROM_ADDRESS;
 
-    // Other configurations for JavaMailSender
     @Autowired
     private JavaMailSender emailSender;
 

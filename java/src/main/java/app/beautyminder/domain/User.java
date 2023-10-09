@@ -53,6 +53,9 @@ public class User implements UserDetails {
 
     private Set<String> authorities = new HashSet<>();
 
+    @Setter
+    private Set<String> cosmeticIds = new HashSet<>(); // favourites
+
     @Builder
     public User(String email, String password, String nickname) {
         this.email = email;
@@ -92,6 +95,16 @@ public class User implements UserDetails {
         return authorities.stream()
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
+    }
+
+    public User addCosmetic(String cosmeticId) {
+        this.cosmeticIds.add(cosmeticId);
+        return this;
+    }
+
+    public User removeCosmetic(String cosmeticId) {
+        this.cosmeticIds.remove(cosmeticId);
+        return this;
     }
 
     public void addAuthority(String authority) {

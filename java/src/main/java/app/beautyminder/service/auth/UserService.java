@@ -14,8 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -41,6 +40,10 @@ public class UserService {
                 .email(dto.getEmail())
                 .password(encoder.encode(dto.getPassword()))
                 .build();  // build the user first
+
+        if (user.getCosmeticIds() == null) {
+            user.setCosmeticIds(new HashSet<>());
+        }
 
         // Add nickname and profileImage only if they are not null
         if (dto.getNickname() != null) {
@@ -123,6 +126,24 @@ public class UserService {
     public User findByEmailAndPassword(String email, String password) {
         return userRepository.findByEmailAndPassword(email, password)
                 .orElseThrow(() -> new IllegalArgumentException("이메일 혹은 비밀번호가 틀립니다."));
+    }
+
+    public User addCosmeticById(String userId, String cosmeticId) {
+        return userRepository.findById(userId)
+                .map(user -> {
+                    user.addCosmetic(cosmeticId);
+                    return userRepository.save(user);  // Save the updated user to the database
+                })
+                .orElseThrow(() -> new NoSuchElementException("No user found with id: " + userId));
+    }
+
+    public User removeCosmeticById(String userId, String cosmeticId) {
+        return userRepository.findById(userId)
+                .map(user -> {
+                    user.removeCosmetic(cosmeticId);
+                    return userRepository.save(user);  // Save the updated user to the database
+                })
+                .orElseThrow(() -> new NoSuchElementException("No user found with id: " + userId));
     }
 
     /*

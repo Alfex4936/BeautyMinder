@@ -93,7 +93,11 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/img/**"))
                 .requestMatchers(antMatcher("/css/**"))
                 .requestMatchers(antMatcher("/js/**"))
-                .requestMatchers(antMatcher("/static/**"));
+                .requestMatchers(antMatcher("/static/**"))
+                // swagger
+                .requestMatchers(antMatcher("/v3/api-docs/**"))
+                .requestMatchers(antMatcher("/proxy/**"))
+                .requestMatchers(antMatcher("/swagger-ui/**"));
     }
 
     @Bean
@@ -122,12 +126,15 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/*").permitAll() // preflight request: ex) POST -> OPTIONS -> POST
                 .requestMatchers(antMatcher("/")).permitAll()
-//                .requestMatchers(antMatcher("/api/**")).permitAll()
+                .requestMatchers(antMatcher("/api/**")).permitAll()
                 .requestMatchers(antMatcher(HttpMethod.POST, "/user/forgot-password")).permitAll()
                 .requestMatchers(antMatcher(HttpMethod.GET, "/user/reset-password")).permitAll()
                 .requestMatchers(antMatcher(HttpMethod.POST, "/user/reset-password")).permitAll()
+                .requestMatchers(antMatcher("/user/signup")).permitAll()
+                .requestMatchers(antMatcher("/user/signup-admin")).permitAll()
                 .requestMatchers(antMatcher("/gpt/**")).permitAll()
                 .requestMatchers(antMatcher("/login")).permitAll()
+                .requestMatchers(antMatcher("/login?error")).permitAll()
                 .anyRequest().authenticated());
 
         http.formLogin(f -> f
@@ -299,6 +306,20 @@ public class WebSecurityConfig {
 
     private void handleFailure(HttpServletResponse response) {
         logger.warn("Handling failure, redirecting to login page.");
+
+        // Set the content type of the response to JSON
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        // Create a JSON object with the error message
+        String jsonMessage = "{\"msg\":\"Unauthorized. Please provide correct user info.\"}";
+
+        // Write the JSON message to the response
+        try {
+            response.getOutputStream().write(jsonMessage.getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         try {
             response.sendRedirect("/login?error");

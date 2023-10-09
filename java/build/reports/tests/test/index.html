@@ -20,13 +20,13 @@
 <tr>
 <td>
 <div class="infoBox" id="tests">
-<div class="counter">1</div>
+<div class="counter">11</div>
 <p>tests</p>
 </div>
 </td>
 <td>
 <div class="infoBox" id="failures">
-<div class="counter">0</div>
+<div class="counter">11</div>
 <p>failures</p>
 </div>
 </td>
@@ -38,7 +38,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">1.533s</div>
+<div class="counter">0.009s</div>
 <p>duration</p>
 </div>
 </td>
@@ -47,8 +47,8 @@
 </div>
 </td>
 <td>
-<div class="infoBox success" id="successRate">
-<div class="percent">100%</div>
+<div class="infoBox failures" id="successRate">
+<div class="percent">0%</div>
 <p>successful</p>
 </div>
 </td>
@@ -58,13 +58,65 @@
 <div id="tabs">
 <ul class="tabLinks">
 <li>
-<a href="#tab0">Packages</a>
+<a href="#tab0">Failed tests</a>
 </li>
 <li>
-<a href="#tab1">Classes</a>
+<a href="#tab1">Packages</a>
+</li>
+<li>
+<a href="#tab2">Classes</a>
 </li>
 </ul>
 <div id="tab0" class="tab">
+<h2>Failed tests</h2>
+<ul class="linkList">
+<li>
+<a href="classes/app.beautyminder.config.jwt.TokenProviderTest.html">TokenProviderTest</a>.
+<a href="classes/app.beautyminder.config.jwt.TokenProviderTest.html#generateToken()">generateToken(): 유저 정보와 만료 기간을 전달해 토큰을 만들 수 있다.</a>
+</li>
+<li>
+<a href="classes/app.beautyminder.config.jwt.TokenProviderTest.html">TokenProviderTest</a>.
+<a href="classes/app.beautyminder.config.jwt.TokenProviderTest.html#getAuthentication()">getAuthentication(): 토큰 기반으로 인증정보를 가져올 수 있다.</a>
+</li>
+<li>
+<a href="classes/app.beautyminder.config.jwt.TokenProviderTest.html">TokenProviderTest</a>.
+<a href="classes/app.beautyminder.config.jwt.TokenProviderTest.html#getUserId()">getUserId(): 토큰으로 유저 ID를 가져올 수 있다.</a>
+</li>
+<li>
+<a href="classes/app.beautyminder.config.jwt.TokenProviderTest.html">TokenProviderTest</a>.
+<a href="classes/app.beautyminder.config.jwt.TokenProviderTest.html#validToken_invalidToken()">validToken(): 만료된 토큰인 경우에 유효성 검증에 실패한다.</a>
+</li>
+<li>
+<a href="classes/app.beautyminder.config.jwt.TokenProviderTest.html">TokenProviderTest</a>.
+<a href="classes/app.beautyminder.config.jwt.TokenProviderTest.html#validToken_validToken()">validToken(): 유효한 토큰인 경우에 유효성 검증에 성공한다.</a>
+</li>
+<li>
+<a href="classes/app.beautyminder.controller.ReviewApiControllerTest.html">ReviewApiControllerTest</a>.
+<a href="classes/app.beautyminder.controller.ReviewApiControllerTest.html#testUpload()">Test Review add</a>
+</li>
+<li>
+<a href="classes/app.beautyminder.controller.TokenApiControllerTest.html">TokenApiControllerTest</a>.
+<a href="classes/app.beautyminder.controller.TokenApiControllerTest.html#createNewAccessToken()">createNewAccessToken: 새로운 액세스 토큰을 발급한다.</a>
+</li>
+<li>
+<a href="classes/app.beautyminder.controller.UserApiControllerTest.html">UserApiControllerTest</a>.
+<a href="classes/app.beautyminder.controller.UserApiControllerTest.html#testAddTodo()">Test Add Todo</a>
+</li>
+<li>
+<a href="classes/app.beautyminder.controller.UserApiControllerTest.html">UserApiControllerTest</a>.
+<a href="classes/app.beautyminder.controller.UserApiControllerTest.html#testDeleteUser()">Delete a user</a>
+</li>
+<li>
+<a href="classes/app.beautyminder.controller.UserApiControllerTest.html">UserApiControllerTest</a>.
+<a href="classes/app.beautyminder.controller.UserApiControllerTest.html#testLogin()">Test Login</a>
+</li>
+<li>
+<a href="classes/app.beautyminder.controller.UserApiControllerTest.html">UserApiControllerTest</a>.
+<a href="classes/app.beautyminder.controller.UserApiControllerTest.html#testSignup()">Test Registration</a>
+</li>
+</ul>
+</div>
+<div id="tab1" class="tab">
 <h2>Packages</h2>
 <table>
 <thead>
@@ -79,19 +131,29 @@
 </thead>
 <tbody>
 <tr>
-<td class="success">
+<td class="failures">
+<a href="packages/app.beautyminder.config.jwt.html">app.beautyminder.config.jwt</a>
+</td>
+<td>5</td>
+<td>5</td>
+<td>0</td>
+<td>0.005s</td>
+<td class="failures">0%</td>
+</tr>
+<tr>
+<td class="failures">
 <a href="packages/app.beautyminder.controller.html">app.beautyminder.controller</a>
 </td>
-<td>1</td>
+<td>6</td>
+<td>6</td>
 <td>0</td>
-<td>0</td>
-<td>1.533s</td>
-<td class="success">100%</td>
+<td>0.004s</td>
+<td class="failures">0%</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div id="tab1" class="tab">
+<div id="tab2" class="tab">
 <h2>Classes</h2>
 <table>
 <thead>
@@ -106,14 +168,44 @@
 </thead>
 <tbody>
 <tr>
-<td class="success">
+<td class="failures">
+<a href="classes/app.beautyminder.config.jwt.TokenProviderTest.html">app.beautyminder.config.jwt.TokenProviderTest</a>
+</td>
+<td>5</td>
+<td>5</td>
+<td>0</td>
+<td>0.005s</td>
+<td class="failures">0%</td>
+</tr>
+<tr>
+<td class="failures">
 <a href="classes/app.beautyminder.controller.ReviewApiControllerTest.html">app.beautyminder.controller.ReviewApiControllerTest</a>
 </td>
 <td>1</td>
+<td>1</td>
 <td>0</td>
+<td>0.001s</td>
+<td class="failures">0%</td>
+</tr>
+<tr>
+<td class="failures">
+<a href="classes/app.beautyminder.controller.TokenApiControllerTest.html">app.beautyminder.controller.TokenApiControllerTest</a>
+</td>
+<td>1</td>
+<td>1</td>
 <td>0</td>
-<td>1.533s</td>
-<td class="success">100%</td>
+<td>0.001s</td>
+<td class="failures">0%</td>
+</tr>
+<tr>
+<td class="failures">
+<a href="classes/app.beautyminder.controller.UserApiControllerTest.html">app.beautyminder.controller.UserApiControllerTest</a>
+</td>
+<td>4</td>
+<td>4</td>
+<td>0</td>
+<td>0.002s</td>
+<td class="failures">0%</td>
 </tr>
 </tbody>
 </table>
@@ -126,7 +218,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 7.5.1</a> at 2023. 9. 30. 오후 4:29:37</p>
+<a href="http://www.gradle.org">Gradle 8.3</a> at 2023. 10. 9. 오후 4:06:47</p>
 </div>
 </div>
 </body>

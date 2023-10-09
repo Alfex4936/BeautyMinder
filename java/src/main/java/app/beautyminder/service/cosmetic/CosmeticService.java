@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -33,10 +32,6 @@ public class CosmeticService {
         return cosmeticRepository.findById(id).orElse(null);
     }
 
-    public List<Cosmetic> findCosmeticsByUserId(String userId) {
-        return cosmeticRepository.findByUserId(userId);
-    }
-
     public List<Cosmetic> findCosmeticsByCategory(Cosmetic.Category category) {
         return cosmeticRepository.findByCategory(category);
     }
@@ -47,14 +42,6 @@ public class CosmeticService {
 
     public List<Cosmetic> findCosmeticsExpiringSoon(LocalDate date) {
         return cosmeticRepository.findExpiringSoon(date);
-    }
-
-    public List<Cosmetic> findCosmeticsExpiringSoonByUserId(String userId, LocalDate date) {
-        return cosmeticRepository.findExpiringSoonByUserId(userId, date);
-    }
-
-    public Optional<Cosmetic> findCosmeticByNameAndUserId(String name, String userId) {
-        return cosmeticRepository.findByNameAndUserId(name, userId);
     }
 
     public List<Cosmetic> findCosmeticsByPurchasedDate(LocalDate purchasedDate) {
@@ -83,4 +70,5 @@ public class CosmeticService {
         }
         return false;
     }
+
 }

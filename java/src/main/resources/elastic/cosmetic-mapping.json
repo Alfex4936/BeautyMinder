@@ -1,0 +1,14 @@
+{
+  "properties": {
+    "name": {
+      "type": "text",
+      "analyzer": "seunjeon"
+    },
+    "category": {
+      "type": "keyword"
+    },
+    "keywords": {
+      "type": "keyword"
+    }
+  }
+}

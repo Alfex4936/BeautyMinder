@@ -1,5 +1,6 @@
 package app.beautyminder.service.cosmetic;
 
+import app.beautyminder.config.WebSecurityConfig;
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.GPTReview;
 import app.beautyminder.domain.Review;
@@ -9,6 +10,8 @@ import app.beautyminder.repository.ReviewRepository;
 import io.github.flashvayne.chatgpt.dto.chat.MultiChatMessage;
 import io.github.flashvayne.chatgpt.service.ChatgptService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ public class GPTReviewService {
     private final CosmeticRepository cosmeticRepository;
     private final ReviewRepository reviewRepository;
     private final GPTReviewRepository gptReviewRepository;
+    private static final Logger logger = LoggerFactory.getLogger(GPTReviewService.class);
 
     @Value("${chatgpt.system}")
     private String systemRole;
@@ -67,6 +71,7 @@ public class GPTReviewService {
     }
 
     private String saveSummarizedReviews(List<Review> reviews, Cosmetic cosmetic) {
+        logger.info("Summarizing reviews for {}...", cosmetic.getName());
         StringBuilder allContents = new StringBuilder();
         allContents.append("제품명: ").append(cosmetic.getName()).append("\n");
 

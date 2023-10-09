@@ -21,9 +21,8 @@ public class ReviewService {
 
     public Review addReview(Review review, MultipartFile[] images) {
         // Ensure images list is initialized
-        if (review.getImages() == null) {
-            review.setImages(new ArrayList<>());
-        }
+
+        review.getCosmetic().updateAverageRating(review.getRating()); // update cosmetic's review score
 
         // Store images and set image URLs in review
         for (MultipartFile image : images) {

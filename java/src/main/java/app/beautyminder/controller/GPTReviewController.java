@@ -16,7 +16,7 @@ public class GPTReviewController {
 
 
     @PostMapping("/summarize")
-    public ResponseEntity<String> triggerSummarization() {
+    public ResponseEntity<String> triggerSummarization() { // test call
         gptReviewService.summarizeReviews();
         return ResponseEntity.ok("Reviews summarized successfully!");
     }

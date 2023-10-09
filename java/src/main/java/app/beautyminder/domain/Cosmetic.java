@@ -1,19 +1,25 @@
 package app.beautyminder.domain;
 
 import lombok.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Document(collection = "cosmetics")
+@Document(collection = "cosmetics") // mongodb
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class Cosmetic {
+
+    private static final Logger LOG = LoggerFactory
+            .getLogger(Cosmetic.class);
 
     @Id
     private String id;
@@ -23,24 +29,32 @@ public class Cosmetic {
     @Setter
     private List<String> images = new ArrayList<>();
 
+    private String glowpick_url;
+
     private LocalDate expirationDate;
-    private LocalDateTime createdDate;
+    private LocalDateTime createdAt;
     private LocalDate purchasedDate;
     private Category category;
     private Status status;
 
-    @DBRef
-    private User user;
+    private float averageRating; // ex) 3.14
+    private int reviewCount = 0;
+    private int totalRating = 0;
+
+//    @Setter
+    private final List<String> keywords = new ArrayList<>();
+
+//    @DBRef
+//    private User user;
 
     @Builder
-    public Cosmetic(String name, LocalDate expirationDate, LocalDate purchasedDate, Category category, Status status, User user) {
+    public Cosmetic(String name, LocalDate expirationDate, LocalDate purchasedDate, Category category, Status status) {
         this.name = name;
         this.expirationDate = expirationDate;
         this.purchasedDate = purchasedDate;
         this.category = category;
         this.status = status;
-        this.user = user;
-        this.createdDate = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
     public enum Category {
@@ -49,5 +63,12 @@ public class Cosmetic {
 
     public enum Status {
         개봉, 미개봉
+    }
+
+    public void updateAverageRating(int newRating) {
+        this.reviewCount++;
+        this.totalRating += newRating;
+        this.averageRating = (float) this.totalRating / this.reviewCount;
+        this.averageRating = Math.round(this.averageRating * 100.0) / 100.0f;  // Round to 2 decimal places
     }
 }

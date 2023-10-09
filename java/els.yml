@@ -1,0 +1,64 @@
+version: '3.8'
+services:
+  es:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        VERSION: 8.7.0
+    container_name: es
+    environment:
+      - node.name=single-node
+      - cluster.name=backtony
+      - discovery.type=single-node
+      - ELASTICSEARCH_XPACK_SECURITY_ENABLED=false
+      - ELASTICSEARCH_XPACK_SECURITY_ENROLLMENT_ENABLED=false
+      - ELASTICSEARCH_XPACK_SECURITY_HTTP_SSL_ENABLED=false
+      - ELASTICSEARCH_XPACK_SECURITY_TRANSPORT_SSL_ENABLED=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - es-bridge
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:8.7.0
+    environment:
+      SERVER_NAME: kibana
+      ELASTICSEARCH_HOSTS: http://es:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - es
+    networks:
+      - es-bridge
+
+  logstash:
+    container_name: logstash
+    image: docker.elastic.co/logstash/logstash:8.7.0
+    ports:
+      - "5044:5044"
+    networks:
+      - es-bridge
+    depends_on:
+      - es
+    volumes:
+      - ./logstash/config:/usr/share/logstash/config
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+
+  filebeat:
+    container_name: filebeat
+    image: docker.elastic.co/beats/filebeat:8.7.0
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - es-bridge
+    depends_on:
+      - es
+      - logstash
+
+networks:
+  es-bridge:
+    driver: bridge

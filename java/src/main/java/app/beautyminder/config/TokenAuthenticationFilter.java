@@ -50,7 +50,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Value("${unprotected.routes}")
     private String[] unprotectedRoutes;
 
-//    private static final Pattern UNPROTECTED_REVIEW_API = Pattern.compile("^/review(/.*)?$");
+    private static final Pattern UNPROTECTED_SWAGGER_API = Pattern.compile("^/(swagger-ui|v3/api-docs|proxy)(/.*)?$");
 //    private static final Pattern UNPROTECTED_ACTUATOR_API = Pattern.compile("^/actuator(/.*)?$");
 
     @Override
@@ -58,13 +58,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             @NotNull HttpServletResponse response,
             @NotNull FilterChain filterChain) throws ServletException, IOException {
-
-//        String path = request.getRequestURI();
-
-        logger.debug("Hello token filter?");
-
         if (!isProtectedRoute(request.getRequestURI())) { // early return
-            logger.debug("Yes! " + request.getRequestURI());
+            logger.debug("Accessing unprotected route! " + request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
@@ -167,7 +162,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isProtectedRoute(String uri) {
         return
-//        !UNPROTECTED_REVIEW_API.matcher(uri).matches() &&
+        !UNPROTECTED_SWAGGER_API.matcher(uri).matches() &&
 //        !UNPROTECTED_ACTUATOR_API.matcher(uri).matches() &&
                 Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
     }
