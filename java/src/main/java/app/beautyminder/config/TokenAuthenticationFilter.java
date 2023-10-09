@@ -51,7 +51,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private String[] unprotectedRoutes;
 
     private static final Pattern UNPROTECTED_SWAGGER_API = Pattern.compile("^/(swagger-ui|v3/api-docs|proxy)(/.*)?$");
-//    private static final Pattern UNPROTECTED_ACTUATOR_API = Pattern.compile("^/actuator(/.*)?$");
+    private static final Pattern UNPROTECTED_API = Pattern.compile("^/search(/.*)?$");
 
     @Override
     protected void doFilterInternal(
@@ -163,7 +163,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private boolean isProtectedRoute(String uri) {
         return
         !UNPROTECTED_SWAGGER_API.matcher(uri).matches() &&
-//        !UNPROTECTED_ACTUATOR_API.matcher(uri).matches() &&
+        !UNPROTECTED_API.matcher(uri).matches() &&
                 Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
     }
 

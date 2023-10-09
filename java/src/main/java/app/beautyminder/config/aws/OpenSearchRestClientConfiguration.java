@@ -57,7 +57,7 @@ public class OpenSearchRestClientConfiguration extends AbstractOpenSearchConfigu
         signer.setServiceName(serviceName);
         signer.setRegionName(region);
         HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer, credentialsProvider);
-        log.error("===== {}", endpoint);
+        log.info("= AWS endpoint: {}", endpoint);
         final ClientConfiguration clientConfiguration = ClientConfiguration.builder()
                 .connectedTo(endpoint)
                 .usingSsl()

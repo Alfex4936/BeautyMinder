@@ -133,6 +133,7 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/user/signup")).permitAll()
                 .requestMatchers(antMatcher("/user/signup-admin")).permitAll()
                 .requestMatchers(antMatcher("/gpt/**")).permitAll()
+                .requestMatchers(antMatcher("/search/**")).permitAll()
                 .requestMatchers(antMatcher("/login")).permitAll()
                 .requestMatchers(antMatcher("/login?error")).permitAll()
                 .anyRequest().authenticated());
