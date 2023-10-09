@@ -61,4 +61,10 @@ public class SearchController {
         String cosmeticsData = cosmeticSearchService.viewCosmeticsData();
         return ResponseEntity.ok(cosmeticsData);
     }
+
+    @DeleteMapping("/indices")
+    public ResponseEntity<Void> deleteAllIndices() {
+        cosmeticSearchService.deleteAllIndices();
+        return ResponseEntity.ok().build();  // Return a 200 OK response upon success
+    }
 }

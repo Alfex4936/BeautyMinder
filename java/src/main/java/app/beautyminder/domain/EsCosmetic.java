@@ -1,4 +1,5 @@
 package app.beautyminder.domain;
+
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.*;
@@ -11,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @Setter
 @Getter
-@Document(indexName = "cosmetics")
+@Document(indexName = "cosmetics") // elasticsearch
 @Mapping(mappingPath = "elastic/cosmetic-mapping.json")
 @Setting(settingPath = "elastic/cosmetic-setting.json")
 public class EsCosmetic {
@@ -21,8 +22,11 @@ public class EsCosmetic {
     @Field(type = FieldType.Text)
     private String name;
 
-    @Field(type = FieldType.Keyword)
-    private Cosmetic.Category category;
+    @Field(type = FieldType.Text)
+    private String brand;
+
+    @Field(type = FieldType.Text)
+    private String category;
 
     @Field(type = FieldType.Keyword)
     private List<String> keywords;

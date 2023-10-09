@@ -1,0 +1,10 @@
+{
+  "properties": {
+    "clickCounts": {
+      "type": "integer"
+    },
+    "hitCounts": {
+      "type": "integer"
+    }
+  }
+}

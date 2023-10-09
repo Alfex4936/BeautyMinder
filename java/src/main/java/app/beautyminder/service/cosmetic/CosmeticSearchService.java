@@ -4,6 +4,7 @@ import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.EsCosmetic;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.elastic.EsCosmeticRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.util.EntityUtils;
@@ -26,14 +27,16 @@ public class CosmeticSearchService {
     private final EsCosmeticRepository esCosmeticRepository;
     private final RestHighLevelClient opensearchClient;
 
+//    @PostConstruct
     @Scheduled(cron = "0 */15 * * * ?") // every 15 mins
     public void indexCosmetics() {
-        log.info("Indexing all the cosmetics!!!");
+        log.info("!!! Indexing all the cosmetics!!!");
         List<Cosmetic> cosmetics = cosmeticRepository.findAll();  // Fetch all cosmetics from MongoDB
         List<EsCosmetic> esCosmetics = cosmetics.stream()
                 .map(this::convertToEsCosmetic)
                 .collect(Collectors.toList());  // Convert to EsCosmetic objects
         esCosmeticRepository.saveAll(esCosmetics);  // Index all cosmetics to Elasticsearch
+        log.info(">>> Indexed all the cosmetics!!!");
     }
 
     private EsCosmetic convertToEsCosmetic(Cosmetic cosmetic) {
@@ -41,7 +44,8 @@ public class CosmeticSearchService {
         return EsCosmetic.builder()
                 .id(cosmetic.getId())
                 .name(cosmetic.getName())
-                .category(cosmetic.getCategory())
+                .brand(cosmetic.getBrand())
+                .category(cosmetic.getCategory().toString())
                 .keywords(cosmetic.getKeywords())
                 .build();
     }
@@ -64,15 +68,32 @@ public class CosmeticSearchService {
         return EntityUtils.toString(response.getEntity());
     }
 
+    public void deleteAllIndices() {
+        try {
+            Request request = new Request("DELETE", "/cosmetics");
+            Response response = opensearchClient.getLowLevelClient().performRequest(request);
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode != 200) {
+                log.error("Failed to delete all indices: " + EntityUtils.toString(response.getEntity()));
+            } else {
+                log.info("Successfully deleted all indices in the 'cosmetics' index.");
+            }
+        } catch (IOException e) {
+            log.error("Exception occurred while deleting all indices: ", e);
+        }
+    }
+
     public List<EsCosmetic> searchByName(String name) {
         return esCosmeticRepository.findByNameContaining(name);
     }
 
     public List<EsCosmetic> searchByCategory(Cosmetic.Category category) {
-        return esCosmeticRepository.findByCategory(category);
+        return esCosmeticRepository.findByCategory(String.valueOf(category));
     }
 
     public List<EsCosmetic> searchByKeyword(String keyword) {
         return esCosmeticRepository.findByKeywordsContains(keyword);
     }
+
+
 }

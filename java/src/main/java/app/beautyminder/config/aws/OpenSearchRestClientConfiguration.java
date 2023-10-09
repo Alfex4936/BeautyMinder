@@ -3,8 +3,13 @@ package app.beautyminder.config.aws;
 import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpRequestInterceptor;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.RestClientBuilder;
 import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.client.sniff.SniffOnFailureListener;
+import org.opensearch.client.sniff.Sniffer;
 import org.opensearch.data.client.orhlc.AbstractOpenSearchConfiguration;
 import org.opensearch.data.client.orhlc.ClientConfiguration;
 import org.opensearch.data.client.orhlc.RestClients;
@@ -13,7 +18,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
-import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 
 import java.time.Duration;
 
@@ -51,23 +55,31 @@ public class OpenSearchRestClientConfiguration extends AbstractOpenSearchConfigu
     @Override
     @Bean
     public RestHighLevelClient opensearchClient() {
-
         AWS4Signer signer = new AWS4Signer();
         String serviceName = "es";
         signer.setServiceName(serviceName);
         signer.setRegionName(region);
         HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer, credentialsProvider);
-        log.info("= AWS endpoint: {}", endpoint);
-        final ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                .connectedTo(endpoint)
-                .usingSsl()
-                .withConnectTimeout(Duration.ofSeconds(300))
-                .withSocketTimeout(Duration.ofSeconds(150))
-                .withClientConfigurer(RestClients.RestClientConfigurationCallback.from(httpAsyncClientBuilder -> {
-                    httpAsyncClientBuilder.addInterceptorLast(interceptor);
-                    return httpAsyncClientBuilder;
-                }))
+
+        RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(endpoint, 443, "https"))
+                .setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.addInterceptorLast(interceptor))
+                .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
+                        .setConnectTimeout((int) Duration.ofSeconds(600).toMillis())
+                        .setSocketTimeout((int) Duration.ofSeconds(300).toMillis()));
+
+        SniffOnFailureListener sniffOnFailureListener = new SniffOnFailureListener();
+        restClientBuilder.setFailureListener(sniffOnFailureListener);
+
+        RestHighLevelClient client = new RestHighLevelClient(restClientBuilder);
+
+        Sniffer esSniffer = Sniffer.builder(client.getLowLevelClient())
+                .setSniffIntervalMillis(999999999) // 11.574일 interval
+                .setSniffAfterFailureDelayMillis(999999999)
                 .build();
-        return RestClients.create(clientConfiguration).rest();
+
+        sniffOnFailureListener.setSniffer(esSniffer);
+
+        return client;
+//        return RestClients.create(clientConfiguration).rest();
     }
 }

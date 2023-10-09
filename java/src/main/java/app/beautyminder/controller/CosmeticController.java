@@ -5,6 +5,7 @@ import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
 import app.beautyminder.service.ReviewService;
 import app.beautyminder.service.auth.UserService;
+import app.beautyminder.service.cosmetic.CosmeticMetricService;
 import app.beautyminder.service.cosmetic.CosmeticService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ public class CosmeticController {
     private final UserService userService;
     private final ReviewService reviewService;
     private final CosmeticService cosmeticService;
+    private final CosmeticMetricService cosmeticMetricService;
 
     private static final Logger logger = LoggerFactory.getLogger(CosmeticController.class);
 
@@ -101,20 +103,15 @@ public class CosmeticController {
         }
     }
 
-//    @GetMapping("/search")
-//    public ResponseEntity<SearchResponse> search(
-//            @RequestParam(required = false) String name,
-//            @RequestParam(required = false) String category,
-//            @RequestParam(required = false) List<String> keywords) {
-//
-//        try {
-//            SearchResponse response = rankingService.searchCosmetics(name, category, keywords);
-//            return new ResponseEntity<>(response, HttpStatus.OK);
-//        } catch (RuntimeException e) {
-//            // Log exception and return error response
-//            // (Logging mechanism/log library code should be here)
-//            logger.error(e.getMessage());
-//            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//    }
+    @PostMapping("/click/{cosmeticId}")
+    public ResponseEntity<Void> incrementClickCount(@PathVariable String cosmeticId) {
+        cosmeticMetricService.incrementClickCount(cosmeticId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/hit/{cosmeticId}")
+    public ResponseEntity<Void> incrementHitCount(@PathVariable String cosmeticId) {
+        cosmeticMetricService.incrementHitCount(cosmeticId);
+        return ResponseEntity.ok().build();
+    }
 }
