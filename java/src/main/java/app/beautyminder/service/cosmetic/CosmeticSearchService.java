@@ -28,9 +28,8 @@ public class CosmeticSearchService {
     private final RestHighLevelClient opensearchClient;
 
 //    @PostConstruct
-    @Scheduled(cron = "0 */15 * * * ?") // every 15 mins
+    @Scheduled(cron = "0 */50 * * * ?") // every 15 mins
     public void indexCosmetics() {
-        log.info("!!! Indexing all the cosmetics!!!");
         List<Cosmetic> cosmetics = cosmeticRepository.findAll();  // Fetch all cosmetics from MongoDB
         List<EsCosmetic> esCosmetics = cosmetics.stream()
                 .map(this::convertToEsCosmetic)
@@ -68,6 +67,12 @@ public class CosmeticSearchService {
         return EntityUtils.toString(response.getEntity());
     }
 
+    public String viewCosmeticMetricsData() throws IOException {
+        Request request = new Request("GET", "/cosmetic_metrics");
+        Response response = opensearchClient.getLowLevelClient().performRequest(request);
+        return EntityUtils.toString(response.getEntity());
+    }
+
     public void deleteAllIndices() {
         try {
             Request request = new Request("DELETE", "/cosmetics");
@@ -94,6 +99,7 @@ public class CosmeticSearchService {
     public List<EsCosmetic> searchByKeyword(String keyword) {
         return esCosmeticRepository.findByKeywordsContains(keyword);
     }
+
 
 
 }

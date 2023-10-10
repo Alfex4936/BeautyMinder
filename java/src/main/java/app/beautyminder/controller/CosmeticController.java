@@ -1,6 +1,7 @@
 package app.beautyminder.controller;
 
 import app.beautyminder.domain.Cosmetic;
+import app.beautyminder.domain.CosmeticMetric;
 import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
 import app.beautyminder.service.ReviewService;
@@ -113,5 +114,12 @@ public class CosmeticController {
     public ResponseEntity<Void> incrementHitCount(@PathVariable String cosmeticId) {
         cosmeticMetricService.incrementHitCount(cosmeticId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/top")
+    public ResponseEntity<List<Cosmetic>> getTopRankedCosmetics(
+            @RequestParam(defaultValue = "10") int size) {
+        List<Cosmetic> topRankedCosmetics = cosmeticMetricService.getTopRankedCosmetics(size);
+        return ResponseEntity.ok(topRankedCosmetics);
     }
 }

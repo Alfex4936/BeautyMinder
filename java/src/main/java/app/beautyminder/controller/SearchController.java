@@ -6,6 +6,7 @@ import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
 import app.beautyminder.service.ReviewService;
 import app.beautyminder.service.auth.UserService;
+import app.beautyminder.service.cosmetic.CosmeticMetricService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.CosmeticService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import java.util.NoSuchElementException;
 public class SearchController {
 
     private final CosmeticSearchService cosmeticSearchService;
+    private final CosmeticMetricService cosmeticMetricService;
 
     @GetMapping("/name")
     public ResponseEntity<List<EsCosmetic>> searchByName(@RequestParam String name) {
@@ -62,9 +64,21 @@ public class SearchController {
         return ResponseEntity.ok(cosmeticsData);
     }
 
+    @GetMapping("/indices/metric")
+    public ResponseEntity<String> viewCosmeticMetricsData() throws IOException {
+        String cosmeticsData = cosmeticSearchService.viewCosmeticMetricsData();
+        return ResponseEntity.ok(cosmeticsData);
+    }
+
     @DeleteMapping("/indices")
     public ResponseEntity<Void> deleteAllIndices() {
         cosmeticSearchService.deleteAllIndices();
         return ResponseEntity.ok().build();  // Return a 200 OK response upon success
+    }
+
+    @PostMapping("/indexnow")
+    public ResponseEntity<String> triggerIndexing() { // test call
+        cosmeticMetricService.executeBulkUpdates();
+        return ResponseEntity.ok("index successfully!");
     }
 }

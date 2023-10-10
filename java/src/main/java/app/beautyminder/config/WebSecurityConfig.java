@@ -134,6 +134,9 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/user/signup-admin")).permitAll()
                 .requestMatchers(antMatcher("/gpt/**")).permitAll()
                 .requestMatchers(antMatcher("/search/**")).permitAll()
+                .requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll()
+                .requestMatchers(antMatcher("/cosmetic/click/**")).permitAll()
+                .requestMatchers(antMatcher("/cosmetic/top/**")).permitAll()
                 .requestMatchers(antMatcher("/login")).permitAll()
                 .requestMatchers(antMatcher("/login?error")).permitAll()
                 .anyRequest().authenticated());

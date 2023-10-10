@@ -14,7 +14,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -50,8 +49,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Value("${unprotected.routes}")
     private String[] unprotectedRoutes;
 
-    private static final Pattern UNPROTECTED_SWAGGER_API = Pattern.compile("^/(swagger-ui|v3/api-docs|proxy)(/.*)?$");
-    private static final Pattern UNPROTECTED_API = Pattern.compile("^/search(/.*)?$");
+    private static final Pattern UNPROTECTED_SWAGGER_API =
+            Pattern.compile("^/(swagger-ui|v3/api-docs|proxy)(/.*)?$");
+    private static final Pattern UNPROTECTED_API =
+            Pattern.compile("^/(search|cosmetic/hit|cosmetic/click|cosmetic/top)(/.*)?$");
 
     @Override
     protected void doFilterInternal(
@@ -67,92 +68,92 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         AtomicBoolean isAuth = new AtomicBoolean(true);
 
 //        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            String token = getAccessToken(request);
+        String token = getAccessToken(request);
 
-            if (tokenProvider.validToken(token)) {
-                logger.debug("Valid access token found, setting the authentication.");
-                Authentication auth = tokenProvider.getAuthentication(token);
-                Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
-                logger.debug("User Authorities: {}", authorities);
+        if (tokenProvider.validToken(token)) {
+            logger.debug("Valid access token found, setting the authentication.");
+            Authentication auth = tokenProvider.getAuthentication(token);
+            Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
+            logger.debug("User Authorities: {}", authorities);
 
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            } else {
-                logger.debug("Invalid access token. Attempting refresh.");
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        } else {
+            logger.debug("Invalid access token. Attempting refresh.");
 
-                // Attempt to use refresh token
-                Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);
+            // Attempt to use refresh token
+            Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);
 
-                optionalRefreshToken
-                        .filter(tokenProvider::validToken)
-                        .flatMap(refreshTokenService::findUserByRefreshToken)
-                        .ifPresentOrElse(
-                                user -> {
-                                    // here should I call /token/refresh ?
-                                    logger.info("Valid refresh token found, generating new access tokens.");
+            optionalRefreshToken
+                    .filter(tokenProvider::validToken)
+                    .flatMap(refreshTokenService::findUserByRefreshToken)
+                    .ifPresentOrElse(
+                            user -> {
+                                // here should I call /token/refresh ?
+                                logger.info("Valid refresh token found, generating new access tokens.");
 
-                                    // Generate new access token and refresh token
-                                    String newAccessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
-                                    String newRefreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
+                                // Generate new access token and refresh token
+                                String newAccessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
+                                String newRefreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
 
-                                    // Update the Security Context
-                                    Authentication newAuth = tokenProvider.getAuthentication(newAccessToken);
-                                    SecurityContextHolder.getContext().setAuthentication(newAuth);
-                                    Collection<? extends GrantedAuthority> authorities = newAuth.getAuthorities();
-                                    logger.debug("Ref User Authorities: {}", authorities);
+                                // Update the Security Context
+                                Authentication newAuth = tokenProvider.getAuthentication(newAccessToken);
+                                SecurityContextHolder.getContext().setAuthentication(newAuth);
+                                Collection<? extends GrantedAuthority> authorities = newAuth.getAuthorities();
+                                logger.debug("Ref User Authorities: {}", authorities);
 
-                                    // Update the HTTP headers and cookies
-                                    response.addHeader(HEADER_AUTHORIZATION, TOKEN_PREFIX + newAccessToken);
+                                // Update the HTTP headers and cookies
+                                response.addHeader(HEADER_AUTHORIZATION, TOKEN_PREFIX + newAccessToken);
 
-                                    int cookieMaxAge = (int) REFRESH_TOKEN_DURATION.toSeconds();
-                                    CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
-                                    CookieUtil.addCookie(response, REFRESH_TOKEN_COOKIE_NAME, newRefreshToken, cookieMaxAge);
+                                int cookieMaxAge = (int) REFRESH_TOKEN_DURATION.toSeconds();
+                                CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
+                                CookieUtil.addCookie(response, REFRESH_TOKEN_COOKIE_NAME, newRefreshToken, cookieMaxAge);
 
-                                    // Optionally, update the refresh token in the database
-                                    saveRefreshToken(user, newRefreshToken);
+                                // Optionally, update the refresh token in the database
+                                saveRefreshToken(user, newRefreshToken);
 //                                    response.addHeader("Authorization", "Bearer " + newAccessToken);
 
-                                    response.setContentType("application/json");
-                                    response.setCharacterEncoding("utf-8");
-                                    LoginResponse login = new LoginResponse(newAccessToken, newRefreshToken, user);
+                                response.setContentType("application/json");
+                                response.setCharacterEncoding("utf-8");
+                                LoginResponse login = new LoginResponse(newAccessToken, newRefreshToken, user);
 
-                                    try {
-                                        String result = objectMapper.registerModule(new JavaTimeModule()).writeValueAsString(login);
+                                try {
+                                    String result = objectMapper.registerModule(new JavaTimeModule()).writeValueAsString(login);
 //                                        objectMapper.writeValue(response.getWriter(), result);
-                                        response.getOutputStream().write(result.getBytes());
-                                    } catch (IOException e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                },
-                                () -> {
-                                    logger.warn("Invalid refresh token. Clearing the security context.");
+                                    response.getOutputStream().write(result.getBytes());
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            },
+                            () -> {
+                                logger.warn("Invalid refresh token. Clearing the security context.");
 
-                                    SecurityContextHolder.getContext().setAuthentication(null);
-                                    SecurityContextHolder.clearContext();
+                                SecurityContextHolder.getContext().setAuthentication(null);
+                                SecurityContextHolder.clearContext();
 
-                                    // block to explicitly handle unauthorized requests
-                                    logger.warn("Unauthorized request, returning 401");
-                                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                // block to explicitly handle unauthorized requests
+                                logger.warn("Unauthorized request, returning 401");
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-                                    // Set the content type of the response to JSON
-                                    response.setContentType("application/json");
-                                    response.setCharacterEncoding("UTF-8");
+                                // Set the content type of the response to JSON
+                                response.setContentType("application/json");
+                                response.setCharacterEncoding("UTF-8");
 
-                                    // Create a JSON object with the error message
-                                    String jsonMessage = "{\"msg\":\"Unauthorized. Please provide a valid token.\"}";
+                                // Create a JSON object with the error message
+                                String jsonMessage = "{\"msg\":\"Unauthorized. Please provide a valid token.\"}";
 
-                                    // Write the JSON message to the response
+                                // Write the JSON message to the response
 
-                                    try {
+                                try {
 //                                        response.getWriter().write(jsonMessage);
 
-                                        response.getOutputStream().write(jsonMessage.getBytes());
-                                    } catch (IOException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                    response.getOutputStream().write(jsonMessage.getBytes());
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
 
-                                    isAuth.set(false);
-                                });
-            }
+                                isAuth.set(false);
+                            });
+        }
 //        }
 
         if (isAuth.get()) {
@@ -162,9 +163,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isProtectedRoute(String uri) {
         return
-        !UNPROTECTED_SWAGGER_API.matcher(uri).matches() &&
-        !UNPROTECTED_API.matcher(uri).matches() &&
-                Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
+                !UNPROTECTED_SWAGGER_API.matcher(uri).matches() &&
+                        !UNPROTECTED_API.matcher(uri).matches() &&
+                        Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
     }
 
     private String getAccessToken(HttpServletRequest request) {
