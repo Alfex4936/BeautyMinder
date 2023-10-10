@@ -1,0 +1,19 @@
+{
+  "properties": {
+    "content": {
+      "type": "text",
+      "analyzer": "seunjeon"
+    },
+    "userName": {
+      "type": "text",
+      "analyzer": "seunjeon"
+    },
+    "cosmeticName": {
+      "type": "text",
+      "analyzer": "seunjeon"
+    },
+    "rating": {
+      "type": "integer"
+    }
+  }
+}

@@ -1,14 +1,12 @@
 package app.beautyminder.controller;
 
-import app.beautyminder.domain.Cosmetic;
-import app.beautyminder.domain.EsCosmetic;
-import app.beautyminder.domain.Review;
-import app.beautyminder.domain.User;
+import app.beautyminder.domain.*;
 import app.beautyminder.service.ReviewService;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticMetricService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.CosmeticService;
+import app.beautyminder.service.cosmetic.ReviewSearchService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +24,18 @@ import java.util.NoSuchElementException;
 public class SearchController {
 
     private final CosmeticSearchService cosmeticSearchService;
+    private final ReviewSearchService reviewSearchService;
     private final CosmeticMetricService cosmeticMetricService;
 
-    @GetMapping("/name")
+    @GetMapping("/cosmetic")
     public ResponseEntity<List<EsCosmetic>> searchByName(@RequestParam String name) {
         List<EsCosmetic> results = cosmeticSearchService.searchByName(name);
+        return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/review")
+    public ResponseEntity<List<EsReview>> searchByContent(@RequestParam String content) {
+        List<EsReview> results = reviewSearchService.searchByContent(content);
         return ResponseEntity.ok(results);
     }
 
@@ -76,9 +81,15 @@ public class SearchController {
         return ResponseEntity.ok().build();  // Return a 200 OK response upon success
     }
 
-    @PostMapping("/indexnow")
-    public ResponseEntity<String> triggerIndexing() { // test call
+    @PostMapping("/index/cosmetic")
+    public ResponseEntity<String> triggerIndexingCosmetic() { // force indexing cosmetic metrics
         cosmeticMetricService.executeBulkUpdates();
+        return ResponseEntity.ok("index successfully!");
+    }
+
+    @PostMapping("/index/review")
+    public ResponseEntity<String> triggerIndexingReview() { // force indexing reviews
+        reviewSearchService.indexReviews();
         return ResponseEntity.ok("index successfully!");
     }
 }
