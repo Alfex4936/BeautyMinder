@@ -38,6 +38,8 @@ public class User implements UserDetails {
     private String nickname;
     @Setter
     private String profileImage;
+    @Setter
+    private String phoneNumber;
 
     @CreatedDate
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")

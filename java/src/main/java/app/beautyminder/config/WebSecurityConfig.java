@@ -127,18 +127,19 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/*").permitAll() // preflight request: ex) POST -> OPTIONS -> POST
                 .requestMatchers(antMatcher("/")).permitAll()
                 .requestMatchers(antMatcher("/api/**")).permitAll()
-                .requestMatchers(antMatcher(HttpMethod.POST, "/user/forgot-password")).permitAll()
+                .requestMatchers(antMatcher("/cosmetic/click/**")).permitAll()
+                .requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll()
+                .requestMatchers(antMatcher("/cosmetic/top/**")).permitAll()
+                .requestMatchers(antMatcher("/gpt/**")).permitAll()
+                .requestMatchers(antMatcher("/login")).permitAll()
+                .requestMatchers(antMatcher("/login?error")).permitAll()
+                .requestMatchers(antMatcher("/search/**")).permitAll()
+                .requestMatchers(antMatcher("/user/forgot-password")).permitAll()
                 .requestMatchers(antMatcher(HttpMethod.GET, "/user/reset-password")).permitAll()
                 .requestMatchers(antMatcher(HttpMethod.POST, "/user/reset-password")).permitAll()
                 .requestMatchers(antMatcher("/user/signup")).permitAll()
                 .requestMatchers(antMatcher("/user/signup-admin")).permitAll()
-                .requestMatchers(antMatcher("/gpt/**")).permitAll()
-                .requestMatchers(antMatcher("/search/**")).permitAll()
-                .requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll()
-                .requestMatchers(antMatcher("/cosmetic/click/**")).permitAll()
-                .requestMatchers(antMatcher("/cosmetic/top/**")).permitAll()
-                .requestMatchers(antMatcher("/login")).permitAll()
-                .requestMatchers(antMatcher("/login?error")).permitAll()
+                .requestMatchers(antMatcher("/user/sms/send")).permitAll()
                 .anyRequest().authenticated());
 
         http.formLogin(f -> f
@@ -186,27 +187,27 @@ public class WebSecurityConfig {
 
 
         http.logout(l -> l
-                        .permitAll()
-                        .logoutUrl("/logout")
-                        .invalidateHttpSession(true)
-                        .logoutSuccessHandler(((request, response, authentication) -> {
-                            logger.info("Logout successful for user: {}", authentication != null ? authentication.getName() : "Unknown");
+                .permitAll()
+                .logoutUrl("/logout")
+                .invalidateHttpSession(true)
+                .logoutSuccessHandler(((request, response, authentication) -> {
+                    logger.info("Logout successful for user: {}", authentication != null ? authentication.getName() : "Unknown");
 
-                            if (authentication != null && authentication.getPrincipal() instanceof app.beautyminder.domain.User user) {
-                                try {
-                                    refreshTokenRepository.deleteByUserId(user.getId());
-                                    // Optionally, clear the cookie
-                                    CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
-                                } catch (Exception e) {
-                                    // log the error
-                                    logger.error(e.getMessage());
-                                }
-                            }
+                    if (authentication != null && authentication.getPrincipal() instanceof app.beautyminder.domain.User user) {
+                        try {
+                            refreshTokenRepository.deleteByUserId(user.getId());
+                            // Optionally, clear the cookie
+                            CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
+                        } catch (Exception e) {
+                            // log the error
+                            logger.error(e.getMessage());
+                        }
+                    }
 
-                            SecurityContextHolder.getContext().setAuthentication(null);
+                    SecurityContextHolder.getContext().setAuthentication(null);
 
-                            response.sendRedirect("/login");
-                        }))
+                    response.sendRedirect("/login");
+                }))
         );
 
 

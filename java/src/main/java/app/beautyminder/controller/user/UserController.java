@@ -1,10 +1,14 @@
 package app.beautyminder.controller.user;
 
 import app.beautyminder.domain.User;
+import app.beautyminder.dto.sms.MessageDTO;
+import app.beautyminder.dto.sms.SmsResponseDTO;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.dto.user.ResetPasswordRequest;
 import app.beautyminder.dto.user.SignUpResponse;
+import app.beautyminder.service.auth.SmsService;
 import app.beautyminder.service.auth.UserService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +16,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClientException;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -21,6 +30,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final SmsService smsService;
 
     // Standard user sign-up
     @PostMapping("/signup")
@@ -70,7 +80,24 @@ public class UserController {
         }
     }
 
-    // FORGOT
+    @PatchMapping("/update/{userId}")
+    public ResponseEntity<User> updateProfile(@PathVariable String userId, @RequestBody Map<String, Object> updates) {
+        try {
+            User user = userService.findById(userId);
+            user = userService.updateUser(user, updates);
+            return ResponseEntity.ok(user);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // FORGOT PASSSWORD
+    @PostMapping("/sms/send")
+    public ResponseEntity<String> sendSms(@RequestBody MessageDTO messageDto) throws JsonProcessingException, RestClientException, URISyntaxException, InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException {
+        SmsResponseDTO response = smsService.sendSms(messageDto);
+        return ResponseEntity.ok(response.toString());
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");

@@ -45,12 +45,15 @@ public class UserService {
             user.setCosmeticIds(new HashSet<>());
         }
 
-        // Add nickname and profileImage only if they are not null
+        // Add nickname, profileImage, phoneNumber only if they are not null
         if (dto.getNickname() != null) {
             user.setNickname(dto.getNickname());
         }
         if (dto.getProfileImage() != null) {
             user.setProfileImage(dto.getProfileImage());
+        }
+        if (dto.getPhoneNumber() != null) {
+            user.setPhoneNumber(dto.getPhoneNumber());
         }
 
         // 기본 권한 설정 ("ROLE_USER")
@@ -70,12 +73,14 @@ public class UserService {
                 .password(encoder.encode(dto.getPassword()))
                 .build();
 
-        // Add nickname and profileImage only if they are not null
         if (dto.getNickname() != null) {
             admin.setNickname(dto.getNickname());
         }
         if (dto.getProfileImage() != null) {
             admin.setProfileImage(dto.getProfileImage());
+        }
+        if (dto.getPhoneNumber() != null) {
+            admin.setPhoneNumber(dto.getPhoneNumber());
         }
 
         // 관리자 권한 추가
@@ -144,6 +149,16 @@ public class UserService {
                     return userRepository.save(user);  // Save the updated user to the database
                 })
                 .orElseThrow(() -> new NoSuchElementException("No user found with id: " + userId));
+    }
+
+    public User updateUser(User user, Map<String, Object> updates) {
+        if (updates.containsKey("nickname")) {
+            user.setNickname((String) updates.get("nickname"));
+        }
+        if (updates.containsKey("profileImage")) {
+            user.setProfileImage((String) updates.get("profileImage"));
+        }
+        return userRepository.save(user);
     }
 
     /*
