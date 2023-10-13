@@ -81,11 +81,11 @@ public class SearchController {
         return ResponseEntity.ok().build();  // Return a 200 OK response upon success
     }
 
-    @PostMapping("/index/cosmetic")
-    public ResponseEntity<String> triggerIndexingCosmetic() { // force indexing cosmetic metrics
-        cosmeticMetricService.executeBulkUpdates();
-        return ResponseEntity.ok("index successfully!");
-    }
+//    @PostMapping("/index/cosmetic")
+//    public ResponseEntity<String> triggerIndexingCosmetic() { // force indexing cosmetic metrics
+//        cosmeticMetricService.executeBulkUpdates();
+//        return ResponseEntity.ok("index successfully!");
+//    }
 
     @PostMapping("/index/review")
     public ResponseEntity<String> triggerIndexingReview() { // force indexing reviews

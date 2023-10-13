@@ -28,7 +28,7 @@ public class CosmeticSearchService {
     private final RestHighLevelClient opensearchClient;
 
 //    @PostConstruct
-    @Scheduled(cron = "0 */50 * * * ?") // every 15 mins
+    // @Scheduled(cron = "0 */50 * * * ?") // every 15 mins
     public void indexCosmetics() {
         List<Cosmetic> cosmetics = cosmeticRepository.findAll();  // Fetch all cosmetics from MongoDB
         List<EsCosmetic> esCosmetics = cosmetics.stream()

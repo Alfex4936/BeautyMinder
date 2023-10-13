@@ -1,14 +1,19 @@
 package app.beautyminder.service.auth;
 
+import app.beautyminder.domain.PasswordResetToken;
+import app.beautyminder.domain.User;
+import app.beautyminder.dto.PasswordResetResponse;
 import app.beautyminder.dto.sms.MessageDTO;
 import app.beautyminder.dto.sms.SmsRequestDTO;
 import app.beautyminder.dto.sms.SmsResponseDTO;
+import app.beautyminder.repository.PasswordResetTokenRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -25,24 +30,28 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class SmsService {
-    @Value("${naver.cloud.accessKey}")
+    @Value("${naver.cloud.access-key}")
     private String accessKey;
 
-    @Value("${naver.cloud.secretKey}")
+    @Value("${naver.cloud.secret-key}")
     private String secretKey;
 
-    @Value("${naver.cloud.sms.openaiKey}")
+    @Value("${naver.cloud.sms.openai-key}")
     private String serviceId;
 
-    @Value("${naver.cloud.sms.senderPhone}")
+    @Value("${naver.cloud.sms.sender-phone}")
     private String phone;
+
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     public String makeSignature(Long time) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
         String space = " ";                    // one space
@@ -70,7 +79,7 @@ public class SmsService {
         return Base64.encodeBase64String(rawHmac);
     }
 
-    public SmsResponseDTO sendSms(MessageDTO messageDto) throws JsonProcessingException, RestClientException, URISyntaxException, InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
+    public SmsResponseDTO sendSms(PasswordResetResponse tUser) throws JsonProcessingException, RestClientException, URISyntaxException, InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
         Long time = System.currentTimeMillis();
 
         HttpHeaders headers = new HttpHeaders();
@@ -79,7 +88,13 @@ public class SmsService {
         headers.set("x-ncp-iam-access-key", accessKey);
         headers.set("x-ncp-apigw-signature-v2", makeSignature(time));
 
+
+        String resetUrl = "http://localhost:8080" + "/user/reset-password?token=" + tUser.getToken();
+        String content = "( " + tUser.getUser().getEmail() + " )의 " + "비밀번호를 초기화하려면 다음 링크를 누르세요: " + resetUrl;
+
+
         List<MessageDTO> messages = new ArrayList<>();
+        MessageDTO messageDto = MessageDTO.builder().to(tUser.getUser().getPhoneNumber()).content(content).build();
         messages.add(messageDto);
 
         SmsRequestDTO request = SmsRequestDTO.builder()

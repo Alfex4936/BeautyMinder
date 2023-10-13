@@ -2,6 +2,7 @@ package app.beautyminder.service.auth;
 
 import app.beautyminder.domain.PasswordResetToken;
 import app.beautyminder.domain.User;
+import app.beautyminder.dto.PasswordResetResponse;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.repository.PasswordResetTokenRepository;
 import app.beautyminder.repository.RefreshTokenRepository;
@@ -184,6 +185,13 @@ public class UserService {
 
         PasswordResetToken token = createPasswordResetToken(user);
         emailService.sendPasswordResetEmail(user.getEmail(), token.getToken());
+    }
+
+    public PasswordResetResponse requestPasswordResetByNumber(String phoneNumber) {
+        User user = userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        PasswordResetToken token = createPasswordResetToken(user);
+        return new PasswordResetResponse(token, user);
     }
 
     private PasswordResetToken createPasswordResetToken(User user) {

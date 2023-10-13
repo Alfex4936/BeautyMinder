@@ -1,6 +1,8 @@
 package app.beautyminder.controller.user;
 
+import app.beautyminder.domain.PasswordResetToken;
 import app.beautyminder.domain.User;
+import app.beautyminder.dto.PasswordResetResponse;
 import app.beautyminder.dto.sms.MessageDTO;
 import app.beautyminder.dto.sms.SmsResponseDTO;
 import app.beautyminder.dto.user.AddUserRequest;
@@ -91,11 +93,21 @@ public class UserController {
         }
     }
 
-    // FORGOT PASSSWORD
-    @PostMapping("/sms/send")
-    public ResponseEntity<String> sendSms(@RequestBody MessageDTO messageDto) throws JsonProcessingException, RestClientException, URISyntaxException, InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException {
-        SmsResponseDTO response = smsService.sendSms(messageDto);
-        return ResponseEntity.ok(response.toString());
+    // FORGOT PASSWORD
+    @PostMapping("/sms/send/{phoneNumber}")
+    public ResponseEntity<String> sendSms(@PathVariable String phoneNumber) throws JsonProcessingException, RestClientException, URISyntaxException, InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException {
+        // TODO: check user's phone number and change content
+        if (phoneNumber == null || phoneNumber.isEmpty()) {
+            return ResponseEntity.badRequest().body("Phone number is required");
+        }
+
+        try {
+            PasswordResetResponse tUser = userService.requestPasswordResetByNumber(phoneNumber);
+            SmsResponseDTO response = smsService.sendSms(tUser);
+            return ResponseEntity.ok(response.toString());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/forgot-password")
