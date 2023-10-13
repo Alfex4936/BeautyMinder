@@ -1,7 +1,6 @@
 package app.beautyminder.controller;
 
 import app.beautyminder.domain.Cosmetic;
-import app.beautyminder.domain.CosmeticMetric;
 import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
 import app.beautyminder.service.ReviewService;

@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -26,6 +27,10 @@ public class UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private static final SecureRandom RANDOM = new SecureRandom();
+
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
 
@@ -54,7 +59,7 @@ public class UserService {
             user.setProfileImage(dto.getProfileImage());
         }
         if (dto.getPhoneNumber() != null) {
-            user.setPhoneNumber(dto.getPhoneNumber());
+            user.setPhoneNumber(dto.getPhoneNumber().replace("-", ""));
         }
 
         // 기본 권한 설정 ("ROLE_USER")
@@ -81,7 +86,7 @@ public class UserService {
             admin.setProfileImage(dto.getProfileImage());
         }
         if (dto.getPhoneNumber() != null) {
-            admin.setPhoneNumber(dto.getPhoneNumber());
+            admin.setPhoneNumber(dto.getPhoneNumber().replace("-", ""));
         }
 
         // 관리자 권한 추가
@@ -162,6 +167,14 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public static String generateToken(int length) {
+        StringBuilder token = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int index = RANDOM.nextInt(CHARACTERS.length());
+            token.append(CHARACTERS.charAt(index));
+        }
+        return token.toString();
+    }
     /*
     Cascading
         If a User is deleted, consider what should happen to their Todo items.
@@ -195,7 +208,7 @@ public class UserService {
     }
 
     private PasswordResetToken createPasswordResetToken(User user) {
-        String token = UUID.randomUUID().toString();
+        String token = generateToken(6);
 
         PasswordResetToken passwordResetToken = PasswordResetToken.builder()
                 .email(user.getEmail())

@@ -116,7 +116,7 @@ public class WebSecurityConfig {
         MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector).servletPath("/path");
 
         http.csrf(AbstractHttpConfigurer::disable);
-        http.cors(withDefaults());
+        http.cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource()));
         http.anonymous(AbstractHttpConfigurer::disable);
 //                http.httpBasic(AbstractHttpConfigurer::disable);
 
@@ -135,6 +135,7 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/login?error")).permitAll()
                 .requestMatchers(antMatcher("/search/**")).permitAll()
                 .requestMatchers(antMatcher("/user/forgot-password")).permitAll()
+                .requestMatchers(antMatcher("/user/sms/**")).permitAll()
                 .requestMatchers(antMatcher(HttpMethod.GET, "/user/reset-password")).permitAll()
                 .requestMatchers(antMatcher(HttpMethod.POST, "/user/reset-password")).permitAll()
                 .requestMatchers(antMatcher("/user/signup")).permitAll()

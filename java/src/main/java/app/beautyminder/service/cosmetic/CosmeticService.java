@@ -32,7 +32,7 @@ public class CosmeticService {
         return cosmeticRepository.findById(id).orElse(null);
     }
 
-    public List<Cosmetic> findCosmeticsByCategory(Cosmetic.Category category) {
+    public List<Cosmetic> findCosmeticsByCategory(String category) {
         return cosmeticRepository.findByCategory(category);
     }
 

@@ -27,8 +27,8 @@ public class CosmeticSearchService {
     private final EsCosmeticRepository esCosmeticRepository;
     private final RestHighLevelClient opensearchClient;
 
-//    @PostConstruct
-    // @Scheduled(cron = "0 */50 * * * ?") // every 15 mins
+    @PostConstruct
+    @Scheduled(cron = "0 */50 * * * ?") // every 15 mins
     public void indexCosmetics() {
         List<Cosmetic> cosmetics = cosmeticRepository.findAll();  // Fetch all cosmetics from MongoDB
         List<EsCosmetic> esCosmetics = cosmetics.stream()
@@ -44,7 +44,7 @@ public class CosmeticSearchService {
                 .id(cosmetic.getId())
                 .name(cosmetic.getName())
                 .brand(cosmetic.getBrand())
-                .category(cosmetic.getCategory().toString())
+                .category(cosmetic.getCategory())
                 .keywords(cosmetic.getKeywords())
                 .build();
     }
@@ -92,14 +92,13 @@ public class CosmeticSearchService {
         return esCosmeticRepository.findByNameContaining(name);
     }
 
-    public List<EsCosmetic> searchByCategory(Cosmetic.Category category) {
-        return esCosmeticRepository.findByCategory(String.valueOf(category));
+    public List<EsCosmetic> searchByCategory(String category) {
+        return esCosmeticRepository.findByCategory(category);
     }
 
     public List<EsCosmetic> searchByKeyword(String keyword) {
         return esCosmeticRepository.findByKeywordsContains(keyword);
     }
-
 
 
 }

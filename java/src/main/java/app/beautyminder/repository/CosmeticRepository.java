@@ -6,11 +6,10 @@ import org.springframework.data.mongodb.repository.Query;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 public interface CosmeticRepository extends MongoRepository<Cosmetic, String> {
 
-    List<Cosmetic> findByCategory(Cosmetic.Category category);
+    List<Cosmetic> findByCategory(String category);
 
     List<Cosmetic> findByStatus(Cosmetic.Status status);
 

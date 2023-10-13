@@ -2,7 +2,8 @@
   "properties": {
     "content": {
       "type": "text",
-      "analyzer": "seunjeon"
+      "analyzer": "seunjeon",
+      "search_analyzer": "seunjeon_search"
     },
     "userName": {
       "type": "text",

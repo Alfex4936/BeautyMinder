@@ -40,7 +40,7 @@ public class SearchController {
     }
 
     @GetMapping("/category")
-    public ResponseEntity<List<EsCosmetic>> searchByCategory(@RequestParam Cosmetic.Category category) {
+    public ResponseEntity<List<EsCosmetic>> searchByCategory(@RequestParam String category) {
         List<EsCosmetic> results = cosmeticSearchService.searchByCategory(category);
         return ResponseEntity.ok(results);
     }

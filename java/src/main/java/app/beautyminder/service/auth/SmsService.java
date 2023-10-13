@@ -19,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -53,7 +54,7 @@ public class SmsService {
 
     private final PasswordResetTokenRepository passwordResetTokenRepository;
 
-    public String makeSignature(Long time) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+    public String makeSignature(Long time) throws NoSuchAlgorithmException, InvalidKeyException {
         String space = " ";                    // one space
         String newLine = "\n";                    // new line
         String method = "POST";                    // method
@@ -89,8 +90,8 @@ public class SmsService {
         headers.set("x-ncp-apigw-signature-v2", makeSignature(time));
 
 
-        String resetUrl = "http://localhost:8080" + "/user/reset-password?token=" + tUser.getToken();
-        String content = "( " + tUser.getUser().getEmail() + " )의 " + "비밀번호를 초기화하려면 다음 링크를 누르세요: " + resetUrl;
+        String resetUrl = "http://localhost:8080" + "/user/reset-password?token=" + tUser.getToken().getToken();
+        String content = tUser.getUser().getEmail() + ") to reset: " + resetUrl;
 
 
         List<MessageDTO> messages = new ArrayList<>();

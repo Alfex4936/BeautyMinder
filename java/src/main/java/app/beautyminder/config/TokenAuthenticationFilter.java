@@ -52,7 +52,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private static final Pattern UNPROTECTED_SWAGGER_API =
             Pattern.compile("^/(swagger-ui|v3/api-docs|proxy)(/.*)?$");
     private static final Pattern UNPROTECTED_API =
-            Pattern.compile("^/(search|cosmetic/hit|cosmetic/click|cosmetic/top)(/.*)?$");
+            Pattern.compile("^/(search|cosmetic/hit|cosmetic/click|cosmetic/top|user/sms/send)(/.*)?$");
 
     @Override
     protected void doFilterInternal(

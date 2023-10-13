@@ -35,7 +35,7 @@ public class Cosmetic {
     private LocalDate expirationDate;
     private LocalDateTime createdAt;
     private LocalDate purchasedDate;
-    private Category category;
+    private String category;
     private Status status;
 
     private float averageRating = 0.0F; // ex) 3.14
@@ -49,7 +49,7 @@ public class Cosmetic {
 //    private User user;
 
     @Builder
-    public Cosmetic(String name, String brand, LocalDate expirationDate, LocalDate purchasedDate, Category category, Status status) {
+    public Cosmetic(String name, String brand, LocalDate expirationDate, LocalDate purchasedDate, String category, Status status) {
         this.name = name;
         this.brand = brand;
         this.expirationDate = expirationDate;

@@ -2,7 +2,12 @@
   "properties": {
     "name": {
       "type": "text",
-      "analyzer": "seunjeon"
+      "analyzer": "seunjeon",
+      "fields": {
+        "keyword": {
+          "type": "keyword"
+        }
+      }
     },
     "brand": {
       "type": "text",
