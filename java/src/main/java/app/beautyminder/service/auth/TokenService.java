@@ -1,30 +1,55 @@
 package app.beautyminder.service.auth;
 
 import app.beautyminder.config.jwt.TokenProvider;
+import app.beautyminder.domain.PasswordResetToken;
 import app.beautyminder.domain.User;
+import app.beautyminder.repository.PasswordResetTokenRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @Service
 public class TokenService {
 
-    private final TokenProvider tokenProvider;
-    private final RefreshTokenService refreshTokenService;
-    private final UserService userService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private static final SecureRandom RANDOM = new SecureRandom();
 
-    public String createNewAccessToken(String refreshToken) {
-        // 토큰 유효성 검사에 실패 하면 예외 발생
-        if(!tokenProvider.validToken(refreshToken)) {
-            throw new IllegalArgumentException("Unexpected token");
+    public static String generateToken(int length) {
+        StringBuilder token = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int index = RANDOM.nextInt(CHARACTERS.length());
+            token.append(CHARACTERS.charAt(index));
         }
+        return token.toString();
+    }
 
-        String userId = refreshTokenService.findByRefreshToken(refreshToken).getUser().getId();
-        User user = userService.findById(userId);
+    PasswordResetToken createPasswordResetToken(User user) {
+        String token = generateToken(6);
 
-        return tokenProvider.generateToken(user, Duration.ofHours(2));
+        PasswordResetToken passwordResetToken = PasswordResetToken.builder()
+                .email(user.getEmail())
+                .token(token)
+                .expiryDate(LocalDateTime.now().plusHours(2))
+                .build();
+
+        passwordResetTokenRepository.save(passwordResetToken);
+
+        return passwordResetToken;
+    }
+
+    public void validateResetToken(String token) {
+        PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));
+
+        if (passwordResetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Reset token has expired");
+        }
     }
 }
 

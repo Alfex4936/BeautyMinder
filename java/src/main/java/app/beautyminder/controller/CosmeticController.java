@@ -7,9 +7,13 @@ import app.beautyminder.service.ReviewService;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticMetricService;
 import app.beautyminder.service.cosmetic.CosmeticService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,15 +31,33 @@ public class CosmeticController {
     private final CosmeticService cosmeticService;
     private final CosmeticMetricService cosmeticMetricService;
 
-    private static final Logger logger = LoggerFactory.getLogger(CosmeticController.class);
-
+    @Operation(
+            summary = "Get All Cosmetics",
+            description = "모든 화장품을 가져옵니다.",
+            tags = {"Cosmetic Operations"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Cosmetic.class, type = "array"))),
+                    @ApiResponse(responseCode = "404", description = "화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))
+            }
+    )
     @GetMapping
     public ResponseEntity<List<Cosmetic>> getAllCosmetics() {
         List<Cosmetic> cosmetics = cosmeticService.getAllCosmetics();
         return ResponseEntity.ok(cosmetics);
     }
 
-    // Retrieve a specific cosmetic by its ID
+    @Operation(
+            summary = "Get Cosmetic by ID",
+            description = "ID로 화장품을 가져옵니다.",
+            tags = {"Cosmetic Operations"},
+            parameters = {
+                    @Parameter(name = "id", description = "화장품의 ID")
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Cosmetic.class))),
+                    @ApiResponse(responseCode = "404", description = "화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))
+            }
+    )
     @GetMapping("/{id}")
     public ResponseEntity<Cosmetic> getCosmeticById(@PathVariable String id) {
         Cosmetic cosmetic = cosmeticService.getCosmeticById(id);
@@ -83,10 +105,27 @@ public class CosmeticController {
         return ResponseEntity.ok(reviews);
     }
 
+    @Operation(
+            summary = "Add to User Favorite",
+            description = "사용자의 즐겨찾기에 화장품을 추가합니다.",
+            tags = {"Cosmetic Operations"},
+            parameters = {
+                    @Parameter(name = "userId", description = "사용자의 ID"),
+                    @Parameter(name = "cosmeticId", description = "화장품의 ID")
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = User.class))),
+                    @ApiResponse(responseCode = "404", description = "사용자 또는 화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))
+            }
+    )
     @PostMapping("/{userId}/favorites/{cosmeticId}")
     public ResponseEntity<User> addToUserFavorite(@PathVariable String userId, @PathVariable String cosmeticId) {
         try {
             User updatedUser = userService.addCosmeticById(userId, cosmeticId);
+
+            // Redis
+            cosmeticMetricService.incrementFavCount(cosmeticId);
+
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -97,6 +136,10 @@ public class CosmeticController {
     public ResponseEntity<User> removeFromUserFavorite(@PathVariable String userId, @PathVariable String cosmeticId) {
         try {
             User updatedUser = userService.removeCosmeticById(userId, cosmeticId);
+
+            // Redis
+            cosmeticMetricService.decreaseFavCount(cosmeticId);
+
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

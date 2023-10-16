@@ -27,7 +27,7 @@ public class ReviewSearchService {
     private final RestHighLevelClient opensearchClient;
 
     //    @PostConstruct
-    // @Scheduled(cron = "0 0 2 * * ?") // everyday 2am
+    @Scheduled(cron = "0 0 2 * * ?") // everyday 2am
     public void indexReviews() {
         List<Review> reviews = reviewRepository.findAll();  // Fetch all reviews from MongoDB
         List<EsReview> esReviews = reviews.stream()

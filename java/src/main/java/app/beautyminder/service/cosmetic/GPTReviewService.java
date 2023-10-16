@@ -1,6 +1,5 @@
 package app.beautyminder.service.cosmetic;
 
-import app.beautyminder.config.WebSecurityConfig;
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.GPTReview;
 import app.beautyminder.domain.Review;
@@ -10,6 +9,7 @@ import app.beautyminder.repository.ReviewRepository;
 import io.github.flashvayne.chatgpt.dto.chat.MultiChatMessage;
 import io.github.flashvayne.chatgpt.service.ChatgptService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class GPTReviewService {
@@ -36,7 +37,7 @@ public class GPTReviewService {
     @Value("${chatgpt.multi.model}")
     private String gptVersion;
 
-    // @Scheduled(cron = "0 0 7 ? * MON") // Every Monday at 7:00 am
+    @Scheduled(cron = "0 0 7 ? * MON") // Every Monday at 7:00 am
     public void summarizeReviews() {
 //        System.out.println("====== " + systemRole);
         List<Cosmetic> allCosmetics = cosmeticRepository.findAll();
@@ -68,6 +69,8 @@ public class GPTReviewService {
                 gptReviewRepository.save(gptReview);
             }
         }
+
+        log.info("GPTReview: Summarization done");
     }
 
     private String saveSummarizedReviews(List<Review> reviews, Cosmetic cosmetic) {

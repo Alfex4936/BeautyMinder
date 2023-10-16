@@ -8,15 +8,21 @@ import app.beautyminder.repository.PasswordResetTokenRepository;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.TodoRepository;
 import app.beautyminder.repository.UserRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RequiredArgsConstructor
 @Service
@@ -27,10 +33,7 @@ public class UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
-
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    private static final SecureRandom RANDOM = new SecureRandom();
-
+    private final TokenService tokenService;
 
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
 
@@ -167,14 +170,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public static String generateToken(int length) {
-        StringBuilder token = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            int index = RANDOM.nextInt(CHARACTERS.length());
-            token.append(CHARACTERS.charAt(index));
-        }
-        return token.toString();
-    }
+
     /*
     Cascading
         If a User is deleted, consider what should happen to their Todo items.
@@ -196,30 +192,17 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        PasswordResetToken token = createPasswordResetToken(user);
+        PasswordResetToken token = tokenService.createPasswordResetToken(user);
         emailService.sendPasswordResetEmail(user.getEmail(), token.getToken());
     }
 
     public PasswordResetResponse requestPasswordResetByNumber(String phoneNumber) {
         User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        PasswordResetToken token = createPasswordResetToken(user);
+        PasswordResetToken token = tokenService.createPasswordResetToken(user);
         return new PasswordResetResponse(token, user);
     }
 
-    private PasswordResetToken createPasswordResetToken(User user) {
-        String token = generateToken(6);
-
-        PasswordResetToken passwordResetToken = PasswordResetToken.builder()
-                .email(user.getEmail())
-                .token(token)
-                .expiryDate(LocalDateTime.now().plusHours(2))
-                .build();
-
-        passwordResetTokenRepository.save(passwordResetToken);
-
-        return passwordResetToken;
-    }
 
     public void resetPassword(String token, String newPassword) {
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
@@ -238,12 +221,4 @@ public class UserService {
         passwordResetTokenRepository.delete(resetToken);
     }
 
-    public void validateResetToken(String token) {
-        PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));
-
-        if (passwordResetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Reset token has expired");
-        }
-    }
 }

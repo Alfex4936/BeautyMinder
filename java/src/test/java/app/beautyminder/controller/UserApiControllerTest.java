@@ -9,12 +9,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -55,8 +57,13 @@ class UserApiControllerTest {
     @Autowired
     RefreshTokenRepository refreshTokenRepository;
 
+    @Value("${naver.cloud.sms.sender-phone}")
+    private String phoneNumber;
+
     private String accessToken;
     private String refreshToken;
+
+    private final String userEmail = "usertest@email";
 
 
     @BeforeEach
@@ -77,7 +84,12 @@ class UserApiControllerTest {
     public void testSignup() throws Exception {
         // given
         String url = "/user/signup";
-        String requestBody = "{\"email\": \"test@com\", \"password\": \"1234\"}";
+
+        var map = new HashMap<>(Map.of("email", userEmail));
+        map.put("password", "1234");
+        map.put("phoneNumber", phoneNumber);
+
+        String requestBody = objectMapper.writeValueAsString(map);  // Convert map to JSON string
 
         // when
         mockMvc.perform(post(url)
@@ -86,15 +98,37 @@ class UserApiControllerTest {
 
                 // then
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.user.email").value("test@com"));
+                .andExpect(jsonPath("$.user.email").value(userEmail));
     }
 
     @Order(2)
+    @DisplayName("Test Forgot password with phone number")
+    @Test
+    public void testSender() throws Exception {
+        // given
+        final String url = "/user/sms/send/";
+
+        Optional<User> optUser = userRepository.findByEmail(userEmail);
+        if (optUser.isEmpty()) {
+            throw new Exception("Non existent user");
+        }
+        User user = optUser.get();
+        String phone = user.getPhoneNumber();
+
+        // when
+        ResultActions resultActions = mockMvc.perform(post(url + phone));
+
+        // then
+        resultActions
+                .andExpect(status().isOk());
+    }
+
+    @Order(3)
     @DisplayName("Test Login")
     @Test
     public void testLogin() throws Exception {
         // given
-        RequestBuilder requestBuilder = formLogin().user("email", "test@com").password("1234");
+        RequestBuilder requestBuilder = formLogin().user("email", userEmail).password("1234");
 
         // when
         // Perform login and capture the response
@@ -115,14 +149,14 @@ class UserApiControllerTest {
         assert validToken(refreshToken);
     }
 
-    @Order(3)
+    @Order(4)
     @DisplayName("Test Add Todo")
     @Test
     public void testAddTodo() throws Exception {
         // given
         String url = "/todo/add";
 
-        Optional<User> optUser = userRepository.findByEmail("test@com");
+        Optional<User> optUser = userRepository.findByEmail(userEmail);
         if (optUser.isEmpty()) {
             throw new Exception("Non existent user");
         }
@@ -147,12 +181,12 @@ class UserApiControllerTest {
                 .andExpect(jsonPath("$.message").value("Todo added successfully"));
     }
 
-    @Order(4)
+    @Order(5)
     @DisplayName("Delete a user")
     @Test
     public void testDeleteUser() throws Exception {
         // given
-        Optional<User> optUser = userRepository.findByEmail("test@com");
+        Optional<User> optUser = userRepository.findByEmail(userEmail);
         if (optUser.isEmpty()) {
             throw new Exception("Non existent user");
         }

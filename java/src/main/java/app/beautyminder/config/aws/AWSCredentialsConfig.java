@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Slf4j
 @Configuration
 public class AWSCredentialsConfig {
 
@@ -21,7 +20,6 @@ public class AWSCredentialsConfig {
 
     @Bean
     public AWSCredentialsProvider customCredentialsProvider() {
-        log.info("Using AWS credentials for access.");
         return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey));
 //        return new AWSStaticCredentialsProvider(new BasicAWSCredentials(username, password));
     }

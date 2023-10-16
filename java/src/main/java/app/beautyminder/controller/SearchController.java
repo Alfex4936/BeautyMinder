@@ -1,22 +1,20 @@
 package app.beautyminder.controller;
 
-import app.beautyminder.domain.*;
-import app.beautyminder.service.ReviewService;
-import app.beautyminder.service.auth.UserService;
-import app.beautyminder.service.cosmetic.CosmeticMetricService;
+import app.beautyminder.domain.EsCosmetic;
+import app.beautyminder.domain.EsReview;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
-import app.beautyminder.service.cosmetic.CosmeticService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,26 +23,70 @@ public class SearchController {
 
     private final CosmeticSearchService cosmeticSearchService;
     private final ReviewSearchService reviewSearchService;
-    private final CosmeticMetricService cosmeticMetricService;
 
+    @Operation(
+            summary = "Search Cosmetics by Name",
+            description = "이름으로 화장품을 검색합니다.",
+            tags = {"Search Operations"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation"),
+                    @ApiResponse(responseCode = "400", description = "Invalid parameters")
+            }
+    )
     @GetMapping("/cosmetic")
     public ResponseEntity<List<EsCosmetic>> searchByName(@RequestParam String name) {
         List<EsCosmetic> results = cosmeticSearchService.searchByName(name);
         return ResponseEntity.ok(results);
     }
 
+    @Operation(
+            summary = "Search Reviews by Content",
+            description = "콘텐츠로 리뷰를 검색합니다.",
+            tags = {"Search Operations"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content =
+                    @Content(array = @ArraySchema(
+                            schema = @Schema(implementation = EsReview.class)
+                    ))),
+                    @ApiResponse(responseCode = "400", description = "Invalid parameters")
+            }
+    )
     @GetMapping("/review")
     public ResponseEntity<List<EsReview>> searchByContent(@RequestParam String content) {
         List<EsReview> results = reviewSearchService.searchByContent(content);
         return ResponseEntity.ok(results);
     }
 
+    @Operation(
+            summary = "Search Cosmetics by Category",
+            description = "카테고리로 화장품을 검색합니다.",
+            tags = {"Search Operations"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content =
+                    @Content(array = @ArraySchema(
+                            schema = @Schema(implementation = EsCosmetic.class)
+                    ))),
+                    @ApiResponse(responseCode = "400", description = "Invalid parameters")
+            }
+    )
     @GetMapping("/category")
     public ResponseEntity<List<EsCosmetic>> searchByCategory(@RequestParam String category) {
         List<EsCosmetic> results = cosmeticSearchService.searchByCategory(category);
         return ResponseEntity.ok(results);
     }
 
+    @Operation(
+            summary = "Search Cosmetics by Keyword",
+            description = "키워드로 화장품을 검색합니다.",
+            tags = {"Search Operations"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content =
+                    @Content(array = @ArraySchema(
+                            schema = @Schema(implementation = EsCosmetic.class)
+                    ))),
+                    @ApiResponse(responseCode = "400", description = "Invalid parameters")
+            }
+    )
     @GetMapping("/keyword")
     public ResponseEntity<List<EsCosmetic>> searchByKeyword(@RequestParam String keyword) {
         List<EsCosmetic> results = cosmeticSearchService.searchByKeyword(keyword);
@@ -87,6 +129,15 @@ public class SearchController {
 //        return ResponseEntity.ok("index successfully!");
 //    }
 
+    @Operation(
+            summary = "Trigger Indexing of Reviews",
+            description = "리뷰 인덱싱을 트리거합니다.",
+            tags = {"Indexing Operations"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Indexing successful", content = @Content(mediaType = "text/plain")),
+                    @ApiResponse(responseCode = "500", description = "Indexing failed", content = @Content(mediaType = "text/plain"))
+            }
+    )
     @PostMapping("/index/review")
     public ResponseEntity<String> triggerIndexingReview() { // force indexing reviews
         reviewSearchService.indexReviews();
