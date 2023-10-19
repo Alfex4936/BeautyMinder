@@ -2,19 +2,18 @@ package app.beautyminder.service.cosmetic;
 
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.dto.CosmeticMetricData;
+import app.beautyminder.dto.Event;
 import app.beautyminder.repository.CosmeticRepository;
+import app.beautyminder.service.EventQueue;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.util.EntityUtils;
-import org.opensearch.client.Request;
-import org.opensearch.client.Response;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,12 +27,14 @@ public class CosmeticMetricService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+    private final EventQueue eventQueue;
+
     // Redis structure: "cosmeticMetrics:{cosmeticId}" -> {"clicks": "10", "hits": "5", "favs": "3"}
     private static final String COSMETIC_METRICS_KEY_TEMPLATE = "cosmeticMetrics:%s";
 
 
     // clicks might be considered more valuable as they represent a user taking a clear action based on their interest
-    
+
     /*
    
     현재 실시간 수집 중인 정보:
@@ -46,7 +47,8 @@ public class CosmeticMetricService {
     private final double HIT_WEIGHT = 1.1;
     private final double FAV_WEIGHT = 2.0;
 
-    @Scheduled(cron = "0 0 7 * * ?") // everyday 7am
+
+    @Scheduled(cron = "0 0 4 * * ?") // everyday 4am
     public void resetCounts() {
         Set<String> keys = redisTemplate.keys("cosmeticMetrics:*");
         if (keys != null) {
@@ -57,31 +59,70 @@ public class CosmeticMetricService {
         log.info("REDIS: Reset all cosmetic metrics.");
     }
 
+    // Scheduled Batch Processing
+    @Scheduled(cron = "0 0/10 * * * ?") // Every 10 minutes
+    @Transactional
+    public void processEvents() {
+        List<Event> events = eventQueue.dequeueAll();
+        Map<String, CosmeticMetricData> aggregatedData = new HashMap<>();
+
+        for (Event event : events) {
+            CosmeticMetricData data = aggregatedData.getOrDefault(event.getCosmeticId(), new CosmeticMetricData());
+            data.setCosmeticId(event.getCosmeticId());
+
+            switch (event.getType()) {
+                case CLICK:
+                    data.setClickCount(data.getClickCount() + 1);
+                    break;
+                case HIT:
+                    data.setHitCount(data.getHitCount() + 1);
+                    break;
+                case FAV:
+                    data.setFavCount(data.getFavCount() + 1);
+                    break;
+            }
+            aggregatedData.put(event.getCosmeticId(), data);
+        }
+
+        for (Map.Entry<String, CosmeticMetricData> entry : aggregatedData.entrySet()) {
+            String cosmeticId = entry.getKey();
+            CosmeticMetricData data = entry.getValue();
+            updateRedisMetrics(cosmeticId, data);
+        }
+
+        log.info("REDIS: Sending batches");
+    }
+
+    // Methods to collect events in the intermediate data store
+    public void collectEvent(String cosmeticId, ActionType type) {
+        eventQueue.enqueue(new Event(cosmeticId, type));
+    }
+
+    public void collectClickEvent(String cosmeticId) {
+        collectEvent(cosmeticId, ActionType.CLICK);
+    }
+
+    public void collectHitEvent(String cosmeticId) {
+        collectEvent(cosmeticId, ActionType.HIT);
+    }
+
+    public void collectFavEvent(String cosmeticId) {
+        collectEvent(cosmeticId, ActionType.FAV);
+    }
+
+    private void updateRedisMetrics(String cosmeticId, CosmeticMetricData data) {
+        String key = buildRedisKey(cosmeticId);
+        redisTemplate.opsForHash().putAll(key, Map.of(
+                "clicks", data.getClickCount().toString(),
+                "hits", data.getHitCount().toString(),
+                "favs", data.getFavCount().toString()
+        ));
+    }
+
     private String buildRedisKey(String cosmeticId) {
         return String.format(COSMETIC_METRICS_KEY_TEMPLATE, cosmeticId);
     }
 
-    public void incrementMetric(String cosmeticId, String metric) {
-        String key = buildRedisKey(cosmeticId);
-        redisTemplate.opsForHash().increment(key, metric, 1);
-    }
-
-    public void incrementClickCount(String cosmeticId) {
-        incrementMetric(cosmeticId, "clicks");
-    }
-
-    public void incrementHitCount(String cosmeticId) {
-        incrementMetric(cosmeticId, "hits");
-    }
-
-    public void incrementFavCount(String cosmeticId) {
-        incrementMetric(cosmeticId, "favs");
-    }
-
-    public void decreaseFavCount(String cosmeticId) {
-        String key = buildRedisKey(cosmeticId);
-        redisTemplate.opsForHash().increment(key, "favs", -1);
-    }
 
     public List<Cosmetic> getTopRankedCosmetics(int size) {
         // Retrieve all keys for the cosmetics metrics
@@ -148,4 +189,19 @@ public class CosmeticMetricService {
         }
         return allCounts;
     }
+
+    @Getter
+    public enum ActionType {
+        CLICK("click"),
+        HIT("hit"),
+        FAV("fav");
+
+        private final String actionString;
+
+        ActionType(String actionString) {
+            this.actionString = actionString;
+        }
+
+    }
+
 }

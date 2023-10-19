@@ -124,7 +124,7 @@ public class CosmeticController {
             User updatedUser = userService.addCosmeticById(userId, cosmeticId);
 
             // Redis
-            cosmeticMetricService.incrementFavCount(cosmeticId);
+            cosmeticMetricService.collectFavEvent(cosmeticId);
 
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (NoSuchElementException e) {
@@ -137,9 +137,6 @@ public class CosmeticController {
         try {
             User updatedUser = userService.removeCosmeticById(userId, cosmeticId);
 
-            // Redis
-            cosmeticMetricService.decreaseFavCount(cosmeticId);
-
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -148,13 +145,13 @@ public class CosmeticController {
 
     @PostMapping("/click/{cosmeticId}")
     public ResponseEntity<Void> incrementClickCount(@PathVariable String cosmeticId) {
-        cosmeticMetricService.incrementClickCount(cosmeticId);
+        cosmeticMetricService.collectClickEvent(cosmeticId);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/hit/{cosmeticId}")
     public ResponseEntity<Void> incrementHitCount(@PathVariable String cosmeticId) {
-        cosmeticMetricService.incrementHitCount(cosmeticId);
+        cosmeticMetricService.collectHitEvent(cosmeticId);
         return ResponseEntity.ok().build();
     }
 
