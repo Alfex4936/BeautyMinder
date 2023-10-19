@@ -2,6 +2,8 @@ package app.beautyminder.controller;
 
 import app.beautyminder.domain.EsCosmetic;
 import app.beautyminder.domain.EsReview;
+import app.beautyminder.dto.CosmeticMetricData;
+import app.beautyminder.service.cosmetic.CosmeticMetricService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,7 +16,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -22,6 +27,7 @@ import java.util.List;
 public class SearchController {
 
     private final CosmeticSearchService cosmeticSearchService;
+    private final CosmeticMetricService cosmeticMetricService;
     private final ReviewSearchService reviewSearchService;
 
     @Operation(
@@ -142,5 +148,11 @@ public class SearchController {
     public ResponseEntity<String> triggerIndexingReview() { // force indexing reviews
         reviewSearchService.indexReviews();
         return ResponseEntity.ok("index successfully!");
+    }
+
+    @GetMapping("/data")
+    public ResponseEntity<List<CosmeticMetricData>> getCosmeticData() {
+        List<CosmeticMetricData> data = cosmeticMetricService.getAllCosmeticCounts();
+        return ResponseEntity.ok(data);
     }
 }

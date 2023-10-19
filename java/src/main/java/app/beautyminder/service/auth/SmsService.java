@@ -52,7 +52,6 @@ public class SmsService {
     @Value("${naver.cloud.sms.sender-phone}")
     private String phone;
 
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     public String makeSignature(Long time) throws NoSuchAlgorithmException, InvalidKeyException {
         String space = " ";                    // one space

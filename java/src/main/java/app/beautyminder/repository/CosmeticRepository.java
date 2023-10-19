@@ -11,8 +11,6 @@ public interface CosmeticRepository extends MongoRepository<Cosmetic, String> {
 
     List<Cosmetic> findByCategory(String category);
 
-    List<Cosmetic> findByStatus(Cosmetic.Status status);
-
     @Query("{'expirationDate': {'$lte': ?0}}")
     List<Cosmetic> findExpiringSoon(LocalDate date);
 

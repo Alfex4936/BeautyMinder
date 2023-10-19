@@ -49,9 +49,9 @@ public class Review {
         this.content = reviewDetails.getContent();
         this.rating = reviewDetails.getRating();
 
-        // Optionally, you might also want to update the images, user, and cosmetic fields
+        // Optionally, might also want to update the images, user, and cosmetic fields
         // if they are part of what can be updated in a review.
-        // For images, you might want to clear the current list and add all images from reviewDetails,
+        // For images, might want to clear the current list and add all images from reviewDetails,
         // or perhaps just append the new images to the current list.
         this.images.clear();
         this.images.addAll(reviewDetails.getImages());

@@ -36,8 +36,6 @@ public class Cosmetic {
     private LocalDateTime createdAt;
     private LocalDate purchasedDate;
     private String category;
-    private Status status;
-
     private float averageRating = 0.0F; // ex) 3.14
     private int reviewCount = 0;
     private int totalRating = 0;
@@ -49,13 +47,12 @@ public class Cosmetic {
 //    private User user;
 
     @Builder
-    public Cosmetic(String name, String brand, LocalDate expirationDate, LocalDate purchasedDate, String category, Status status) {
+    public Cosmetic(String name, String brand, LocalDate expirationDate, LocalDate purchasedDate, String category) {
         this.name = name;
         this.brand = brand;
         this.expirationDate = expirationDate;
         this.purchasedDate = purchasedDate;
         this.category = category;
-        this.status = status;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -179,10 +176,6 @@ public class Cosmetic {
             }
             throw new IllegalArgumentException("No enum constant with display name: " + displayName);
         }
-    }
-
-    public enum Status {
-        개봉, 미개봉
     }
 
     public void updateAverageRating(int newRating) {

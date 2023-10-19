@@ -36,9 +36,6 @@ public class CosmeticService {
         return cosmeticRepository.findByCategory(category);
     }
 
-    public List<Cosmetic> findCosmeticsByStatus(Cosmetic.Status status) {
-        return cosmeticRepository.findByStatus(status);
-    }
 
     public List<Cosmetic> findCosmeticsExpiringSoon(LocalDate date) {
         return cosmeticRepository.findExpiringSoon(date);
