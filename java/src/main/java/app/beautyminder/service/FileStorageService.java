@@ -36,7 +36,7 @@ public class FileStorageService {
     );
 
     public String storeFile(MultipartFile file) {
-        validateImageFileType(file);  // Add this line
+        validateImageFileType(file);
 
         try {
             // Store the original file
