@@ -7,7 +7,6 @@ import app.beautyminder.dto.user.LoginResponse;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.service.auth.RefreshTokenService;
 import app.beautyminder.service.auth.UserDetailService;
-import app.beautyminder.service.auth.UserService;
 import app.beautyminder.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -52,7 +51,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
-import static org.springframework.security.config.Customizer.withDefaults;
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
 @RequiredArgsConstructor
@@ -62,13 +60,11 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 public class WebSecurityConfig {
 
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
-    //    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
-    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofSeconds(3000);
+    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService;
-    private final UserService userService;
     private final UserDetailService userDetailsService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -136,6 +132,7 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/search/**")).permitAll()
                 .requestMatchers(antMatcher("/user/forgot-password")).permitAll()
                 .requestMatchers(antMatcher("/user/sms/**")).permitAll()
+                .requestMatchers(antMatcher("/baumann/**")).permitAll()
                 .requestMatchers(antMatcher(HttpMethod.GET, "/user/reset-password")).permitAll()
                 .requestMatchers(antMatcher(HttpMethod.POST, "/user/reset-password")).permitAll()
                 .requestMatchers(antMatcher("/user/signup")).permitAll()

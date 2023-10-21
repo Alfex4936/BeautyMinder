@@ -155,6 +155,17 @@ public class CosmeticController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(
+            summary = "Get N ranked products",
+            description = "N개의 실시간 랭킹 제품들을 불러옵니다.",
+            tags = {"Redis Operations"},
+            parameters = {
+                    @Parameter(name = "size", description = "N개 제품")
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Cosmetic.class, type = "array")))
+            }
+    )
     @GetMapping("/top")
     public ResponseEntity<List<Cosmetic>> getTopRankedCosmetics(
             @RequestParam(defaultValue = "10") int size) {

@@ -4,7 +4,26 @@
 - ✨: 새로운 기능 추가할 때
 - 🐛: 버그 수정할 때
 - 🚀: 성능 향상을 위한 코드 변경할 때
-  
+- 
+git commit -m "✨ Implement Baumann Skin Test Calcuation in API" -m "example json
+
+{
+  "skinType" : "ORPW",
+  "scores" : {
+    "hydration" : 38.0,
+    "sensitivity" : 46.0,
+    "pigmentation" : 46.5,
+    "elasticity" : 74.5,
+    "moistureRetention" : 81.25
+  },
+  "metadata" : {
+    "hydrationMax" : 44,
+    "sensitivityMax" : 64,
+    "pigmentationMax" : 57,
+    "elasticityMax" : 85
+  }
+}
+"
 # 🏗️ 구조
 
 - 🎨: 코드 형식을 변경할 때 (들여쓰기, 세미콜론 추가/제거 등)
