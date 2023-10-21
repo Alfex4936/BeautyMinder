@@ -1,0 +1,24 @@
+//Dry vs. Oily (D vs O): 11 questions
+//Sensitive vs. Resistant (S vs R): 16 questions
+//Pigmented vs. Non-Pigmented (P vs N): 14 questions
+//Wrinkled vs. Tight (W vs T): 21 questions
+
+1. 모든 질문의 maxScore = 5 (단 2개의 선택지가 있는 질문은 0 아니면 5 점)
+
+DvsO : 11개 질문 최대 44점 (최소 11)
+SvsR: 16개 질문 최대 64점 (최소 16)
+PvsN: 14개 질문 최대 57점 (최소 13)
+WvsT: 21개 질문 최대 85점 (최소 20)
+수분?: 최대 10점 (최소 4점)
+
+2. 수분 % 계산 질문 4개 있음
+  - 메이크업 파운데이션 후 2~3시간 후 상태는?
+  - 습도가 낮은 환경에서 보습제나 선크림을 바르지 않은 상태에서 내 피부는?
+  - 수분이 많지 않을 때 얼굴 피부가 땡땡해지는 느낌은?
+  - 수분 크림을 바른 후 2~3시간 정도 지나면 볼은?
+
+moisture1 = 100 * sum5 / totalScore5
+moisture2 = (100 * (totalScore5 - sum5)
+
+3. 타입 구하기
+

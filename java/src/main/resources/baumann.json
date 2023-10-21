@@ -1,0 +1,1432 @@
+{
+  "survey": {
+    "questions": [
+      {
+        "category": "D vs O",
+        "questions": [
+          {
+            "question_kr": "세안 후 제품을 바르지 않은 상태에서 내 피부는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "매우 거칠고 벗겨지거나 텁수룩하다."
+              },
+              {
+                "option": 2,
+                "description": "피부가 꽉 조이는 느낌을 받는다."
+              },
+              {
+                "option": 3,
+                "description": "빛을 반사하지 않고 수분을 잘 공급한다."
+              },
+              {
+                "option": 4,
+                "description": "밝은 빛의 반사로 피부가 반짝인다."
+              }
+            ]
+          },
+          {
+            "question_kr": "평소 사진에서 보이는 내 피부는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "피부에서 빛이 나지 않는다."
+              },
+              {
+                "option": 2,
+                "description": "때때로 빛이 난다."
+              },
+              {
+                "option": 3,
+                "description": "자주 빛이 난다."
+              },
+              {
+                "option": 4,
+                "description": "항상 빛이 난다."
+              }
+            ]
+          },
+          {
+            "question_kr": "메이크업 파운데이션 후 2~3시간 후 상태는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "주름이 벗겨지거나 찌그러진다."
+              },
+              {
+                "option": 2,
+                "description": "매끄럽다."
+              },
+              {
+                "option": 3,
+                "description": "광택이 난다."
+              },
+              {
+                "option": 4,
+                "description": "줄무늬가 있고 반짝거린다."
+              },
+              {
+                "option": 5,
+                "description": "파운데이션을 사용하지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "습도가 낮은 환경에서 보습제나 선크림을 바르지 않은 상태에서 내 피부는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "매우 건조하거나 균열이 느껴진다."
+              },
+              {
+                "option": 2,
+                "description": "팽팽한 느낌이 든다."
+              },
+              {
+                "option": 3,
+                "description": "정상으로 느껴진다."
+              },
+              {
+                "option": 4,
+                "description": "윤기가 도는 것 같으나 수분 크림이 필요하다고 느껴진다."
+              },
+              {
+                "option": 5,
+                "description": "잘 모르겠다."
+              }
+            ]
+          },
+          {
+            "question_kr": "확대 거울을 볼 때 핀 끝 크기 이상의 큰 모공의 개수는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "T존(이마와 코)에만 몇개 있다."
+              },
+              {
+                "option": 3,
+                "description": "많다."
+              },
+              {
+                "option": 4,
+                "description": "엄청 많다."
+              },
+              {
+                "option": 5,
+                "description": "잘 모르겠다."
+              }
+            ]
+          },
+          {
+            "question_kr": "얼굴 피부의 특징은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "건조하다."
+              },
+              {
+                "option": 2,
+                "description": "정상이다."
+              },
+              {
+                "option": 3,
+                "description": "복합성이다."
+              },
+              {
+                "option": 4,
+                "description": "기름기가 있다."
+              }
+            ]
+          },
+          {
+            "question_kr": "비누, 거품 등을 사용하면 얼굴 피부는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "건조하거나 균열이 느껴진다."
+              },
+              {
+                "option": 2,
+                "description": "약간 건조한 느낌이 들지만 균열은 생기지 않는다"
+              },
+              {
+                "option": 3,
+                "description": "정상으로 느껴진다."
+              },
+              {
+                "option": 4,
+                "description": "기름기가 느껴진다."
+              },
+              {
+                "option": 5,
+                "description": "비누나 기타 거품 세정제를 사용하지 않는다.(피부 건조가 이유라면 1를 선택)"
+              }
+            ]
+          },
+          {
+            "question_kr": "수분이 많지 않을 때 얼굴 피부가 땡땡해지는 느낌은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "항상 그렇다."
+              },
+              {
+                "option": 2,
+                "description": "때때로 그렇다."
+              },
+              {
+                "option": 3,
+                "description": "거의 그렇지 않다."
+              },
+              {
+                "option": 4,
+                "description": "전혀 그렇지 않다."
+              }
+            ]
+          },
+          {
+            "question_kr": "블랙헤드 또는 화이트 헤드는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "거의 없다."
+              },
+              {
+                "option": 3,
+                "description": "때때로 있다."
+              },
+              {
+                "option": 4,
+                "description": "항상 있다."
+              }
+            ]
+          },
+          {
+            "question_kr": "T존(이마와 코)에 기름기는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "때때로 있다."
+              },
+              {
+                "option": 3,
+                "description": "자주 있다."
+              },
+              {
+                "option": 4,
+                "description": "항상 있다."
+              }
+            ]
+          },
+          {
+            "question_kr": "수분 크림을 바른 후 2~3시간 정도 지나면 볼은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "매우 거칠고, 벗겨지거나, 덥수룩하다."
+              },
+              {
+                "option": 2,
+                "description": "매끄럽다."
+              },
+              {
+                "option": 3,
+                "description": "약간 광택이 난다."
+              },
+              {
+                "option": 4,
+                "description": "윤기가 나고 매끄럽거나, 보습제를 사용하지 않는다."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "S vs R",
+        "questions": [
+          {
+            "question_kr": "얼굴에 붉은 혹은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "거의 없다."
+              },
+              {
+                "option": 3,
+                "description": "최소 한 달에 한 번 생긴다."
+              },
+              {
+                "option": 4,
+                "description": "적어도 일주일에 한 번 생긴다."
+              }
+            ]
+          },
+          {
+            "question_kr": "피부 관리 제품을 사용할 때 얼굴에 발진, 가려움, 따끔거림은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "거의 없다."
+              },
+              {
+                "option": 3,
+                "description": "종종 있다."
+              },
+              {
+                "option": 4,
+                "description": "항상 그렇다."
+              },
+              {
+                "option": 5,
+                "description": "얼굴에 제품을 바르지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "여드름이나 홍반 진단을 받은 적은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "친구들과 지인들에게 들어본 적 있다."
+              },
+              {
+                "option": 3,
+                "description": "있다."
+              },
+              {
+                "option": 4,
+                "description": "심각하다."
+              },
+              {
+                "option": 5,
+                "description": "불확실하다."
+              }
+            ]
+          },
+          {
+            "question_kr": "14캐럿 금이 아닌 보석을 착용할 경우 두드러기는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "거의 없다."
+              },
+              {
+                "option": 3,
+                "description": "종종 있다."
+              },
+              {
+                "option": 4,
+                "description": "항상 있다."
+              },
+              {
+                "option": 5,
+                "description": "불확실하다."
+              }
+            ]
+          },
+          {
+            "question_kr": "자외선 차단제를 바를 때 피부에 가려움, 화상, 탈진 또는 붉게 물드는 경우는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "거의 없다."
+              },
+              {
+                "option": 3,
+                "description": "종종 있다."
+              },
+              {
+                "option": 4,
+                "description": "항상 있다."
+              },
+              {
+                "option": 5,
+                "description": "선크림을 절대 바르지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "아토피성 피부염, 습진 접촉성 피부염(알레르기성 피부 발진) 진단을 받은 적은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "친구들과 지인들에게 들어본 적 있다."
+              },
+              {
+                "option": 3,
+                "description": "있다."
+              },
+              {
+                "option": 4,
+                "description": "심각하다."
+              },
+              {
+                "option": 5,
+                "description": "불확실하다."
+              }
+            ]
+          },
+          {
+            "question_kr": "반지 밑에 발진은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "거의 없다."
+              },
+              {
+                "option": 3,
+                "description": "종종 있다."
+              },
+              {
+                "option": 4,
+                "description": "항상 있다."
+              },
+              {
+                "option": 5,
+                "description": "반지를 끼지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "거품 목욕, 마사지 오일 또는 바디 로션을 사용할 때 피부에 두드러기, 가려움 또는 건조함은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "거의 없다."
+              },
+              {
+                "option": 3,
+                "description": "종종 있다."
+              },
+              {
+                "option": 4,
+                "description": "항상 있다."
+              },
+              {
+                "option": 5,
+                "description": "이런 제품을 사용하지 않는다.(문제가 발생하기 때문에 사용하지 않는 경우 앞의 답중 하나를 선택)"
+              }
+            ]
+          },
+          {
+            "question_kr": "호텔에서 제공하는 비누를 몸이나 얼굴에 사용할 때 문제는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "대부분 문제 없다."
+              },
+              {
+                "option": 3,
+                "description": "피부가 가렵거나 빨갛게 변하거나 두드러기가 난다."
+              },
+              {
+                "option": 4,
+                "description": "너무 많아 사용하지 않는다."
+              },
+              {
+                "option": 5,
+                "description": "개인 비누를 가지고 다녀서 잘 모르겠다."
+              }
+            ]
+          },
+          {
+            "question_kr": "가족 중 누군가가 아토피, 습진, 천식및 알레르기를 진단 받은 적은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "가족 중 한 명"
+              },
+              {
+                "option": 3,
+                "description": "가족 중 여러 명"
+              },
+              {
+                "option": 4,
+                "description": "가족 대부분"
+              },
+              {
+                "option": 5,
+                "description": "불확실하다."
+              }
+            ]
+          },
+          {
+            "question_kr": "적당한 운동 후 또는 스트레스나 분노와 같은 강한 감정으로 얼굴이나 목이 붉어지는 빈도는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "때때로 그렇다."
+              },
+              {
+                "option": 3,
+                "description": "자주 그렇다."
+              },
+              {
+                "option": 4,
+                "description": "항상 그렇다."
+              }
+            ]
+          },
+          {
+            "question_kr": "술을 마시면 얼굴이 붉어지고 빨개지는 경향은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "때때로 그렇다."
+              },
+              {
+                "option": 3,
+                "description": "자주 그렇다."
+              },
+              {
+                "option": 4,
+                "description": "항상 또는 이 문제로 인해술을 마시지 않는다."
+              },
+              {
+                "option": 5,
+                "description": "절대 술을 마시지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "얼큰하거나 뜨거운 음식, 음료를 먹은 후 빨갛게 상기되는 빈도는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "때때로 그렇다."
+              },
+              {
+                "option": 3,
+                "description": "자주 그렇다."
+              },
+              {
+                "option": 4,
+                "description": "항상 그렇다."
+              },
+              {
+                "option": 5,
+                "description": "매운 음식을 절대 먹지 않는다.(얼굴 홍조 때문에 먹지 않는 경우 앞의 답중 하나를 선택)"
+              }
+            ]
+          },
+          {
+            "question_kr": "얼굴과 코에 붉거나 푸른색의 눈에 보이는 부러진 혈관의 개수는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "거의 없다.(1~3개)"
+              },
+              {
+                "option": 3,
+                "description": "일부 있다.(4~6개)"
+              },
+              {
+                "option": 4,
+                "description": "여러개 있다.(7개 이상)"
+              }
+            ]
+          },
+          {
+            "question_kr": "사진에서 당신의 얼굴이 붉게 보인 적은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "전혀 그렇지 않다."
+              },
+              {
+                "option": 2,
+                "description": "때때로 있다."
+              },
+              {
+                "option": 3,
+                "description": "자주 있다."
+              },
+              {
+                "option": 4,
+                "description": "항상 그렇다."
+              }
+            ]
+          },
+          {
+            "question_kr": "햇볕에 타지 않았는데도 사람들이 내게 햇볕에 탔는지 물어온 경우는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "때때로 있다."
+              },
+              {
+                "option": 3,
+                "description": "자주 있다."
+              },
+              {
+                "option": 4,
+                "description": "항상 그렇다."
+              },
+              {
+                "option": 5,
+                "description": "항상 햇볕에 그을린다.(아주 나쁨!)"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "P vs N",
+        "questions": [
+          {
+            "question_kr": "여드름이 나거나 머리카락이 자란 후에 짙은 갈색, 검은 반점의 나타남은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "때때로 있다."
+              },
+              {
+                "option": 3,
+                "description": "자주 있다."
+              },
+              {
+                "option": 4,
+                "description": "항상 그렇다."
+              },
+              {
+                "option": 5,
+                "description": "여드름이나 생머리가 절대 나지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "베인 후 갈색 자국은 얼마나 남는지?",
+            "options": [
+              {
+                "option": 1,
+                "description": "갈색 자국은 없다."
+              },
+              {
+                "option": 2,
+                "description": "일주일"
+              },
+              {
+                "option": 3,
+                "description": "몇 주"
+              },
+              {
+                "option": 4,
+                "description": "몇 개월"
+              }
+            ]
+          },
+          {
+            "question_kr": "임신 중이거나 피임약을 먹거나 호르몬 대체요법(HRT)을 복용할 때 얼굴에 생긴 흑점은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "1 개"
+              },
+              {
+                "option": 3,
+                "description": "몇 개"
+              },
+              {
+                "option": 4,
+                "description": "많다."
+              },
+              {
+                "option": 5,
+                "description": "질문에 해당되지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "윗입술이나 볼에 거무스름한 반점이나 패치가 있던 적은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "잘 모르겠다."
+              },
+              {
+                "option": 3,
+                "description": "약간 눈에 띄게 있었다."
+              },
+              {
+                "option": 4,
+                "description": "매우 눈에 띄게 있었다."
+              }
+            ]
+          },
+          {
+            "question_kr": "햇볕을 쬐면 얼굴의 그을림은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "확실하지 않다."
+              },
+              {
+                "option": 3,
+                "description": "약간 더 심해진다."
+              },
+              {
+                "option": 4,
+                "description": "많다."
+              },
+              {
+                "option": 5,
+                "description": "매일 얼굴에 선크림을 바르고 햇빛을 받지 않는다.(흑점, 주근깨 발생으로 지속적인 자외선 차단제를 사용한다면 4를 선택)"
+              }
+            ]
+          },
+          {
+            "question_kr": "얼굴에 기미, 옅은 갈색, 회색 반점이 있다는 진단을 받은 적은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "한 번 있지만 사라졌다."
+              },
+              {
+                "option": 3,
+                "description": "있다."
+              },
+              {
+                "option": 4,
+                "description": "심각하다."
+              },
+              {
+                "option": 5,
+                "description": "불확실하다."
+              }
+            ]
+          },
+          {
+            "question_kr": "얼굴, 가슴, 등, 팔에 작은 갈색 반점(주근깨, 선, 반점)이 있던 적은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "있다.(1~5개)"
+              },
+              {
+                "option": 3,
+                "description": "많이 있다.(6~15개)"
+              },
+              {
+                "option": 4,
+                "description": "아주 많이 있다.(16개 이상)"
+              }
+            ]
+          },
+          {
+            "question_kr": "몇 달 만에 처음으로 태양에 노출되었을 때, 피부는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "화상만 해당된다."
+              },
+              {
+                "option": 2,
+                "description": "화상은 더 어두워진다."
+              },
+              {
+                "option": 3,
+                "description": "어두워 진다."
+              },
+              {
+                "option": 4,
+                "description": "피부가 이미 검어서 어두워지는지 잘 모르겠다."
+              }
+            ]
+          },
+          {
+            "question_kr": "며칠 동안 연속으로 태양에 노출되면?",
+            "options": [
+              {
+                "option": 1,
+                "description": "햇볕에 그을리고 물집이 잡히지만 피부색은 변하지 않는다."
+              },
+              {
+                "option": 2,
+                "description": "피부가 약간어두워 진다."
+              },
+              {
+                "option": 3,
+                "description": "피부가 많이어두워 진다."
+              },
+              {
+                "option": 4,
+                "description": "피부가 이미 검어서 까맣게 변했는지 잘 안보인다."
+              },
+              {
+                "option": 5,
+                "description": "불확실하다."
+              }
+            ]
+          },
+          {
+            "question_kr": "햇빛을 쬐면 주근깨가 (1~2mm 정도)?",
+            "options": [
+              {
+                "option": 1,
+                "description": "절대 발생하지 않는다."
+              },
+              {
+                "option": 2,
+                "description": "매년 몇 개의 작은 주근깨가 생긴다."
+              },
+              {
+                "option": 3,
+                "description": "새로운 주근깨가 자주 생긴다."
+              },
+              {
+                "option": 4,
+                "description": "피부가 이미 검어서 어두워지는지 잘 모르겠다."
+              }
+            ]
+          },
+          {
+            "question_kr": "부모님 중에 주근깨가 있다면 어느정도?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "얼굴에 몇 개 있다."
+              },
+              {
+                "option": 3,
+                "description": "얼굴에 많이 있다."
+              },
+              {
+                "option": 4,
+                "description": "얼굴, 가슴, 목, 어깨에 많이 있다."
+              },
+              {
+                "option": 5,
+                "description": "불확실하다."
+              }
+            ]
+          },
+          {
+            "question_kr": "당신의 원래 머리 색상은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "금색"
+              },
+              {
+                "option": 2,
+                "description": "갈색"
+              },
+              {
+                "option": 3,
+                "description": "검은색"
+              },
+              {
+                "option": 4,
+                "description": "빨간색"
+              }
+            ]
+          },
+          {
+            "question_kr": "부모님 중에 주근깨가 있다면 어느정도?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "1명 있다."
+              },
+              {
+                "option": 3,
+                "description": "2 명 이상 있다."
+              },
+              {
+                "option": 4,
+                "description": "흑색종 이력이 있다."
+              },
+              {
+                "option": 5,
+                "description": "불확실하다."
+              }
+            ]
+          },
+          {
+            "question_kr": "햇볕에 노출되는 피부 부위에 검은점이?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "있다."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "category": "W vs T",
+        "questions": [
+          {
+            "question_kr": "얼굴에 주름은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "전혀 없다."
+              },
+              {
+                "option": 2,
+                "description": "얼굴을 움직일 때 주름이 생긴다."
+              },
+              {
+                "option": 3,
+                "description": "몇개 있다."
+              },
+              {
+                "option": 4,
+                "description": "얼굴을 움직이지 않아도 주름이 나타나있다."
+              }
+            ]
+          },
+          {
+            "question_kr": "어머니의 얼굴 피부는 몇 살로 보였는가?",
+            "options": [
+              {
+                "option": 1,
+                "description": "어머니 나이보다 5살에서 10살 어려보인다."
+              },
+              {
+                "option": 2,
+                "description": "어머니 본인 나이대로 보인다."
+              },
+              {
+                "option": 3,
+                "description": "어머니 나이보다 5살 많아 보인다."
+              },
+              {
+                "option": 4,
+                "description": "어머니 나이보다 5살 이상 많아 보인다."
+              },
+              {
+                "option": 5,
+                "description": "해당 되지 않는다.기억이 나지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "아버지의 얼굴 피부는 몇 살로 보였는가?",
+            "options": [
+              {
+                "option": 1,
+                "description": "아버지 나이보다 5살에서 10살 어려보인다."
+              },
+              {
+                "option": 2,
+                "description": "아버지 본인 나이대로 보인다."
+              },
+              {
+                "option": 3,
+                "description": "아버지 나이보다 5살 많아 보인다."
+              },
+              {
+                "option": 4,
+                "description": "아버지 나이보다 5살 이상 많아 보인다."
+              },
+              {
+                "option": 5,
+                "description": "해당 되지 않는다.기억이 나지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "외할머니의 얼굴 피부는 몇 살로 보였는가?",
+            "options": [
+              {
+                "option": 1,
+                "description": "외할머니 나이보다 5살에서 10살 어려보인다."
+              },
+              {
+                "option": 2,
+                "description": "외할머니 본인 나이대로 보인다."
+              },
+              {
+                "option": 3,
+                "description": "외할머니 나이보다 5살 많아 보인다."
+              },
+              {
+                "option": 4,
+                "description": "외할머니 나이보다 5살 이상 많아 보인다."
+              },
+              {
+                "option": 5,
+                "description": "해당 되지 않는다. 기억이 나지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "외할아버지의 얼굴 피부는 몇 살로 보였는가?",
+            "options": [
+              {
+                "option": 1,
+                "description": "외할아버지 나이보다 5살에서 10살 어려보인다."
+              },
+              {
+                "option": 2,
+                "description": "외할아버지 본인 나이대로 보인다."
+              },
+              {
+                "option": 3,
+                "description": "외할아버지 나이보다 5살 많아 보인다."
+              },
+              {
+                "option": 4,
+                "description": "외할아버지 나이보다 5살 이상 많아 보인다."
+              },
+              {
+                "option": 5,
+                "description": "해당 되지 않는다. 기억이 나지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "친할머니의 얼굴 피부는 몇 살로 보였는가?",
+            "options": [
+              {
+                "option": 1,
+                "description": "친할머니 나이보다 5살에서 10살 어려보인다."
+              },
+              {
+                "option": 2,
+                "description": "친할머니 본인 나이대로 보인다."
+              },
+              {
+                "option": 3,
+                "description": "친할머니 나이보다 5살 많아 보인다."
+              },
+              {
+                "option": 4,
+                "description": "친할머니 나이보다 5살 이상 많아 보인다."
+              },
+              {
+                "option": 5,
+                "description": "해당 되지 않는다. 기억이 나지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "친할아버지의 얼굴 피부는 몇 살로 보였는가?",
+            "options": [
+              {
+                "option": 1,
+                "description": "친할아버지 나이보다 5살에서 10살 어려보인다."
+              },
+              {
+                "option": 2,
+                "description": "친할아버지 본인 나이대로 보인다."
+              },
+              {
+                "option": 3,
+                "description": "친할아버지 나이보다 5살 많아 보인다."
+              },
+              {
+                "option": 4,
+                "description": "친할아버지 나이보다 5살 이상 많아 보인다."
+              },
+              {
+                "option": 5,
+                "description": "해당 되지 않는다. 기억이 나지 않는다."
+              }
+            ]
+          },
+          {
+            "question_kr": "살면서 야외활동을 통해 1년에 2주 이상 지속적으로 피부를 태운 적은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "1~5년 동안"
+              },
+              {
+                "option": 3,
+                "description": "5~10년 동안"
+              },
+              {
+                "option": 4,
+                "description": "10년 이상이다."
+              }
+            ]
+          },
+          {
+            "question_kr": "살면서 언제라도 1년에 2주 이하의 계절 태닝을 해본적은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "1~5년 동안"
+              },
+              {
+                "option": 3,
+                "description": "5~10년 동안"
+              },
+              {
+                "option": 4,
+                "description": "10년 이상이다."
+              }
+            ]
+          },
+          {
+            "question_kr": "지금까지 거주지의 하루 일광 노출은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "대부분 흐린 지역에서 살았다."
+              },
+              {
+                "option": 2,
+                "description": "대부분 흐린 지역에서도, 태양 노출이 많은 지역에서도 살았다."
+              },
+              {
+                "option": 3,
+                "description": "태양 노출이 많은 지역에서 살았다."
+              },
+              {
+                "option": 4,
+                "description": "열대, 북부, 또는 매우 화창한 지역에서 많이 살았다."
+              }
+            ]
+          },
+          {
+            "question_kr": "남들이 보는 당신의 나이는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "현재 내 나이보다 1~5살 어리다."
+              },
+              {
+                "option": 2,
+                "description": "현재 내 나이다."
+              },
+              {
+                "option": 3,
+                "description": "현재 내 나이보다 5살 위다."
+              },
+              {
+                "option": 4,
+                "description": "현재 내 나이보다 5살 이상 많다."
+              }
+            ]
+          },
+          {
+            "question_kr": "지난 5년 동안 야외 활동을 통해 피부를 태우도록 방치한 횟수는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "한 달에 한 번"
+              },
+              {
+                "option": 3,
+                "description": "일주일에 한 번"
+              },
+              {
+                "option": 4,
+                "description": "매일"
+              }
+            ]
+          },
+          {
+            "question_kr": "태닝을 해본적은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "1~5회"
+              },
+              {
+                "option": 3,
+                "description": "6~10회"
+              },
+              {
+                "option": 4,
+                "description": "여러 번"
+              }
+            ]
+          },
+          {
+            "question_kr": "평생동안 담배를 피워보거나 지속적으로 노출된 적은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "없다."
+              },
+              {
+                "option": 2,
+                "description": "몇 갑"
+              },
+              {
+                "option": 3,
+                "description": "여러 갑"
+              },
+              {
+                "option": 4,
+                "description": "매일 담배를 피운다."
+              },
+              {
+                "option": 5,
+                "description": "담배를 피워본 적은 없지만 지속적으로 간접 흡연에 노출 되었다."
+              }
+            ]
+          },
+          {
+            "question_kr": "당신이 거주하고 있는 지역의 대기 오염 정도는?",
+            "options": [
+              {
+                "option": 1,
+                "description": "공기가 깨끗하고 상쾌하다."
+              },
+              {
+                "option": 2,
+                "description": "주로 공기가 깨끗하지만 가끔 오염되었다."
+              },
+              {
+                "option": 3,
+                "description": "공기가 약간 오염되었다."
+              },
+              {
+                "option": 4,
+                "description": "공기가 매우 오염되었다."
+              }
+            ]
+          },
+          {
+            "question_kr": "레티노이드 페이셜 (레티놀, 리노바, 레틴-A, 타조락, 디핀 또는 어바지) 크림을 사용한 기간은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "오랜 세월"
+              },
+              {
+                "option": 2,
+                "description": "간혹"
+              },
+              {
+                "option": 3,
+                "description": "어렸을 때 여드름으로 한 번"
+              },
+              {
+                "option": 4,
+                "description": "없다."
+              }
+            ]
+          },
+          {
+            "question_kr": "현재 과일과 채소를 자주 먹는지?",
+            "options": [
+              {
+                "option": 1,
+                "description": "매 끼니마다"
+              },
+              {
+                "option": 2,
+                "description": "하루에 한 번"
+              },
+              {
+                "option": 3,
+                "description": "간혹"
+              },
+              {
+                "option": 4,
+                "description": "없다."
+              }
+            ]
+          },
+          {
+            "question_kr": "평생동안 하루 식단 중 과일과  채소로 구성된 식단은 몇 퍼센트?",
+            "options": [
+              {
+                "option": 1,
+                "description": "75-100%"
+              },
+              {
+                "option": 2,
+                "description": "25-75%"
+              },
+              {
+                "option": 3,
+                "description": "10-25%"
+              },
+              {
+                "option": 4,
+                "description": "0-10%"
+              }
+            ]
+          },
+          {
+            "question_kr": "당신의 자연 피부색은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "어둡다."
+              },
+              {
+                "option": 2,
+                "description": "중간이다."
+              },
+              {
+                "option": 3,
+                "description": "밝다."
+              },
+              {
+                "option": 4,
+                "description": "매우 밝다."
+              }
+            ]
+          },
+          {
+            "question_kr": "당신의 인종은?",
+            "options": [
+              {
+                "option": 1,
+                "description": "아프리카계 미국인/캐리비안/블랙"
+              },
+              {
+                "option": 2,
+                "description": "아시아/인도/중해/기타"
+              },
+              {
+                "option": 3,
+                "description": "라틴 아메리카/히스패닉"
+              },
+              {
+                "option": 4,
+                "description": "백인"
+              }
+            ]
+          },
+          {
+            "question_kr": "당신은 65세 이상?",
+            "options": [
+              {
+                "option": 1,
+                "description": "미만이다."
+              },
+              {
+                "option": 2,
+                "description": "이상이다."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
