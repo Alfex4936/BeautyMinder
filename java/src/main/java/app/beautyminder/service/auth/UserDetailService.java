@@ -15,7 +15,6 @@ public class UserDetailService implements UserDetailsService {
 
     @Override
     public User loadUserByUsername(String email) {
-        System.out.println("======= " + email);
         return userRepository.findByEmail(email)
                  .orElseThrow(() -> new IllegalArgumentException((email)));
     }

@@ -1,20 +1,23 @@
 package app.beautyminder.controller;
 
+import app.beautyminder.dto.BaumannSurveyAnswerDTO;
+import app.beautyminder.dto.BaumannTypeDTO;
 import app.beautyminder.service.BaumannService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,35 +28,59 @@ public class BaumannController {
 
     private final BaumannService baumannService;
 
-    @GetMapping()
-    public ResponseEntity<String> testBaumann() throws Exception {
-
-        // JSON parser object to parse read file
-        JSONParser jsonParser = new JSONParser();
-
-        try (FileReader reader = new FileReader("src/main/resources/baumann.json")) {
-            // Read JSON file
-            Object obj = jsonParser.parse(reader);
-
-            JSONObject jsonObject = (JSONObject) obj;
-            JSONObject surveyObject = (JSONObject) jsonObject.get("survey");
-            JSONArray categoriesArray = (JSONArray) surveyObject.get("questions");
-
-            // Create a map to store the responses with the scores from the survey inputs.
-            Map<String, Integer> responses = getTestMap(categoriesArray);
-
-            // Call your service method and get the JSON result
-            String resultJson = baumannService.calculateResults(responses);
-
-            // Return the JSON string in the response entity with the appropriate status code
-            return ResponseEntity.ok(resultJson); // This will set the response body to your JSON string
-
-        } catch (IOException | ParseException e) {
-            e.printStackTrace();
-            // Return an internal server error status (500) if there's an exception
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
-        }
+    @Operation(
+            summary = "Get Baumann Skin Type",
+            description = "바우만 피부 타입 얻기",
+            tags = {"Baumann Operations"},
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(name = "typicalResponses", value = "{ \"responses\": {\"A1\": 4, \"B2\": 5, \"D21\": 2} }", summary = "Example Baumann survey request body"),
+                            schema = @Schema(implementation = BaumannSurveyAnswerDTO.class)), description = "Baumann Test Survey"),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "바우만 피부 결과", content = @Content(
+                            examples = @ExampleObject(name = "BMTI",
+                                    value = "{ \"skinType\": \"OSNT\", \"scores\": { \"hydration\": 27.5, \"sensitivity\": 16.0, \"pigmentation\": 19.5, \"elasticity\": 39.0, \"moistureRetention\": 65.625 }, \"metadata\": { \"hydrationMax\": 44, \"sensitivityMax\": 64, \"pigmentationMax\": 57, \"elasticityMax\": 85 } }",
+                                    summary = "Example Baumann survey response body"),
+                            mediaType = "application/json", schema = @Schema(implementation = BaumannTypeDTO.class
+                    ))),
+            }
+    )
+    @PostMapping("/test")
+    public ResponseEntity<BaumannTypeDTO> getBaumann(@RequestBody BaumannSurveyAnswerDTO baumannSurveyAnswerDTO) {
+        BaumannTypeDTO resultJson = baumannService.calculateResults(baumannSurveyAnswerDTO.getResponses());
+        return ResponseEntity.ok(resultJson);
     }
+
+//    @GetMapping("/example")
+//    public ResponseEntity<BaumannTypeDTO> testBaumann() throws Exception {
+//
+//        // JSON parser object to parse read file
+//        JSONParser jsonParser = new JSONParser();
+//
+//        try (FileReader reader = new FileReader("src/main/resources/baumann.json")) {
+//            // Read JSON file
+//            Object obj = jsonParser.parse(reader);
+//
+//            JSONObject jsonObject = (JSONObject) obj;
+//            JSONObject surveyObject = (JSONObject) jsonObject.get("survey");
+//            JSONArray categoriesArray = (JSONArray) surveyObject.get("questions");
+//
+//            // Create a map to store the responses with the scores from the survey inputs.
+//            Map<String, Integer> responses = getTestMap(categoriesArray);
+//
+//            // Call your service method and get the JSON result
+//            BaumannTypeDTO resultJson = baumannService.calculateResults(responses);
+//
+//            // Return the JSON string in the response entity with the appropriate status code
+//            return ResponseEntity.ok(resultJson); // This will set the response body to your JSON string
+//
+//        } catch (IOException | ParseException e) {
+//            e.printStackTrace();
+//            // Return an internal server error status (500) if there's an exception
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+//        }
+//    }
 
     @NotNull
     private static Map<String, Integer> getTestMap(JSONArray categoriesArray) {

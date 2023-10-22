@@ -1,19 +1,12 @@
 package app.beautyminder.service;
 
-import app.beautyminder.domain.Cosmetic;
-import app.beautyminder.domain.Review;
-import app.beautyminder.repository.ReviewRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import app.beautyminder.dto.BaumannTypeDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -37,9 +30,8 @@ public class BaumannService {
      *
      * @param responses a map of question keys and the selected option for each.
      * @return a JSON string representing the individual's Baumann skin type.
-     * @throws Exception if there is a processing error.
      */
-    public String calculateResults(Map<String, Integer> responses) throws Exception {
+    public BaumannTypeDTO calculateResults(Map<String, Integer> responses) {
         log.info("Responses: {}", responses);
 
         // Calculate scores for each category.
@@ -57,40 +49,24 @@ public class BaumannService {
         String pType = pScore >= 28.5 ? "P" : "N";
         String wType = wScore >= 42.5 ? "W" : "T";
 
-        // Create structured JSON with results
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode result = mapper.createObjectNode();
+        // Create structured result
+        String skinType = dType + sType + pType + wType;
 
-        // Adding the skin type
-        result.put("skinType", dType + sType + pType + wType);
-
-        // Create a detailed scores object
-        ObjectNode scores = mapper.createObjectNode();
-        scores.put("hydration", dScore);  // Actual score
+        Map<String, Double> scores = new HashMap<>();
+        scores.put("hydration", dScore);
         scores.put("sensitivity", sScore);
         scores.put("pigmentation", pScore);
         scores.put("elasticity", wScore);
         scores.put("moistureRetention", moistureScore);
 
         // Add metadata (optional)
-        ObjectNode metadata = mapper.createObjectNode();
+        Map<String, Integer> metadata = new HashMap<>();
         metadata.put("hydrationMax", 44);
         metadata.put("sensitivityMax", 64);
         metadata.put("pigmentationMax", 57);
         metadata.put("elasticityMax", 85);
 
-        // Including scores in the result
-        result.set("scores", scores);
-
-        // Including metadata in the result (optional)
-        result.set("metadata", metadata);
-
-        // Convert the structured data to a JSON string
-        String resultJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(result);
-
-        log.info("\nResult: {}", resultJson);
-
-        return resultJson;
+        return new BaumannTypeDTO(skinType, scores, metadata);
     }
 
     /**
@@ -144,8 +120,8 @@ public class BaumannService {
      * The method aggregates scores from individual questions related
      * to a particular skin property.
      *
-     * @param responses the map of all responses.
-     * @param prefix the category identifier.
+     * @param responses    the map of all responses.
+     * @param prefix       the category identifier.
      * @param numQuestions the number of questions in the category.
      * @return the aggregate score for the category.
      */
