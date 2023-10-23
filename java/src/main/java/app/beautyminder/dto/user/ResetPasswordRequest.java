@@ -5,8 +5,8 @@ import lombok.Getter;
 @Getter
 public class ResetPasswordRequest {
 
-    private String token;
-    private String password;
+    private final String token;
+    private final String password;
 
     public ResetPasswordRequest(String token, String password) {
         this.token = token;
