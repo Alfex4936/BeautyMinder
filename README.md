@@ -1,103 +1,121 @@
-# beautyMinder
-2023-2 capstone design project
+# BeautyMinder 💄✨
 
-# Java or Rust
-![demo](https://github.com/LeeZEun/beautyMinder/assets/2356749/88d8eb9b-1091-473d-96b5-a293f78ea337)
+BeautyMinder is the bloom of our capstone design venture initiated in September 2023.
 
-# 데이터베이스 스키마 (진행중)
+It manifests as a cosmetic recommendation app, meticulously tuned to individual skin types as determined through the Baumann skin type assessment.
 
-> TODO: MySQL or PostgreSQL
+# Team Members 👥
+| Name          | Student ID | Role             | Major                     |
+|---------------|------------|------------------|---------------------------|
+| **Jieun Lee** | 202020719  | Frontend         | Software Engineering      |
+| **Suji Bae**  | 201620984  | Frontend         | Software Engineering      |
+| **Yoon Wook Cho**|201720730| Frontend         | Software Engineering      |
+| **Heesang Kwak**|202022311 | Frontend         | Software Engineering      |
+| **Seok Won Choi** (Rustacean)|201720710| Backend          | Software Engineering      |
 
-> 테이블 이름 복수형 (plural) 선택
+# Technology Stack 🛠️
 
-## 테이블
+| Area                  | Technology                                      |
+|-----------------------|-------------------------------------------------|
+| **Frontend Framework**| Flutter                                         |
+| **Backend Server**    | AWS EC2 (Docker, Spring Boot v3.1, Redis)            |
+| **Database**          | MongoDB (hosted on Atlas)|
+| **Real-Time Metrics** | Redis                                           |
+| **Search Engine**     | Elasticsearch (AWS OpenSearch)                                   |
+| **Data Visualization**| Kibana (AWS OpenSearch Dashboard)                                          |
+| **Text Summarization**| GPT-4 API                                        |
+| **Notification Svcs** | Naver Cloud SMS API, SMTP Protocol              |
+| **CI/CD**             | GitHub Actions                                  |
 
-### 1. User (사용자)
+# System Architecture 🏗️
+![System Architecture](https://github.com/Alfex4936/beautyMinder/assets/2356749/5caf6d91-ab5e-419d-8520-455c91ca59c9)
 
-| 칼럼 이름        | 타입              | 설명                 | Nullable |
-|--------------|-----------------| -------------------- | -------- |
-| id           | `BIGINT`        | 고유 아이디          | 아니오   |
-| email        | `VARCHAR(255)`  | 이메일               | 아니오   |
-| password     | `VARCHAR(255)`  | 암호화된 비밀번호    | 아니오   |
-| nickname     | `VARCHAR(100)`  | 닉네임               | 예       |
-| profileImage | `VARCHAR(255)`  | 프로필 이미지 URL    | 예       |
-| createdAt    | `LocalDateTime` | 생성 일시            | 아니오   |
+## Detailed Breakdown 🔍
+- **Redis**: Harnesses real-time metrics like product click counters, search hit counters, and favorite counters, utilizing pipeline/batch methods for data collection.
+- **MongoDB**: The cornerstone for data persistence.
+- **Elasticsearch**: The search conduit within the app, empowering users to delve into product data based on cosmetic name, brand name, category, keywords, and review texts.
+- **Kibana**: The lens to our data, illustrating the narrative encoded in Elasticsearch data.
+- **GPT-4 API**: Our text maestro, summarizing reviews for each cosmetic product, categorized by high and low ratings for a nuanced understanding of user feedback.
 
-🔗 **연관 테이블**: `Cosmetic`, `RefreshToken`, `Todo`, `UserAuthorities`
+# Baumann Skin Type Survey
+![types](https://cdn.shopify.com/s/files/1/0740/5984/1838/files/img_1_-_16-baumann-skin-types_800x.png?v=1689709313)
 
-### 1.1 UserAuthorities (사용자 권한)
+1. **Individual Question Score Calculation:**
 
-| 칼럼 이름        | 타입              | 설명                 | Nullable |
-|--------------|-----------------| -------------------- | -------- |
-| user_id      | `BIGINT`        | User 테이블의 FK     | 아니오   |
-| authority    | `VARCHAR(50)`   | 권한                 | 아니오   |
+For each question in the survey, a score is calculated based on the selected option. The scoring function can be represented as:
 
-🔗 **연관 테이블**: `User`
+$$
+\text{{score}}(q_i) =
+\begin{cases}
+1.0, & \text{if option 1 is selected;} \\
+2.0, & \text{if option 2 is selected;} \\
+3.0, & \text{if option 3 is selected;} \\
+4.0, & \text{if option 4 is selected;} \\
+2.5, & \text{if option 5 is selected (special case);} \\
+0.0, & \text{if the choice is invalid or for specific two-choice questions.}
+\end{cases}
+$$
 
-### 2. Cosmetic (화장품)
+For certain two-choice questions, a different rule applies:
 
-| 칼럼 이름       | 타입           | 설명                 | Nullable |
-| -------------- | -------------- | -------------------- | -------- |
-| id             | `BIGINT`       | 고유 아이디          | 아니오   |
-| name           | `VARCHAR(100)` | 화장품 이름          | 아니오   |
-| expirationDate | `LocalDate`    | 유통기한             | 예       |
-| createdDate    | `LocalDateTime`| 생성 일시            | 아니오   |
-| purchasedDate  | `LocalDate`    | 구입 일자            | 예       |
-| category       | `ENUM`         | 카테고리             | 아니오   |
-| status         | `ENUM`         | 개봉/미개봉          | 아니오   |
-| user_id        | `BIGINT`       | User 테이블의 FK     | 아니오   |
+$$
+\text{{score}}(q_i) =
+\begin{cases}
+0.0, & \text{if option 1 is selected;} \\
+5.0, & \text{if option 2 is selected.}
+\end{cases}
+$$
 
-```sql
-category        ENUM('스킨케어', '클렌징/필링', '마스크/팩', '선케어', '베이스', '아이', '립', '바디', '헤어', '네일', '향수', '기타')
-status          ENUM('개봉', '미개봉')
-```
+2. **Aggregate Category Scores:**
 
-🔗 **연관 테이블**: `User`
+For each category (A, B, C, D), the total score is the sum of the individual question scores within that category. If \(n\) is the number of questions in a category, and \(q_i\) represents each question:
 
-### 3. RefreshToken (리프레시 토큰)
+$$
+\text{{Total Score for a Category}} = \sum_{i=1}^{n} \text{{score}}(q_i)
+$$
 
-| 칼럼 이름       | 타입           | 설명                 | Nullable |
-| -------------- | -------------- | -------------------- | -------- |
-| id             | `BIGINT`       | 고유 아이디          | 아니오   |
-| user_id        | `BIGINT`       | User 테이블의 FK     | 아니오   |
-| refreshToken   | `VARCHAR(255)` | 리프레시 토큰        | 아니오   |
-| createdAt      | `LocalDateTime`| 생성 일시            | 아니오   |
-| expiresAt      | `LocalDateTime`| 만료 일시            | 예       |
+3. **Moisture Score Calculation:**
 
-🔗 **연관 테이블**: `User`
+The moisture score is calculated specifically from certain questions, represented as \(m_i\). If we assume there are \(k\) questions contributing to the moisture score:
 
-### 4. Todo (할 일)
+$$
+\text{{Moisture Score}} = \left( \frac{\sum_{i=1}^{k} \text{{score}}(m_i)}{16} \right) \times 100
+$$
 
-| 칼럼 이름       | 타입           | 설명                 | Nullable |
-| -------------- | -------------- | -------------------- | -------- |
-| id             | `BIGINT`       | 고유 아이디          | 아니오   |
-| date           | `LocalDate`    | 할 일의 날짜         | 아니오   |
-| tasks          | `VARCHAR(255)` | 할 일 목록           | 아니오   |
-| user_id        | `BIGINT`       | User 테이블의 FK     | 아니오   |
+4. **Skin Type Determination:**
 
-🔗 **연관 테이블**: `User`
+Each category score is compared to a threshold to determine the skin type descriptor. This can be represented with the following conditions:
 
-### 5. **리뷰 테이블**
+$$
+\text{{Skin Type}} =
+\begin{cases}
+O, & \text{if A score} \geq 22; \\
+D, & \text{otherwise;}
+\end{cases}
+\]
+\[
+\begin{cases}
+R, & \text{if B score} \geq 32; \\
+S, & \text{otherwise;}
+\end{cases}
+\]
+\[
+\begin{cases}
+P, & \text{if C score} \geq 28.5; \\
+N, & \text{otherwise;}
+\end{cases}
+\]
+\[
+\begin{cases}
+W, & \text{if D score} \geq 42.5; \\
+T, & \text{otherwise.}
+\end{cases}
+$$
 
- 
- | 칼럼 이름       | 타입           | 설명                 | Nullable |
-| -------------- | -------------- | -------------------- | -------- |
-| grade          | `BIGINT`       | 평점 1~5사이           | 아니오 |
-| Title          | `VARCHAR(255)`  |제목        | 아니오   |
-| id             | `BIGINT` |User 테이블의 FK             | 아니오   |
-| detail         | `TEXT`       | 내용     | 아니오   |
-| created_at     | `DATETIME`       | 생성날짜     | 아니오   |
-| repiled_at      | `DATETIME`       | 수정날짜     | 아니오   |
+5. **Result Compilation:**
 
-## 관계도
+The final skin type is a string concatenation of the individual skin type descriptors from each category, represented as:
 
-```json
-User 1 ----< Cosmetic
-     1 ----< RefreshToken
-     1 ----< Todo
-     1 ----< UserAuthorities
-```
-
-> `User` 테이블과 다른 테이블 간의 1:다 관계를 나타냄.
-
-> 각 사용자는 여러 개의 `Cosmetic`, `RefreshToken`, `Todo`, `UserAuthorities` 엔트리를 가질 수 있음.
+$$
+\text{{Final Skin Type}} = \text{{Skin Type from A}} + \text{{Skin Type from B}} + \text{{Skin Type from C}} + \text{{Skin Type from D}}
+$$

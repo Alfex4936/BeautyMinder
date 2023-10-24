@@ -4,7 +4,7 @@ import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.GPTReview;
 import app.beautyminder.repository.GPTReviewRepository;
 import app.beautyminder.service.cosmetic.CosmeticService;
-import app.beautyminder.service.cosmetic.GPTReviewService;
+import app.beautyminder.service.cosmetic.GPTService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,7 +21,7 @@ import java.util.Optional;
 @RequestMapping("/gpt")
 public class GPTReviewController {
 
-    private final GPTReviewService gptReviewService;
+    private final GPTService gptService;
     private final CosmeticService cosmeticService;
     private final GPTReviewRepository gptReviewRepository;
 
@@ -40,7 +40,7 @@ public class GPTReviewController {
 
     @PostMapping("/summarize")
     public ResponseEntity<String> triggerSummarization() { // test call
-        gptReviewService.summarizeReviews();
+        gptService.summarizeReviews();
         return ResponseEntity.ok("Reviews summarized successfully!");
     }
 

@@ -172,4 +172,11 @@ public class CosmeticController {
         List<Cosmetic> topRankedCosmetics = cosmeticMetricService.getTopRankedCosmetics(size);
         return ResponseEntity.ok(topRankedCosmetics);
     }
+
+//    @GetMapping("/top/keyword")
+//    public ResponseEntity<List<Cosmetic>> getTopRankedKeywords(
+//            @RequestParam(defaultValue = "10") int size) {
+//        List<Cosmetic> topRankedCosmetics = cosmeticMetricService.get(size);
+//        return ResponseEntity.ok(topRankedCosmetics);
+//    }
 }

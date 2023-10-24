@@ -16,10 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -42,6 +39,9 @@ public class SearchController {
     @GetMapping("/cosmetic")
     public ResponseEntity<List<EsCosmetic>> searchByName(@RequestParam String name) {
         List<EsCosmetic> results = cosmeticSearchService.searchByName(name);
+        if (!results.isEmpty()) {
+            cosmeticMetricService.collectSearchEvent(name.trim());
+        }
         return ResponseEntity.ok(results);
     }
 
@@ -60,6 +60,9 @@ public class SearchController {
     @GetMapping("/review")
     public ResponseEntity<List<EsReview>> searchByContent(@RequestParam String content) {
         List<EsReview> results = reviewSearchService.searchByContent(content);
+        if (!results.isEmpty()) {
+            cosmeticMetricService.collectSearchEvent(content.trim());
+        }
         return ResponseEntity.ok(results);
     }
 
@@ -78,6 +81,9 @@ public class SearchController {
     @GetMapping("/category")
     public ResponseEntity<List<EsCosmetic>> searchByCategory(@RequestParam String category) {
         List<EsCosmetic> results = cosmeticSearchService.searchByCategory(category);
+        if (!results.isEmpty()) {
+            cosmeticMetricService.collectSearchEvent(category.trim());
+        }
         return ResponseEntity.ok(results);
     }
 
@@ -96,6 +102,9 @@ public class SearchController {
     @GetMapping("/keyword")
     public ResponseEntity<List<EsCosmetic>> searchByKeyword(@RequestParam String keyword) {
         List<EsCosmetic> results = cosmeticSearchService.searchByKeyword(keyword);
+        if (!results.isEmpty()) {
+            cosmeticMetricService.collectSearchEvent(keyword.trim());
+        }
         return ResponseEntity.ok(results);
     }
 

@@ -1,10 +1,14 @@
 package app.beautyminder.service.cosmetic;
 
 import app.beautyminder.domain.Cosmetic;
+import app.beautyminder.domain.KeywordRank;
 import app.beautyminder.dto.CosmeticMetricData;
 import app.beautyminder.dto.Event;
+import app.beautyminder.dto.KeywordEvent;
 import app.beautyminder.repository.CosmeticRepository;
+import app.beautyminder.repository.KeywordRankRepository;
 import app.beautyminder.service.EventQueue;
+import app.beautyminder.service.EventQueueKeyword;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +30,17 @@ import java.util.stream.Collectors;
 public class CosmeticMetricService {
 
     private final CosmeticRepository cosmeticRepository;
+    private final KeywordRankRepository keywordRankRepository;
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
     private final EventQueue eventQueue;
+    private final EventQueueKeyword eventQueueKeyword;
 
     // Redis structure: "cosmeticMetrics:{cosmeticId}" -> {"clicks": "10", "hits": "5", "favs": "3"}
     private static final String COSMETIC_METRICS_KEY_TEMPLATE = "cosmeticMetrics:%s";
+    private final String KEYWORD_METRICS_KEY = "keywordMetrics";
 
 
     // clicks might be considered more valuable as they represent a user taking a clear action based on their interest
@@ -51,15 +58,19 @@ public class CosmeticMetricService {
     private final double FAV_WEIGHT = 2.0;
 
 
-    @PostConstruct
+     @PostConstruct
     @Scheduled(cron = "0 0 4 * * ?") // everyday 4am
     public void resetCounts() {
         Set<String> keys = redisTemplate.keys("cosmeticMetrics:*");
+
         if (keys != null) {
             for (String key : keys) {
                 redisTemplate.delete(key);
             }
         }
+
+        redisTemplate.delete(KEYWORD_METRICS_KEY);
+
         log.info("REDIS: Reset all cosmetic metrics.");
     }
 
@@ -71,21 +82,23 @@ public class CosmeticMetricService {
         Map<String, CosmeticMetricData> aggregatedData = new HashMap<>();
 
         for (Event event : events) {
-            CosmeticMetricData data = aggregatedData.getOrDefault(event.getCosmeticId(), new CosmeticMetricData());
-            data.setCosmeticId(event.getCosmeticId());
+            aggregatedData.merge(event.getCosmeticId(), new CosmeticMetricData(), (existingData, newData) -> {
+                existingData.setCosmeticId(event.getCosmeticId());
 
-            switch (event.getType()) {
-                case CLICK:
-                    data.setClickCount((data.getClickCount() != null ? data.getClickCount() : 0) + 1);
-                    break;
-                case HIT:
-                    data.setHitCount((data.getHitCount() != null ? data.getHitCount() : 0) + 1);
-                    break;
-                case FAV:
-                    data.setFavCount((data.getFavCount() != null ? data.getFavCount() : 0) + 1);
-                    break;
-            }
-            aggregatedData.put(event.getCosmeticId(), data);
+                switch (event.getType()) {
+                    case CLICK:
+                        existingData.setClickCount((existingData.getClickCount() != null ? existingData.getClickCount() : 0) + 1);
+                        break;
+                    case HIT:
+                        existingData.setHitCount((existingData.getHitCount() != null ? existingData.getHitCount() : 0) + 1);
+                        break;
+                    case FAV:
+                        existingData.setFavCount((existingData.getFavCount() != null ? existingData.getFavCount() : 0) + 1);
+                        break;
+                }
+
+                return existingData;
+            });
         }
 
         for (Map.Entry<String, CosmeticMetricData> entry : aggregatedData.entrySet()) {
@@ -97,9 +110,63 @@ public class CosmeticMetricService {
         log.info("REDIS: Sending batches");
     }
 
+    @Scheduled(cron = "0 0/10 * * * ?")  // Every 10 minutes
+    @Transactional
+    public void processKeywordEvents() {
+        List<KeywordEvent> events = eventQueueKeyword.dequeueAll();
+        Map<String, Long> keywordCountMap = new HashMap<>();
+
+        for (KeywordEvent event : events) {
+            keywordCountMap.merge(event.getKeyword(), 1L, Long::sum);
+        }
+
+        for (Map.Entry<String, Long> entry : keywordCountMap.entrySet()) {
+            String keyword = entry.getKey();
+            Long count = entry.getValue();
+            redisTemplate.opsForHash().increment(KEYWORD_METRICS_KEY, keyword, count);
+        }
+
+        log.info("REDIS: Processed keyword batches");
+    }
+
+    // Scheduled Batch Processing to log top 10 keywords everyday 2pm
+    @Scheduled(cron = "0 0 14 * * ?")
+//    @Scheduled(cron = "0 0/2 * * * ?") // every 1min
+    public void saveTop10Keywords() {
+        // Get all keyword counts from Redis
+        Map<Object, Object> keywordCounts = redisTemplate.opsForHash().entries(KEYWORD_METRICS_KEY);
+
+        // Sort keywords by counts in descending order
+        List<Map.Entry<Object, Object>> sortedEntries = keywordCounts.entrySet().stream()
+                .sorted((e1, e2) -> Long.compare(
+                        Long.parseLong((String) e2.getValue()),
+                        Long.parseLong((String) e1.getValue())
+                ))
+                .limit(10)
+                .toList();
+
+        // Extract the top 10 keywords
+        List<String> top10Keywords = sortedEntries.stream()
+                .map(entry -> (String) entry.getKey())
+                .toList();
+
+        // Create a new KeywordRank instance
+        KeywordRank keywordRank = KeywordRank.builder()
+                .rankings(top10Keywords)
+                .build();
+
+        // Save the KeywordRank instance to the database
+        keywordRankRepository.save(keywordRank);
+    }
+
     // Methods to collect events in the intermediate data store
     public void collectEvent(String cosmeticId, ActionType type) {
         eventQueue.enqueue(new Event(cosmeticId, type));
+    }
+
+    // Collects keyword search events
+    public void collectSearchEvent(String keyword) {
+        eventQueueKeyword.enqueue(new KeywordEvent(keyword));
     }
 
     public void collectClickEvent(String cosmeticId) {
