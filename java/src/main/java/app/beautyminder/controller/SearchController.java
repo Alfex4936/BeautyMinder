@@ -66,6 +66,13 @@ public class SearchController {
         return ResponseEntity.ok(results);
     }
 
+    @GetMapping("/review/drop")
+
+    public ResponseEntity<String> dropReviewIndices() {
+        reviewSearchService.deleteAllIndices();
+        return ResponseEntity.ok().build();
+    }
+
     @Operation(
             summary = "Search Cosmetics by Category",
             description = "카테고리로 화장품을 검색합니다.",
@@ -106,6 +113,12 @@ public class SearchController {
             cosmeticMetricService.collectSearchEvent(keyword.trim());
         }
         return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/analyze")
+    public ResponseEntity<String> analyzeReview(@RequestParam String text) throws IOException {
+        String analyzedText = reviewSearchService.analyzeText(text);
+        return ResponseEntity.ok(analyzedText);
     }
 
     @GetMapping("/indices")

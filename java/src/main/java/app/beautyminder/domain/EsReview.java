@@ -21,7 +21,7 @@ public class EsReview {
     private String content;
 
     @Field(type = FieldType.Integer)
-    private int rating;
+    private Integer rating;
 
     @Field(type = FieldType.Text)
     private String userName;

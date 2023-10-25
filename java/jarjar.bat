@@ -1,4 +1,4 @@
 @echo off
 ./gradlew bootJar
-
-npx @redocly/cli build-docs openapi.yaml 
+@REM java -jar your-app.jar --spring.profiles.active=iam
+npx @redocly/cli build-docs openapi.yaml

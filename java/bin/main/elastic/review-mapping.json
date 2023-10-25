@@ -3,8 +3,7 @@
     "content": {
       "type": "text",
       "analyzer": "seunjeon",
-      "search_analyzer": "seunjeon_search",
-      "similarity": "less_length_norm_BM25"
+      "search_analyzer": "seunjeon_search"
     },
     "userName": {
       "type": "text",

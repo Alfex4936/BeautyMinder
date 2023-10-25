@@ -2,27 +2,35 @@ package app.beautyminder.config.aws;
 
 import com.amazonaws.auth.AWS4Signer;
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.RestClientBuilder;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.sniff.SniffOnFailureListener;
 import org.opensearch.client.sniff.Sniffer;
 import org.opensearch.data.client.orhlc.AbstractOpenSearchConfiguration;
-import org.opensearch.data.client.orhlc.ClientConfiguration;
-import org.opensearch.data.client.orhlc.RestClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 import java.time.Duration;
+import java.util.Arrays;
 
 /**
- * @author Seok Won
+ * @author Seok Won Choi
  */
 @Configuration
 @EnableElasticsearchRepositories(basePackages = "app.beautyminder.repository.elastic")
@@ -35,34 +43,59 @@ public class OpenSearchRestClientConfiguration extends AbstractOpenSearchConfigu
     @Value("${aws.os.region}")
     private String region;
 
-    private AWSCredentialsProvider credentialsProvider = null;
+    @Value("${cloud.aws.credentials.access-key}")
+    private String accessKey;
+
+    @Value("${cloud.aws.credentials.secret-key}")
+    private String secretKey;
+
+    @Value("${aws.user.name}")
+    private String username;
+
+    @Value("${aws.user.password}")
+    private String password;
 
     @Autowired
-    public OpenSearchRestClientConfiguration(AWSCredentialsProvider provider) {
-        credentialsProvider = provider;
+    private Environment environment;
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Bean
+    @ConditionalOnProperty(name = "spring.profiles.active", havingValue = "awsBasic")
+    public CredentialsProvider credentialsProvider() {
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
+        return credentialsProvider;
     }
 
-    /**
-     * SpringDataOpenSearch data provides us the flexibility to implement our custom {@link RestHighLevelClient} instance by implementing the abstract method {@link AbstractOpenSearchConfiguration#opensearchClient()},
-     *
-     * @return RestHighLevelClient. Amazon OpenSearch Service Https rest calls have to be signed with AWS credentials, hence an interceptor {@link HttpRequestInterceptor} is required to sign every
-     * API calls with credentials. The signing is happening through the below snippet
-     * <code>
-     * signer.sign(signableRequest, awsCredentialsProvider.getCredentials());
-     * </code>
-     */
+    @Bean
+    @ConditionalOnProperty(name = "spring.profiles.active", havingValue = "awsIAM")
+    public AWSCredentialsProvider awsCredentialsProvider() {
+        return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey));
+    }
 
     @Override
     @Bean
     public RestHighLevelClient opensearchClient() {
-        AWS4Signer signer = new AWS4Signer();
-        String serviceName = "es";
-        signer.setServiceName(serviceName);
-        signer.setRegionName(region);
-        HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer, credentialsProvider);
+        RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(endpoint, 443, "https"));
 
-        RestClientBuilder restClientBuilder = RestClient.builder(new HttpHost(endpoint, 443, "https"))
-                .setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.addInterceptorLast(interceptor))
+        if (Arrays.asList(environment.getActiveProfiles()).contains("awsIAM")) { // IAM role auth
+            AWS4Signer signer = new AWS4Signer();
+            String serviceName = "es";
+            signer.setServiceName(serviceName);
+            signer.setRegionName(region);
+            AWSCredentialsProvider awsCredentialsProvider = applicationContext.getBean(AWSCredentialsProvider.class);
+            HttpRequestInterceptor interceptor = new AWSRequestSigningApacheInterceptor(serviceName, signer, awsCredentialsProvider);
+            restClientBuilder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.addInterceptorLast(interceptor));
+        } else if (Arrays.asList(environment.getActiveProfiles()).contains("awsBasic")) { // Basic auth
+            CredentialsProvider credentialsProvider = applicationContext.getBean(CredentialsProvider.class);
+            restClientBuilder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+        } else {
+            throw new IllegalArgumentException("Unknown authentication method: " + Arrays.toString(environment.getActiveProfiles()));
+        }
+
+        restClientBuilder
                 .setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
                         .setConnectTimeout((int) Duration.ofSeconds(600).toMillis())
                         .setSocketTimeout((int) Duration.ofSeconds(300).toMillis()));
@@ -72,6 +105,7 @@ public class OpenSearchRestClientConfiguration extends AbstractOpenSearchConfigu
 
         RestHighLevelClient client = new RestHighLevelClient(restClientBuilder);
 
+        // Single Node doesn't need sniffer!
         Sniffer esSniffer = Sniffer.builder(client.getLowLevelClient())
                 .setSniffIntervalMillis(999999999) // 11.574일 interval
                 .setSniffAfterFailureDelayMillis(999999999)

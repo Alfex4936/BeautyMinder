@@ -1,40 +1,11 @@
 {
-  "similarity": {
-    "less_length_norm_BM25": {
-      "type": "BM25",
-      "b": 0.2
-    }
-  },
-  "max_ngram_diff": 2,
   "analysis": {
-    "char_filter": {
-      "whitespace_remove": {
-        "type": "pattern_replace",
-        "pattern": " ",
-        "replacement": ""
-      }
-    },
     "filter": {
-      "ngram": {
-        "type": "ngram",
-        "min_gram": 1,
-        "max_gram": 3,
-        "token_chars": [
-          "letter",
-          "digit",
-          "punctuation",
-          "symbol"
-        ]
-      },
-      "synonyms_filter": {
-        "updateable": true,
-        "lenient": true,
+      "synonym": {
         "type": "synonym",
         "synonyms": [
           "근디 => 근데",
           "조아요 => 좋아요",
-          "좋구 => 좋구요",
-          "좋아 => 좋아요",
           "아파욬 => 아파요",
           "ㅋㅋㅋ => 웃음",
           "ㅠㅠ, ㅜㅜ => 슬픔",
@@ -56,13 +27,7 @@
       },
       "korean_stop": {
         "type": "stop",
-        "stopwords": [
-          "이",
-          "그",
-          "저",
-          "것",
-          "도"
-        ]
+        "stopwords": ["이", "그", "저", "것"]
       },
       "lowercase": {
         "type": "lowercase"
@@ -71,7 +36,7 @@
     "tokenizer": {
       "seunjeon_tokenizer": {
         "type": "seunjeon_tokenizer",
-        "index_eojeol": true,
+        "index_eojeol": false,
         "decompound": true,
         "pos_tagging": false,
         "index_poses": [
@@ -99,19 +64,9 @@
       "seunjeon_search": {
         "tokenizer": "seunjeon_tokenizer",
         "filter": [
-          "synonyms_filter",
+          "synonym",
           "lowercase",
-          "trim",
           "korean_stop"
-        ]
-      },
-      "ngram": {
-        "char_filter": [
-          "whitespace_remove"
-        ],
-        "tokenizer": "ngram",
-        "filter": [
-          "lowercase"
         ]
       },
       "keyword": {

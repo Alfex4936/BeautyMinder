@@ -1,0 +1,23 @@
+{
+  "properties": {
+    "name": {
+      "type": "text",
+      "analyzer": "seunjeon",
+      "fields": {
+        "keyword": {
+          "type": "keyword"
+        }
+      }
+    },
+    "brand": {
+      "type": "text",
+      "analyzer": "seunjeon"
+    },
+    "category": {
+      "type": "keyword"
+    },
+    "keywords": {
+      "type": "keyword"
+    }
+  }
+}
