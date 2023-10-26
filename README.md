@@ -7,11 +7,11 @@ It manifests as a cosmetic recommendation app, meticulously tuned to individual 
 # Team Members 👥
 | Name          | Student ID | Role             | Major                     |
 |---------------|------------|------------------|---------------------------|
-| **Jieun Lee** | 202020719  | Frontend         | Software Engineering      |
-| **Suji Bae**  | 201620984  | Frontend         | Software Engineering      |
-| **Yoon Wook Cho**|201720730| Frontend         | Software Engineering      |
-| **Heesang Kwak**|202022311 | Frontend         | Software Engineering      |
-| **Seok Won Choi** (Rustacean)|201720710| Backend          | Software Engineering      |
+| **Jieun Lee** ([LeeZEun](https://github.com/LeeZEun)) | 202020719  | Frontend         | Software Engineering      |
+| **Suji Bae** ([Bae-suji](https://github.com/Bae-suji))  | 201620984  | Frontend         | Software Engineering      |
+| **Yoon Wook Cho** ([yoonwook](https://github.com/yoonwook))|201720730| Frontend         | Software Engineering      |
+| **Heesang Kwak** ([KWAKMANBO](https://github.com/KWAKMANBO))|202022311 | Frontend         | Software Engineering      |
+| **Seok Won Choi** ([Alfex4936](https://github.com/Alfex4936))|201720710| Backend          | Software Engineering      |
 
 # Technology Stack 🛠️
 
