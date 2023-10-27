@@ -76,7 +76,7 @@ public class TodoController {
             requestBody = @RequestBody(description = "Todo details for update"),
             tags = {"Todo Operations"}
     )
-    @PostMapping("/update")
+    @PutMapping("/update")
     public ResponseEntity<AddTodoResponse> updateTodo(@RequestBody Todo todo) {
         try {
             Todo updatedTodo = todoService.updateTodo(todo);

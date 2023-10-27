@@ -123,21 +123,27 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/*").permitAll() // preflight request: ex) POST -> OPTIONS -> POST
                 .requestMatchers(antMatcher("/")).permitAll()
                 .requestMatchers(antMatcher("/api/**")).permitAll()
-                .requestMatchers(antMatcher("/cosmetic/click/**")).permitAll()
-                .requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll()
-                .requestMatchers(antMatcher("/cosmetic/top/**")).permitAll()
+
+                .requestMatchers(antMatcher("/es-index/**")).permitAll()
                 .requestMatchers(antMatcher("/gpt/**")).permitAll()
+                .requestMatchers(antMatcher("/redis/**")).permitAll()
+                .requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll()
+                .requestMatchers(antMatcher("/cosmetic/click")).permitAll()
+                .requestMatchers(antMatcher("/search/**")).permitAll()
+                .requestMatchers(antMatcher("/data-view/**")).permitAll()
+                .requestMatchers(antMatcher("/baumann/**")).permitAll()
+
                 .requestMatchers(antMatcher("/login")).permitAll()
                 .requestMatchers(antMatcher("/login?error")).permitAll()
-                .requestMatchers(antMatcher("/search/**")).permitAll()
+
                 .requestMatchers(antMatcher("/user/forgot-password")).permitAll()
                 .requestMatchers(antMatcher("/user/sms/**")).permitAll()
-                .requestMatchers(antMatcher("/baumann/**")).permitAll()
                 .requestMatchers(antMatcher(HttpMethod.GET, "/user/reset-password")).permitAll()
                 .requestMatchers(antMatcher(HttpMethod.POST, "/user/reset-password")).permitAll()
                 .requestMatchers(antMatcher("/user/signup")).permitAll()
                 .requestMatchers(antMatcher("/user/signup-admin")).permitAll()
                 .requestMatchers(antMatcher("/user/sms/send")).permitAll()
+
                 .anyRequest().authenticated());
 
         http.formLogin(f -> f

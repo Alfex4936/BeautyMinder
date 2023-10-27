@@ -9,8 +9,11 @@ import app.beautyminder.dto.user.SignUpResponse;
 import app.beautyminder.service.auth.SmsService;
 import app.beautyminder.service.auth.TokenService;
 import app.beautyminder.service.auth.UserService;
+import app.beautyminder.service.cosmetic.CosmeticMetricService;
+import app.beautyminder.service.cosmetic.CosmeticService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -18,6 +21,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
@@ -29,6 +33,8 @@ import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
@@ -38,6 +44,7 @@ public class UserController {
     private final UserService userService;
     private final SmsService smsService;
     private final TokenService tokenService;
+    private final CosmeticMetricService cosmeticMetricService;
 
     // Standard user sign-up
     @Operation(
@@ -100,7 +107,7 @@ public class UserController {
 
 
     @Operation(
-            summary = "User Logout",
+            summary = "User Deletion",
             description = "사용자 삭제 by userId",
             tags = {"User Operations"}
     )
@@ -140,14 +147,66 @@ public class UserController {
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = User.class)))
             }
     )
+
+    // Can take any field in User class
     @PatchMapping("/update/{userId}")
-    public ResponseEntity<User> updateProfile(@PathVariable String userId, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<?> updateProfile(@PathVariable String userId, @RequestBody Map<String, Object> updates) {
+        Optional<User> optionalUser = userService.updateUserFields(userId, updates);
+        if (optionalUser.isPresent()) {
+            return ResponseEntity.ok(optionalUser.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+    }
+
+    @Operation(
+            summary = "Add to User Favorite",
+            description = "사용자의 즐겨찾기에 화장품을 추가합니다.",
+            tags = {"User Operations"},
+            parameters = {
+                    @Parameter(name = "userId", description = "사용자의 ID"),
+                    @Parameter(name = "cosmeticId", description = "화장품의 ID")
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = User.class))),
+                    @ApiResponse(responseCode = "404", description = "사용자 또는 화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))
+            }
+    )
+    @PostMapping("/{userId}/favorites/{cosmeticId}")
+    public ResponseEntity<User> addToUserFavorite(@PathVariable String userId, @PathVariable String cosmeticId) {
         try {
-            User user = userService.findById(userId);
-            user = userService.updateUser(user, updates);
-            return ResponseEntity.ok(user);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            User updatedUser = userService.addCosmeticById(userId, cosmeticId);
+
+            // Redis
+            cosmeticMetricService.collectFavEvent(cosmeticId);
+
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Operation(
+            summary = "Delete a favourite of User",
+            description = "사용자의 즐겨찾기에 화장품을 삭제합니다.",
+            tags = {"User Operations"},
+            parameters = {
+                    @Parameter(name = "userId", description = "사용자의 ID"),
+                    @Parameter(name = "cosmeticId", description = "화장품의 ID")
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = User.class))),
+                    @ApiResponse(responseCode = "404", description = "사용자 또는 화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))
+            }
+    )
+    @DeleteMapping("/{userId}/favorites/{cosmeticId}")
+    public ResponseEntity<User> removeFromUserFavorite(@PathVariable String userId, @PathVariable String cosmeticId) {
+        try {
+            User updatedUser = userService.removeCosmeticById(userId, cosmeticId);
+
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        } catch (NoSuchElementException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
@@ -226,7 +285,7 @@ public class UserController {
             summary = "Reset Password",
             description = "사용자의 비밀번호를 재설정합니다.",
             requestBody = @RequestBody(description = "Reset password details"),
-            tags = {"User Operations"},
+            tags = {"Password Reset Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "비밀번호가 성공적으로 재설정됨", content = @Content(schema = @Schema(implementation = String.class))),
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = String.class)))

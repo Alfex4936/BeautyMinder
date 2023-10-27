@@ -74,11 +74,16 @@ public class CosmeticMetricService {
         log.info("REDIS: Reset all cosmetic metrics.");
     }
 
+    // Cosmetic Metrics collection (click/search hit)
     // Scheduled Batch Processing
     @Scheduled(cron = "0 0/10 * * * ?") // Every 10 minutes
     @Transactional
     public void processEvents() {
         List<Event> events = eventQueue.dequeueAll();
+        if (events.isEmpty()) {
+            log.info("Metric Redis batch empty");
+            return;
+        }
         Map<String, CosmeticMetricData> aggregatedData = new HashMap<>();
 
         for (Event event : events) {
@@ -110,10 +115,15 @@ public class CosmeticMetricService {
         log.info("REDIS: Sending batches");
     }
 
+    // Keyword collection
     @Scheduled(cron = "0 0/10 * * * ?")  // Every 10 minutes
     @Transactional
     public void processKeywordEvents() {
         List<KeywordEvent> events = eventQueueKeyword.dequeueAll();
+        if (events.isEmpty()) {
+            log.info("Keyword Redis batch empty");
+            return;
+        }
         Map<String, Long> keywordCountMap = new HashMap<>();
 
         for (KeywordEvent event : events) {

@@ -8,21 +8,19 @@ import app.beautyminder.repository.PasswordResetTokenRepository;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.TodoRepository;
 import app.beautyminder.repository.UserRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -35,7 +33,36 @@ public class UserService {
     private final EmailService emailService;
     private final TokenService tokenService;
 
+    /*
+    MongoRepository:
+        Provides CRUD operations and simple query derivation.
+        Easier to use for common scenarios.
+        Spring Data generates the implementation based on method names or annotations.
+
+    MongoTemplate:
+        More powerful, offering a wide range of MongoDB operations.
+        Provides fine-grained control over queries and updates.
+        Useful for complex queries, operations, or aggregations not covered by repository abstraction.
+     */
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
+
+    public Optional<User> updateUserFields(String userId, Map<String, Object> updates) {
+        Query query = new Query(Criteria.where("id").is(userId));
+        if (mongoTemplate.exists(query, User.class)) {
+            Update update = new Update();
+            for (Map.Entry<String, Object> entry : updates.entrySet()) {
+                update.set(entry.getKey(), entry.getValue());
+            }
+            mongoTemplate.updateFirst(query, update, User.class);
+            return Optional.ofNullable(mongoTemplate.findOne(query, User.class));
+        } else {
+            return Optional.empty();
+        }
+    }
+
 
     // 일반 사용자 저장
     public String saveUser(AddUserRequest dto) {
@@ -160,15 +187,15 @@ public class UserService {
                 .orElseThrow(() -> new NoSuchElementException("No user found with id: " + userId));
     }
 
-    public User updateUser(User user, Map<String, Object> updates) {
-        if (updates.containsKey("nickname")) {
-            user.setNickname((String) updates.get("nickname"));
-        }
-        if (updates.containsKey("profileImage")) {
-            user.setProfileImage((String) updates.get("profileImage"));
-        }
-        return userRepository.save(user);
-    }
+//    public User updateUser(User user, Map<String, Object> updates) {
+//        if (updates.containsKey("nickname")) {
+//            user.setNickname((String) updates.get("nickname"));
+//        }
+//        if (updates.containsKey("profileImage")) {
+//            user.setProfileImage((String) updates.get("profileImage"));
+//        }
+//        return userRepository.save(user);
+//    }
 
 
     /*

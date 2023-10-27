@@ -1,4 +1,4 @@
-package app.beautyminder.controller;
+package app.beautyminder.controller.review;
 
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.GPTReview;
@@ -25,7 +25,6 @@ public class GPTReviewController {
     private final CosmeticService cosmeticService;
     private final GPTReviewRepository gptReviewRepository;
 
-
     @Operation(
             summary = "Trigger Summarization",
             description = "리뷰 요약을 트리거합니다.",
@@ -38,16 +37,16 @@ public class GPTReviewController {
             }
     )
 
-    @PostMapping("/summarize")
+    @PostMapping("/review/summarize")
     public ResponseEntity<String> triggerSummarization() { // test call
         gptService.summarizeReviews();
         return ResponseEntity.ok("Reviews summarized successfully!");
     }
 
     @Operation(
-            summary = "Get Cosmetic by ID",
+            summary = "Get Cosmetic's a GPT-review by ID",
             description = "화장품 ID로 GPT 요약 리뷰를 가져옵니다.",
-            tags = {"Cosmetic Operations"},
+            tags = {"GPT Review Operations"},
             parameters = {
                     @Parameter(name = "id", description = "화장품의 ID")
             },
@@ -56,7 +55,7 @@ public class GPTReviewController {
                     @ApiResponse(responseCode = "404", description = "GPT 리뷰 정보를 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))
             }
     )
-    @GetMapping("/{id}")
+    @GetMapping("/review/{id}")
     public ResponseEntity<GPTReview> getGPTReview(@PathVariable String id) {
         Cosmetic cosmetic = cosmeticService.getCosmeticById(id);
         if (cosmetic == null) {

@@ -58,6 +58,9 @@ public class User implements UserDetails {
     @Setter
     private Set<String> cosmeticIds = new HashSet<>(); // favourites
 
+    @Setter
+    private String baumann;
+
     @Builder
     public User(String email, String password, String nickname) {
         this.email = email;

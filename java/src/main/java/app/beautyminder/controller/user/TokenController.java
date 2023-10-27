@@ -1,20 +1,25 @@
-package app.beautyminder.controller;
+package app.beautyminder.controller.user;
 
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.CreateAccessTokenRequest;
 import app.beautyminder.dto.CreateAccessTokenResponse;
+import app.beautyminder.dto.user.SignUpResponse;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.service.auth.RefreshTokenService;
 import app.beautyminder.service.auth.TokenService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,6 +40,15 @@ public class TokenController {
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
 
+    @Operation(
+            summary = "Refresh Tokens",
+            description = "Refresh Token 재발급.",
+            tags = {"Token Operations"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "RefreshToken 생성됨", content = @Content(schema = @Schema(implementation = Map.class))),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = String.class)))
+            }
+    )
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(HttpServletRequest request) {
         Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);

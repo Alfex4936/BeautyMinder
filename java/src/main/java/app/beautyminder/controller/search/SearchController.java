@@ -1,4 +1,4 @@
-package app.beautyminder.controller;
+package app.beautyminder.controller.search;
 
 import app.beautyminder.domain.EsCosmetic;
 import app.beautyminder.domain.EsReview;
@@ -66,13 +66,6 @@ public class SearchController {
         return ResponseEntity.ok(results);
     }
 
-    @GetMapping("/review/drop")
-
-    public ResponseEntity<String> dropReviewIndices() {
-        reviewSearchService.deleteAllIndices();
-        return ResponseEntity.ok().build();
-    }
-
     @Operation(
             summary = "Search Cosmetics by Category",
             description = "카테고리로 화장품을 검색합니다.",
@@ -113,68 +106,5 @@ public class SearchController {
             cosmeticMetricService.collectSearchEvent(keyword.trim());
         }
         return ResponseEntity.ok(results);
-    }
-
-    @GetMapping("/analyze")
-    public ResponseEntity<String> analyzeReview(@RequestParam String text) throws IOException {
-        String analyzedText = reviewSearchService.analyzeText(text);
-        return ResponseEntity.ok(analyzedText);
-    }
-
-    @GetMapping("/indices")
-    public ResponseEntity<String> listAllIndices() throws IOException {
-        String indices = cosmeticSearchService.listAllIndices();
-        return ResponseEntity.ok(indices);
-    }
-
-    @GetMapping("/indices/cosmetics")
-    public ResponseEntity<String> getIndexOfCosmetics() throws IOException {
-        String indexInfo = cosmeticSearchService.getIndexOfCosmetics();
-        return ResponseEntity.ok(indexInfo);
-    }
-
-    @GetMapping("/cosmetics/data")
-    public ResponseEntity<String> viewCosmeticsData() throws IOException {
-        String cosmeticsData = cosmeticSearchService.viewCosmeticsData();
-        return ResponseEntity.ok(cosmeticsData);
-    }
-
-    @GetMapping("/indices/metric")
-    public ResponseEntity<String> viewCosmeticMetricsData() throws IOException {
-        String cosmeticsData = cosmeticSearchService.viewCosmeticMetricsData();
-        return ResponseEntity.ok(cosmeticsData);
-    }
-
-    @DeleteMapping("/indices")
-    public ResponseEntity<Void> deleteAllIndices() {
-        cosmeticSearchService.deleteAllIndices();
-        return ResponseEntity.ok().build();  // Return a 200 OK response upon success
-    }
-
-//    @PostMapping("/index/cosmetic")
-//    public ResponseEntity<String> triggerIndexingCosmetic() { // force indexing cosmetic metrics
-//        cosmeticMetricService.executeBulkUpdates();
-//        return ResponseEntity.ok("index successfully!");
-//    }
-
-    @Operation(
-            summary = "Trigger Indexing of Reviews",
-            description = "리뷰 인덱싱을 트리거합니다.",
-            tags = {"Indexing Operations"},
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Indexing successful", content = @Content(mediaType = "text/plain")),
-                    @ApiResponse(responseCode = "500", description = "Indexing failed", content = @Content(mediaType = "text/plain"))
-            }
-    )
-    @PostMapping("/index/review")
-    public ResponseEntity<String> triggerIndexingReview() { // force indexing reviews
-        reviewSearchService.indexReviews();
-        return ResponseEntity.ok("index successfully!");
-    }
-
-    @GetMapping("/data")
-    public ResponseEntity<List<CosmeticMetricData>> getCosmeticData() {
-        List<CosmeticMetricData> data = cosmeticMetricService.getAllCosmeticCounts();
-        return ResponseEntity.ok(data);
     }
 }

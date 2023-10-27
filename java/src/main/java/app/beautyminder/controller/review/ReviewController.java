@@ -1,10 +1,13 @@
-package app.beautyminder.controller;
+package app.beautyminder.controller.review;
 
+import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
 import app.beautyminder.dto.ReviewDTO;
 import app.beautyminder.service.FileStorageService;
 import app.beautyminder.service.ReviewService;
+import app.beautyminder.service.cosmetic.CosmeticService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -18,13 +21,37 @@ import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/review") // /review/api
+@RequestMapping("/review")
 public class ReviewController {
 
     private final ReviewService reviewService;
     private final FileStorageService fileStorageService;
+    private final CosmeticService cosmeticService;
+
+    // Retrieve all reviews of a specific cosmetic
+    @Operation(
+            summary = "Get all reviews of a cosmetic",
+            description = "특정 화장품의 리뷰를 모두 가져옵니다.",
+            tags = {"Review Operations"},
+            parameters = { @Parameter(name="cosmeticId", description = "화장품 ID")},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Review.class, type = "array"))),
+                    @ApiResponse(responseCode = "404", description = "리뷰 없음", content = @Content(schema = @Schema(implementation = String.class)))
+            }
+    )
+    @GetMapping("/{cosmeticId}")
+    public ResponseEntity<List<Review>> getReviewsForCosmetic(@PathVariable String cosmeticId) {
+        Cosmetic cosmetic = cosmeticService.getCosmeticById(cosmeticId);
+        if (cosmetic == null) {
+            return ResponseEntity.notFound().build();
+        }
+        List<Review> reviews = reviewService.getAllReviewsByCosmetic(cosmetic);
+        return ResponseEntity.ok(reviews);
+    }
 
     @Operation(
             summary = "Add a new review",
