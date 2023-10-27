@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -72,7 +73,7 @@ public class CosmeticController {
             }
     )
     @PostMapping
-    public ResponseEntity<Cosmetic> createCosmetic(@RequestBody Cosmetic cosmetic) {
+    public ResponseEntity<Cosmetic> createCosmetic(@Valid @RequestBody Cosmetic cosmetic) {
         Cosmetic newCosmetic = cosmeticService.saveCosmetic(cosmetic);
         return ResponseEntity.ok(newCosmetic);
     }

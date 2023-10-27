@@ -1,4 +1,4 @@
-package app.beautyminder.service;
+package app.beautyminder.util;
 
 import app.beautyminder.dto.Event;
 import org.springframework.stereotype.Service;

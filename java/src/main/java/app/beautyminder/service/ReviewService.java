@@ -2,11 +2,16 @@ package app.beautyminder.service;
 
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
+import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.ReviewRepository;
+import app.beautyminder.service.cosmetic.CosmeticService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,11 +23,15 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final FileStorageService fileStorageService;
+    private final CosmeticRepository cosmeticRepository;
 
     public Review addReview(Review review, MultipartFile[] images) {
         // Ensure images list is initialized
-
         review.getCosmetic().updateAverageRating(review.getRating()); // update cosmetic's review score
+
+        // HERE mongodb doesn't support cascading saves via `@DBRef`
+        // Save the updated Cosmetic object
+        cosmeticRepository.save(review.getCosmetic());
 
         // Store images and set image URLs in review
         for (MultipartFile image : images) {
@@ -45,7 +54,7 @@ public class ReviewService {
             }
             return reviewRepository.save(review);
         } else {
-            throw new IllegalArgumentException("Review not found with id: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found with id: " + id);
         }
     }
 

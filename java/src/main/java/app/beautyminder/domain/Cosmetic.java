@@ -18,9 +18,6 @@ import java.util.List;
 @Builder
 public class Cosmetic {
 
-    private static final Logger LOG = LoggerFactory
-            .getLogger(Cosmetic.class);
-
     @Id
     private String id;
 

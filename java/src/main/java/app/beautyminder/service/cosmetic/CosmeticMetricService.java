@@ -7,8 +7,8 @@ import app.beautyminder.dto.Event;
 import app.beautyminder.dto.KeywordEvent;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.KeywordRankRepository;
-import app.beautyminder.service.EventQueue;
-import app.beautyminder.service.EventQueueKeyword;
+import app.beautyminder.util.EventQueue;
+import app.beautyminder.util.EventQueueKeyword;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.swing.*;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;

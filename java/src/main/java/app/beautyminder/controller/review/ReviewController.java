@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +36,7 @@ public class ReviewController {
             summary = "Get all reviews of a cosmetic",
             description = "특정 화장품의 리뷰를 모두 가져옵니다.",
             tags = {"Review Operations"},
-            parameters = { @Parameter(name="cosmeticId", description = "화장품 ID")},
+            parameters = {@Parameter(name = "cosmeticId", description = "화장품 ID")},
             responses = {
                     @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Review.class, type = "array"))),
                     @ApiResponse(responseCode = "404", description = "리뷰 없음", content = @Content(schema = @Schema(implementation = String.class)))
@@ -90,12 +89,7 @@ public class ReviewController {
             @PathVariable("id") String id,
             @RequestPart Review reviewDetails,
             @RequestPart(value = "images", required = false) MultipartFile[] images) {
-        try {
-            Review updatedReview = reviewService.updateReview(id, reviewDetails, images);
-            return ResponseEntity.ok(updatedReview);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        return ResponseEntity.ok(reviewService.updateReview(id, reviewDetails, images));
     }
 
     @Operation(

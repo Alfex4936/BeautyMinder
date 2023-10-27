@@ -125,6 +125,7 @@ public class UserService {
     }
 
     // 사용자 ID로 조회
+//    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not found");
     public User findById(String userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
