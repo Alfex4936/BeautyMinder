@@ -4,6 +4,7 @@ import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.core.Local;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class RefreshTokenService {
@@ -30,6 +32,7 @@ public class RefreshTokenService {
 
     public void deleteAllExpiredTokens(LocalDateTime now) {
         List<RefreshToken> expiredTokens = refreshTokenRepository.findAllExpiredTokens(now);
+        log.info("Refresh token cleaning: {}", expiredTokens);
         refreshTokenRepository.deleteAll(expiredTokens);
     }
 

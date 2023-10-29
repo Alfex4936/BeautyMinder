@@ -19,6 +19,8 @@ public class TokenService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
+    private final int LENGTH = 6;
+    private final long VALID_HOURS = 2;
 
     public static String generateToken(int length) {
         StringBuilder token = new StringBuilder(length);
@@ -30,12 +32,12 @@ public class TokenService {
     }
 
     PasswordResetToken createPasswordResetToken(User user) {
-        String token = generateToken(6);
+        String token = generateToken(LENGTH);
 
         PasswordResetToken passwordResetToken = PasswordResetToken.builder()
                 .email(user.getEmail())
                 .token(token)
-                .expiryDate(LocalDateTime.now().plusHours(2))
+                .expiryDate(LocalDateTime.now().plusHours(VALID_HOURS))
                 .build();
 
         passwordResetTokenRepository.save(passwordResetToken);
