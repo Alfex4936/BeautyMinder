@@ -1,24 +1,21 @@
 package app.beautyminder.service.auth;
 
-import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.PasswordResetToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.repository.PasswordResetTokenRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @Service
 public class TokenService {
 
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final int LENGTH = 6;
     private final long VALID_HOURS = 2;
 

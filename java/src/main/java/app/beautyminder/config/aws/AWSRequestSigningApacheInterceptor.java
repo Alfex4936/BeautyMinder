@@ -53,6 +53,57 @@ public class AWSRequestSigningApacheInterceptor implements HttpRequestIntercepto
     }
 
     /**
+     * @param params list of HTTP query params as NameValuePairs
+     * @return a multimap of HTTP query params
+     */
+    private static Map<String, List<String>> nvpToMapParams(final List<NameValuePair> params) {
+        Map<String, List<String>> parameterMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (NameValuePair nvp : params) {
+            List<String> argsList =
+                    parameterMap.computeIfAbsent(nvp.getName(), k -> new ArrayList<>());
+            argsList.add(nvp.getValue());
+        }
+        return parameterMap;
+    }
+
+    /**
+     * @param headers modeled Header objects
+     * @return a Map of header entries
+     */
+    private static Map<String, String> headerArrayToMap(final Header[] headers) {
+        Map<String, String> headersMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (Header header : headers) {
+            if (!skipHeader(header)) {
+                headersMap.put(header.getName(), header.getValue());
+            }
+        }
+        return headersMap;
+    }
+
+    /**
+     * @param header header line to check
+     * @return true if the given header should be excluded when signing
+     */
+    private static boolean skipHeader(final Header header) {
+        return ("content-length".equalsIgnoreCase(header.getName())
+                && "0".equals(header.getValue())) // Strip Content-Length: 0
+                || "host".equalsIgnoreCase(header.getName()); // Host comes from endpoint
+    }
+
+    /**
+     * @param mapHeaders Map of header entries
+     * @return modeled Header objects
+     */
+    private static Header[] mapToHeaderArray(final Map<String, String> mapHeaders) {
+        Header[] headers = new Header[mapHeaders.size()];
+        int i = 0;
+        for (Map.Entry<String, String> headerEntry : mapHeaders.entrySet()) {
+            headers[i++] = new BasicHeader(headerEntry.getKey(), headerEntry.getValue());
+        }
+        return headers;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -103,56 +154,5 @@ public class AWSRequestSigningApacheInterceptor implements HttpRequestIntercepto
                 httpEntityEnclosingRequest.setEntity(basicHttpEntity);
             }
         }
-    }
-
-    /**
-     * @param params list of HTTP query params as NameValuePairs
-     * @return a multimap of HTTP query params
-     */
-    private static Map<String, List<String>> nvpToMapParams(final List<NameValuePair> params) {
-        Map<String, List<String>> parameterMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        for (NameValuePair nvp : params) {
-            List<String> argsList =
-                    parameterMap.computeIfAbsent(nvp.getName(), k -> new ArrayList<>());
-            argsList.add(nvp.getValue());
-        }
-        return parameterMap;
-    }
-
-    /**
-     * @param headers modeled Header objects
-     * @return a Map of header entries
-     */
-    private static Map<String, String> headerArrayToMap(final Header[] headers) {
-        Map<String, String> headersMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        for (Header header : headers) {
-            if (!skipHeader(header)) {
-                headersMap.put(header.getName(), header.getValue());
-            }
-        }
-        return headersMap;
-    }
-
-    /**
-     * @param header header line to check
-     * @return true if the given header should be excluded when signing
-     */
-    private static boolean skipHeader(final Header header) {
-        return ("content-length".equalsIgnoreCase(header.getName())
-                && "0".equals(header.getValue())) // Strip Content-Length: 0
-                || "host".equalsIgnoreCase(header.getName()); // Host comes from endpoint
-    }
-
-    /**
-     * @param mapHeaders Map of header entries
-     * @return modeled Header objects
-     */
-    private static Header[] mapToHeaderArray(final Map<String, String> mapHeaders) {
-        Header[] headers = new Header[mapHeaders.size()];
-        int i = 0;
-        for (Map.Entry<String, String> headerEntry : mapHeaders.entrySet()) {
-            headers[i++] = new BasicHeader(headerEntry.getKey(), headerEntry.getValue());
-        }
-        return headers;
     }
 }

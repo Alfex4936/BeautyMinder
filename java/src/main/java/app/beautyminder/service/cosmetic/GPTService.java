@@ -25,14 +25,16 @@ import java.util.Optional;
 @Service
 public class GPTService {
 
+    private static final Logger logger = LoggerFactory.getLogger(GPTService.class);
     private final ChatgptService chatgptService;
     private final CosmeticRepository cosmeticRepository;
     private final ReviewRepository reviewRepository;
     private final GPTReviewRepository gptReviewRepository;
-    private static final Logger logger = LoggerFactory.getLogger(GPTService.class);
-
     @Value("${chatgpt.system}")
     private String systemRole;
+
+    @Value("${chatgpt.system-keyword}")
+    private String systemRoleKeyword;
 
     @Value("${chatgpt.multi.model}")
     private String gptVersion;
@@ -89,5 +91,51 @@ public class GPTService {
                 new MultiChatMessage("user", allContents.toString()));
 
         return chatgptService.multiChat(messages); // Return the summarized content
+    }
+
+//    @Scheduled(cron = "0 0 7 ? * MON") // Every Monday at 7:00 am
+//    public void summarizeReviews() {
+////        System.out.println("====== " + systemRole);
+//        List<Cosmetic> allCosmetics = cosmeticRepository.findAll();
+//
+//        for (Cosmetic cosmetic : allCosmetics) {
+//            List<Review> positiveReviews = reviewRepository.findRandomReviewsByRatingAndCosmetic(3, 5, cosmetic.getId(), 10);
+//            List<Review> negativeReviews = reviewRepository.findRandomReviewsByRatingAndCosmetic(1, 3, cosmetic.getId(), 10);
+//
+//            String positiveSummary = saveSummarizedReviews(positiveReviews, cosmetic);
+//            String negativeSummary = saveSummarizedReviews(negativeReviews, cosmetic);
+//
+//            // Check if GPTReview already exists for this cosmetic
+//            Optional<GPTReview> existingReviewOpt = gptReviewRepository.findByCosmetic(cosmetic);
+//
+//            if (existingReviewOpt.isPresent()) {
+//                // If it exists, update it
+//                GPTReview existingReview = existingReviewOpt.get();
+//                existingReview.setPositive(positiveSummary);
+//                existingReview.setNegative(negativeSummary);
+//                gptReviewRepository.save(existingReview);
+//            } else {
+//                // If it doesn't exist, create a new one
+//                GPTReview gptReview = GPTReview.builder()
+//                        .gptVersion(gptVersion)
+//                        .positive(positiveSummary)
+//                        .negative(negativeSummary)
+//                        .cosmetic(cosmetic)
+//                        .build();
+//                gptReviewRepository.save(gptReview);
+//            }
+//        }
+//
+//        log.info("GPTReview: Summarization done");
+//    }
+
+    private String generateKeywords(String baumannType) {
+        logger.info("Generating keywords for {}...", baumannType);
+
+        List<MultiChatMessage> messages = Arrays.asList(
+                new MultiChatMessage("system", systemRoleKeyword),
+                new MultiChatMessage("user", "My Baumann type " + baumannType));
+
+        return chatgptService.multiChat(messages);
     }
 }

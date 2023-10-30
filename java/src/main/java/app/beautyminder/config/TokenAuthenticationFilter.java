@@ -15,6 +15,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,25 +35,21 @@ import java.util.regex.Pattern;
 
 import static app.beautyminder.config.WebSecurityConfig.*;
 
+@Slf4j
 @RequiredArgsConstructor
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
-    private final TokenProvider tokenProvider;
-    private final RefreshTokenService refreshTokenService;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     private final static String HEADER_AUTHORIZATION = "Authorization";
     private final static String TOKEN_PREFIX = "Bearer ";
-
-    private static final Logger logger = LoggerFactory.getLogger(TokenAuthenticationFilter.class);
-
-    @Value("${unprotected.routes}")
-    private String[] unprotectedRoutes;
-
     private static final Pattern UNPROTECTED_SWAGGER_API =
             Pattern.compile("^/(swagger-ui|v3/api-docs|proxy)(/.*)?$");
     private static final Pattern UNPROTECTED_API =
             Pattern.compile("^/(es-index|data-view|gpt|search|cosmetic/hit|cosmetic/click|redis|user/sms/send|baumann)(/.*)?$");
+    private final TokenProvider tokenProvider;
+    private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Value("${unprotected.routes}")
+    private String[] unprotectedRoutes;
 
     @Override
     protected void doFilterInternal(
@@ -60,7 +57,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             @NotNull HttpServletResponse response,
             @NotNull FilterChain filterChain) throws ServletException, IOException {
         if (!isProtectedRoute(request.getRequestURI())) { // early return
-            logger.debug("Accessing unprotected route! " + request.getRequestURI());
+            log.debug("Accessing unprotected route! " + request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
@@ -71,14 +68,14 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         String token = getAccessToken(request);
 
         if (tokenProvider.validToken(token)) {
-            logger.debug("Valid access token found, setting the authentication.");
+            log.debug("Valid access token found, setting the authentication.");
             Authentication auth = tokenProvider.getAuthentication(token);
             Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
-            logger.debug("User Authorities: {}", authorities);
+            log.debug("User Authorities: {}", authorities);
 
             SecurityContextHolder.getContext().setAuthentication(auth);
         } else {
-            logger.debug("Invalid access token. Attempting refresh.");
+            log.debug("Invalid access token. Attempting refresh.");
 
             // Attempt to use refresh token
             Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);
@@ -89,7 +86,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                     .ifPresentOrElse(
                             user -> {
                                 // here should I call /token/refresh ?
-                                logger.info("Valid refresh token found, generating new access tokens.");
+                                log.info("Valid refresh token found, generating new access tokens.");
 
                                 // Generate new access token and refresh token
                                 String newAccessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
@@ -99,7 +96,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                 Authentication newAuth = tokenProvider.getAuthentication(newAccessToken);
                                 SecurityContextHolder.getContext().setAuthentication(newAuth);
                                 Collection<? extends GrantedAuthority> authorities = newAuth.getAuthorities();
-                                logger.debug("Ref User Authorities: {}", authorities);
+                                log.debug("Ref User Authorities: {}", authorities);
 
                                 // Update the HTTP headers and cookies
                                 response.addHeader(HEADER_AUTHORIZATION, TOKEN_PREFIX + newAccessToken);
@@ -125,13 +122,13 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                 }
                             },
                             () -> {
-                                logger.warn("Invalid refresh token. Clearing the security context.");
+                                log.warn("Invalid refresh token. Clearing the security context.");
 
                                 SecurityContextHolder.getContext().setAuthentication(null);
                                 SecurityContextHolder.clearContext();
 
                                 // block to explicitly handle unauthorized requests
-                                logger.warn("Unauthorized request, returning 401");
+                                log.warn("Unauthorized request, returning 401");
                                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
                                 // Set the content type of the response to JSON

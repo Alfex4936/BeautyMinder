@@ -8,6 +8,8 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.io.IOException;
+
 @Slf4j
 @ControllerAdvice // 모든 컨트롤러에서 발생하는 예외를 잡아서 처리
 public class GlobalExceptionHandler {
@@ -33,8 +35,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ErrorResponse> handle(Exception e) {
-        e.printStackTrace();
         log.error("Exception", e);
+        return createErrorResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler({IOException.class})
+    protected ResponseEntity<ErrorResponse> handleIOException(Exception e) {
+        log.error("IOException", e);
         return createErrorResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR);
     }
 

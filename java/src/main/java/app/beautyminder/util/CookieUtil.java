@@ -18,23 +18,6 @@ public class CookieUtil {
         response.addCookie(cookie);
     }
 
-    // Production
-    public void addSecureCookie(HttpServletResponse response, String name, String value, int maxAge, boolean isSecure, String sameSite) {
-        StringBuilder cookieValue = new StringBuilder(name).append("=").append(value)
-                .append("; Max-Age=").append(maxAge)
-                .append("; Path=/")
-                .append("; HttpOnly");
-
-        if (isSecure) {
-            cookieValue.append("; Secure");
-        }
-
-        if (sameSite != null) {
-            cookieValue.append("; SameSite=").append(sameSite); // Lax, Strict
-        }
-
-        response.addHeader("Set-Cookie", cookieValue.toString());
-    }
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
         Cookie[] cookies = request.getCookies();
 
@@ -63,6 +46,24 @@ public class CookieUtil {
                         Base64.getUrlDecoder().decode(cookie.getValue())
                 )
         );
+    }
+
+    // Production
+    public void addSecureCookie(HttpServletResponse response, String name, String value, int maxAge, boolean isSecure, String sameSite) {
+        StringBuilder cookieValue = new StringBuilder(name).append("=").append(value)
+                .append("; Max-Age=").append(maxAge)
+                .append("; Path=/")
+                .append("; HttpOnly");
+
+        if (isSecure) {
+            cookieValue.append("; Secure");
+        }
+
+        if (sameSite != null) {
+            cookieValue.append("; SameSite=").append(sameSite); // Lax, Strict
+        }
+
+        response.addHeader("Set-Cookie", cookieValue.toString());
     }
 }
 

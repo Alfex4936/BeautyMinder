@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
+@ControllerAdvice
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/es-index")

@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface RefreshTokenRepository extends MongoRepository<RefreshToken, String> {
 
     Optional<RefreshToken> findByUserId(String userId);
+
     Optional<RefreshToken> findByRefreshToken(String refreshToken);
 
     @Query("{'expiresAt': {'$lt': ?0}}")
@@ -19,5 +20,6 @@ public interface RefreshTokenRepository extends MongoRepository<RefreshToken, St
     List<RefreshToken> findAllByUserId(String userId);
 
     void deleteByUserId(String userId);
+
     void deleteByRefreshToken(String refreshToken);
 }

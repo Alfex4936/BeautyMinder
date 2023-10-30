@@ -1,11 +1,14 @@
 package app.beautyminder.service;
 
+import app.beautyminder.domain.Review;
 import app.beautyminder.service.cosmetic.CosmeticMetricService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,6 +29,12 @@ public class RecommendService {
     private final CosmeticSearchService cosmeticSearchService;
     private final CosmeticMetricService cosmeticMetricService;
     private final ReviewSearchService reviewSearchService;
+    private final ReviewService reviewService;
+
+    public List<Review> getReviewsForRecommendation(Integer minRating, String userBaumann) {
+        List<Review> filteredReviews = reviewService.getReviewsForRecommendation(minRating, userBaumann);
+        return filteredReviews;
+    }
 
 //    public List<Product> recommendProducts(String baumannSkinType, int n, int k, int x, int y, int z) {
 //        List<String> keywords = generateKeywords(baumannSkinType);

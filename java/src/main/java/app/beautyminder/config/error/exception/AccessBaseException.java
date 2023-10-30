@@ -1,6 +1,7 @@
 package app.beautyminder.config.error.exception;
 
 import app.beautyminder.config.error.ErrorCode;
+
 public class AccessBaseException extends RuntimeException {
 
 

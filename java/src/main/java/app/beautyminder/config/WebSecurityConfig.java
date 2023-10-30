@@ -62,15 +62,12 @@ public class WebSecurityConfig {
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
     public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
+    private static final Logger logger = LoggerFactory.getLogger(WebSecurityConfig.class);
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService;
     private final UserDetailService userDetailsService;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private static final Logger logger = LoggerFactory.getLogger(WebSecurityConfig.class);
-
 
     @Bean
     public StrictHttpFirewall httpFirewall() {

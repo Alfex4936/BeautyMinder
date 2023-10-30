@@ -10,6 +10,7 @@ import java.util.List;
 public interface TodoRepository extends MongoRepository<Todo, String> {
 
     List<Todo> findByUserId(String userId);
+
     List<Todo> findByDate(LocalDate date);
 
     @Query("{'user.id': ?0, 'date': ?1}")

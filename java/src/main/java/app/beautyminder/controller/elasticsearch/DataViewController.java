@@ -6,7 +6,10 @@ import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,7 +33,7 @@ public class DataViewController {
         String cosmeticsData = cosmeticSearchService.viewCosmeticsData();
         return ResponseEntity.ok(cosmeticsData);
     }
-
+    
     @GetMapping("/cosmetic-metrics")
     public ResponseEntity<String> viewCosmeticMetricsData() throws IOException {
         String cosmeticsData = cosmeticSearchService.viewCosmeticMetricsData();

@@ -4,16 +4,12 @@ import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.ReviewRepository;
-import app.beautyminder.service.cosmetic.CosmeticService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,5 +61,9 @@ public class ReviewService {
 
     public Optional<Review> getReviewById(String id) {
         return reviewRepository.findById(id);
+    }
+
+    public List<Review> getReviewsForRecommendation(Integer minRating, String userBaumann) {
+        return reviewRepository.findReviewsByRatingAndUserBaumann(minRating, userBaumann);
     }
 }

@@ -1,9 +1,7 @@
 package app.beautyminder.service.cosmetic;
 
-import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.CosmeticExpiry;
 import app.beautyminder.repository.CosmeticExpiryRepository;
-import app.beautyminder.repository.CosmeticRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +18,7 @@ import java.util.Optional;
 public class CosmeticExpiryService {
 
     private final CosmeticExpiryRepository cosmeticExpiryRepository;
+
     public CosmeticExpiry createCosmeticExpiry(CosmeticExpiry cosmeticExpiry) {
         return cosmeticExpiryRepository.save(cosmeticExpiry);
     }

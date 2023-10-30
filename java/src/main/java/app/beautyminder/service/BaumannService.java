@@ -32,7 +32,7 @@ public class BaumannService {
      * @return a JSON string representing the individual's Baumann skin type.
      */
     public BaumannTypeDTO calculateResults(Map<String, Integer> responses) {
-        log.info("Responses: {}", responses);
+        // log.info("Responses: {}", responses);
 
         // Calculate scores for each category.
         double dScore = calculateCategoryScore(responses, "A", 11);

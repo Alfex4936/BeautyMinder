@@ -22,11 +22,6 @@ import java.util.List;
 @Service
 public class FileStorageService {
 
-    private final AmazonS3 amazonS3;
-
-    @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
-
     // have to consider using a library that can read and verify the image's binary data.
     private static final List<String> ALLOWED_FILE_TYPES = Arrays.asList(
             "image/jpeg",
@@ -34,6 +29,9 @@ public class FileStorageService {
             "image/jpg",
             "image/gif"
     );
+    private final AmazonS3 amazonS3;
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     public String storeFile(MultipartFile file) {
         validateImageFileType(file);
@@ -89,7 +87,7 @@ public class FileStorageService {
 
     private void validateImageFileType(MultipartFile file) {
         String contentType = file.getContentType();
-        if(!ALLOWED_FILE_TYPES.contains(contentType)) {
+        if (!ALLOWED_FILE_TYPES.contains(contentType)) {
             throw new FileStorageException("Invalid file type. Only JPG, PNG, and GIF images are allowed.", null);
         }
     }

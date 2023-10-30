@@ -4,8 +4,6 @@ import app.beautyminder.domain.Todo;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
-
 @Setter
 @Getter
 public class AddTodoResponse {

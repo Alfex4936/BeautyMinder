@@ -11,8 +11,12 @@ import java.util.Optional;
 
 public interface CosmeticExpiryRepository extends MongoRepository<CosmeticExpiry, String> {
     List<CosmeticExpiry> findAllByUserIdOrderByExpiryDateAsc(String userId);
+
     Page<CosmeticExpiry> findAllByUserId(String userId, Pageable pageable);
+
     Optional<CosmeticExpiry> findByUserIdAndId(String userId, String expiryId);
+
     Optional<CosmeticExpiry> findByCosmeticId(String cosmeticId);
+
     List<CosmeticExpiry> findAllByUserIdAndExpiryDateBetween(String userId, LocalDate startDate, LocalDate endDate);
 }

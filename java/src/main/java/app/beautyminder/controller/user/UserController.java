@@ -10,7 +10,6 @@ import app.beautyminder.service.auth.SmsService;
 import app.beautyminder.service.auth.TokenService;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticMetricService;
-import app.beautyminder.service.cosmetic.CosmeticService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

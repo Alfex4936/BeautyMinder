@@ -3,7 +3,6 @@ package app.beautyminder.dto.sms;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor

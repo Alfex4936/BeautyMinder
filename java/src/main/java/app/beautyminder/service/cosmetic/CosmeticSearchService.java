@@ -4,7 +4,6 @@ import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.EsCosmetic;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.elastic.EsCosmeticRepository;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.util.EntityUtils;
@@ -27,7 +26,7 @@ public class CosmeticSearchService {
     private final EsCosmeticRepository esCosmeticRepository;
     private final RestHighLevelClient opensearchClient;
 
-//    @PostConstruct
+    //    @PostConstruct
     @Scheduled(cron = "0 */50 * * * ?") // every 50 min
     public void indexCosmetics() {
         List<Cosmetic> cosmetics = cosmeticRepository.findAll();  // Fetch all cosmetics from MongoDB

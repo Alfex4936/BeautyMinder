@@ -28,36 +28,31 @@ import java.util.stream.Collectors;
 @Service
 public class CosmeticMetricService {
 
-    private final CosmeticRepository cosmeticRepository;
-    private final KeywordRankRepository keywordRankRepository;
-
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
-
-    private final EventQueue eventQueue;
-    private final EventQueueKeyword eventQueueKeyword;
-
     // Redis structure: "cosmeticMetrics:{cosmeticId}" -> {"clicks": "10", "hits": "5", "favs": "3"}
     private static final String COSMETIC_METRICS_KEY_TEMPLATE = "cosmeticMetrics:%s";
+    private final CosmeticRepository cosmeticRepository;
+    private final KeywordRankRepository keywordRankRepository;
+    private final EventQueue eventQueue;
+    private final EventQueueKeyword eventQueueKeyword;
     private final String KEYWORD_METRICS_KEY = "keywordMetrics";
-
-
-    // clicks might be considered more valuable as they represent a user taking a clear action based on their interest
-
     /*
-   
+
     현재 실시간 수집 중인 정보:
         1. 제품 클릭
         2. 제품 검색 hit (검색 했을 때 제품이 노출된 횟수)
         3. 매일 즐겨찾기에 추가된 수
-    
+
      */
     private final double CLICK_WEIGHT = 1.8;
+
+
+    // clicks might be considered more valuable as they represent a user taking a clear action based on their interest
     private final double HIT_WEIGHT = 1.1;
     private final double FAV_WEIGHT = 2.0;
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
-
-     @PostConstruct
+    @PostConstruct
     @Scheduled(cron = "0 0 4 * * ?") // everyday 4am
     public void resetCounts() {
         Set<String> keys = redisTemplate.keys("cosmeticMetrics:*");
