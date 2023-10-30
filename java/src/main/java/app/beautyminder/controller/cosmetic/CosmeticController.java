@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +66,7 @@ public class CosmeticController {
             summary = "Create a cosmetic data",
             description = "화장품을 생성합니다.",
             tags = {"Cosmetic Operations"},
-            requestBody = @RequestBody(description = "화장품"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "화장품"),
             responses = {
                     @ApiResponse(responseCode = "200", description = "화장품 추가 성공", content = @Content(schema = @Schema(implementation = Cosmetic.class))),
             }
@@ -86,7 +85,7 @@ public class CosmeticController {
             parameters = {
                     @Parameter(name = "id", description = "화장품의 ID"),
             },
-            requestBody = @RequestBody(description = "Cosmetic 모델"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Cosmetic 모델"),
             responses = {
                     @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Cosmetic.class))),
                     @ApiResponse(responseCode = "404", description = "화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))

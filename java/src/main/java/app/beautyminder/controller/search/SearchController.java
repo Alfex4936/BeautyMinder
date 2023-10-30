@@ -37,6 +37,7 @@ public class SearchController {
                     @ApiResponse(responseCode = "400", description = "Invalid parameters")
             }
     )
+    // TODO: EsCosmetic 말고 Cosmetic으로 넘겨주기
     @GetMapping("/cosmetic")
     public ResponseEntity<List<EsCosmetic>> searchByName(@RequestParam String name) {
         List<EsCosmetic> results = cosmeticSearchService.searchByName(name);
@@ -107,5 +108,11 @@ public class SearchController {
             cosmeticMetricService.collectSearchEvent(keyword.trim());
         }
         return ResponseEntity.ok(results);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> searchAnything(@RequestParam String anything) {
+        cosmeticMetricService.collectSearchEvent(anything.trim());
+        return ResponseEntity.ok("Searched: " + anything);
     }
 }

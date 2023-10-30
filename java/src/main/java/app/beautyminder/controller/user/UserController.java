@@ -15,15 +15,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClientException;
 
@@ -35,6 +37,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/user") // Base path for all routes in this controller
@@ -49,7 +52,7 @@ public class UserController {
     @Operation(
             summary = "Standard User Signup",
             description = "표준 사용자 등록을 처리합니다.",
-            requestBody = @RequestBody(description = "User signup details"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User signup details"),
             tags = {"User Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "사용자가 생성됨", content = @Content(schema = @Schema(implementation = SignUpResponse.class))),
@@ -57,7 +60,7 @@ public class UserController {
             }
     )
     @PostMapping("/signup")
-    public ResponseEntity<SignUpResponse> signUp(@RequestBody AddUserRequest request) {
+    public ResponseEntity<SignUpResponse> signUp(@Valid @org.springframework.web.bind.annotation.RequestBody AddUserRequest request) {
         try {
             String userId = userService.saveUser(request);
             User user = userService.findById(userId);
@@ -71,7 +74,7 @@ public class UserController {
     @Operation(
             summary = "Admin User Signup",
             description = "관리자 사용자 등록을 처리합니다.",
-            requestBody = @RequestBody(description = "Admin signup details"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Admin signup details"),
             tags = {"User Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "관리자가 생성됨", content = @Content(schema = @Schema(implementation = SignUpResponse.class))),
@@ -139,7 +142,7 @@ public class UserController {
     @Operation(
             summary = "Update user profile",
             description = "사용자 프로필 업데이트",
-            requestBody = @RequestBody(content = @Content(schema = @Schema(implementation = Map.class)), description = "Profile updates"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(implementation = Map.class)), description = "Profile updates"),
             tags = {"User Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "유저 업데이트 완료", content = @Content(schema = @Schema(implementation = User.class))),
@@ -147,6 +150,7 @@ public class UserController {
             }
     )
 
+    // org.springframework.web.bind.annotation.
     // Can take any field in User class
     @PatchMapping("/update/{userId}")
     public ResponseEntity<?> updateProfile(@PathVariable String userId, @RequestBody Map<String, Object> updates) {
@@ -238,7 +242,7 @@ public class UserController {
     @Operation(
             summary = "Request password reset via email",
             description = "이메일을 통한 비밀번호 재설정 요청",
-            requestBody = @RequestBody(content = @Content(schema = @Schema(implementation = Map.class)), description = "Email for password reset"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(implementation = Map.class)), description = "Email for password reset"),
             tags = {"Password Reset Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "비밀번호 재설정 요청 메일 전송 완료", content = @Content(schema = @Schema(implementation = String.class))),
@@ -283,7 +287,7 @@ public class UserController {
     @Operation(
             summary = "Reset Password",
             description = "사용자의 비밀번호를 재설정합니다.",
-            requestBody = @RequestBody(description = "Reset password details"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Reset password details"),
             tags = {"Password Reset Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "비밀번호가 성공적으로 재설정됨", content = @Content(schema = @Schema(implementation = String.class))),

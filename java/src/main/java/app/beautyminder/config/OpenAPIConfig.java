@@ -26,6 +26,6 @@ public class OpenAPIConfig {
                         .contact(new Contact().email("ikr@kakao.com"))
                         .description("2023-2 Capstone Design")
                 )
-                .addServersItem(new Server().url("https://server/").description("AWS EC2"));
+                .addServersItem(new Server().url("http://localhost:8080").description("AWS EC2"));
     }
 }

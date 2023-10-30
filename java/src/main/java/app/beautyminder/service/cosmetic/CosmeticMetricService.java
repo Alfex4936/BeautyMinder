@@ -8,7 +8,6 @@ import app.beautyminder.dto.KeywordEvent;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.KeywordRankRepository;
 import app.beautyminder.util.EventQueue;
-import app.beautyminder.util.EventQueueKeyword;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -33,8 +34,11 @@ public class CosmeticMetricService {
     private final CosmeticRepository cosmeticRepository;
     private final KeywordRankRepository keywordRankRepository;
     private final EventQueue eventQueue;
-    private final EventQueueKeyword eventQueueKeyword;
     private final String KEYWORD_METRICS_KEY = "keywordMetrics";
+    private final Map<String, RunningStats> keywordStatsMap = new HashMap<>();
+    private static final Integer HIGH_VOLUME_THRESHOLD = 100; // imagine average searches is around 100
+    private static final double HIGH_SIG_LEVEL = 3.0;
+    private static final double LOW_SIG_LEVEL = 2.0;
     /*
 
     현재 실시간 수집 중인 정보:
@@ -64,6 +68,7 @@ public class CosmeticMetricService {
         }
 
         redisTemplate.delete(KEYWORD_METRICS_KEY);
+        keywordStatsMap.clear();
 
         log.info("REDIS: Reset all cosmetic metrics.");
     }
@@ -109,11 +114,24 @@ public class CosmeticMetricService {
         log.info("REDIS: Sending batches");
     }
 
-    // Keyword collection
-    @Scheduled(cron = "0 0/10 * * * ?")  // Every 10 minutes
+    // -------- Keyword collection
+    public double calculateSignificanceLevel(long dataVolume) {
+        // Increase significance level during high data volume periods
+        if (dataVolume > HIGH_VOLUME_THRESHOLD) {
+            return HIGH_SIG_LEVEL;
+        } else {
+            return LOW_SIG_LEVEL;
+        }
+    }
+
+//    @Scheduled(cron = "0 0/10 * * * ?")  // Every 10 minutes
+    @Scheduled(cron = "*/35 * * * * ?")  // Every 35 seconds
     @Transactional
     public void processKeywordEvents() {
-        List<KeywordEvent> events = eventQueueKeyword.dequeueAll();
+        List<KeywordEvent> events = eventQueue.dequeueAllKeywords();
+        long dataVolume = events.size();  // number of events
+        double adaptiveSigLevel = calculateSignificanceLevel(dataVolume);
+
         if (events.isEmpty()) {
             log.info("Keyword Redis batch empty");
             return;
@@ -127,15 +145,33 @@ public class CosmeticMetricService {
         for (Map.Entry<String, Long> entry : keywordCountMap.entrySet()) {
             String keyword = entry.getKey();
             Long count = entry.getValue();
-            redisTemplate.opsForHash().increment(KEYWORD_METRICS_KEY, keyword, count);
+
+            // Update running statistics for each keyword
+            RunningStats stats = keywordStatsMap.computeIfAbsent(keyword, k -> new RunningStats());
+            stats.update(count);
+
+            /*
+
+            Increasing the significanceLevel (e.g., to 3.0) would make the system less sensitive to deviations, requiring a larger change in search frequency to consider a keyword as trending. This might result in fewer keywords being identified as trending but with higher confidence that the change is significant.
+            Decreasing the significanceLevel (e.g., to 1.0) would make the system more sensitive to deviations, potentially identifying more keywords as trending. However, this might also increase the likelihood of identifying noise or less meaningful trends.
+
+             */
+            // Default to incrementing on the first run, or check for significant deviation in subsequent runs
+            boolean shouldIncrement = stats.count.get() == 1 || stats.isSignificantDeviation(count, adaptiveSigLevel);
+
+            if (shouldIncrement) {
+                // This keyword is trending; update its ranking in Redis
+                log.info("Incrementing Redis count for keyword: {} by {}", keyword, count);
+                redisTemplate.opsForHash().increment(KEYWORD_METRICS_KEY, keyword, count);
+            }
         }
 
-        log.info("REDIS: Processed keyword batches");
+        log.info("REDIS: Processed keyword batches ({})", dataVolume);
     }
 
-    // Scheduled Batch Processing to log top 10 keywords everyday 2pm
-    @Scheduled(cron = "0 0 14 * * ?")
-//    @Scheduled(cron = "0 0/2 * * * ?") // every 1min
+    // Scheduled Batch Processing to log top 10 keywords every 15mins
+//    @Scheduled(cron = "0 0 14 * * ?")
+    @Scheduled(cron = "0 0/15 * * * ?") // every 15min
     public void saveTop10Keywords() {
         // Get all keyword counts from Redis
         Map<Object, Object> keywordCounts = redisTemplate.opsForHash().entries(KEYWORD_METRICS_KEY);
@@ -149,15 +185,28 @@ public class CosmeticMetricService {
                 .limit(10)
                 .toList();
 
+        // Log the top 10 keywords along with their counts
+        for (Map.Entry<Object, Object> entry : sortedEntries) {
+            log.info("Keyword: {}, Count: {}", entry.getKey(), entry.getValue());
+        }
+
         // Extract the top 10 keywords
         List<String> top10Keywords = sortedEntries.stream()
                 .map(entry -> (String) entry.getKey())
                 .toList();
 
+        if (top10Keywords.isEmpty()) {
+            log.info("Empty top 10 keywords");
+            return;
+        }
+
+        log.info("Saving top 10 keywords: {}", top10Keywords);
+
         // Create a new KeywordRank instance
         KeywordRank keywordRank = KeywordRank.builder()
                 .rankings(top10Keywords)
                 .build();
+
 
         // Save the KeywordRank instance to the database
         keywordRankRepository.save(keywordRank);
@@ -170,7 +219,7 @@ public class CosmeticMetricService {
 
     // Collects keyword search events
     public void collectSearchEvent(String keyword) {
-        eventQueueKeyword.enqueue(new KeywordEvent(keyword));
+        eventQueue.enqueueKeyword(new KeywordEvent(keyword));
     }
 
     public void collectClickEvent(String cosmeticId) {
@@ -315,4 +364,32 @@ public class CosmeticMetricService {
 
     }
 
+
+    static class RunningStats {
+        private final AtomicLong count = new AtomicLong();
+        private final AtomicReference<Double> mean = new AtomicReference<>(0.0);
+        private final AtomicReference<Double> M2 = new AtomicReference<>(0.0);
+
+        void update(long value) {
+            long count = this.count.incrementAndGet();
+            double delta = value - mean.get();
+            mean.set(mean.get() + delta / count);
+            M2.set(M2.get() + delta * (value - mean.get()));
+        }
+
+        boolean isSignificantDeviation(long recentCount, double significanceLevel) {
+            if (count.get() < 2) {
+                return false;  // Not enough data to determine deviation
+            }
+
+            double variance = M2.get() / (count.get() - 1);
+            double stddev = Math.sqrt(variance);
+
+            // Calculate the z-score
+            double z = (recentCount - mean.get()) / stddev;
+
+            // Check if the absolute z-score is greater than the significance level
+            return Math.abs(z) > significanceLevel;
+        }
+    }
 }

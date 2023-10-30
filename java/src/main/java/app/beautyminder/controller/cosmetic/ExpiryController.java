@@ -32,8 +32,8 @@ public class ExpiryController {
                     @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = CosmeticExpiry.class))),
             }
     )
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<CosmeticExpiry> createCosmeticExpiry(@Valid @RequestBody CosmeticExpiry cosmeticExpiry) {
+    @PostMapping()
+    public ResponseEntity<CosmeticExpiry> createCosmeticExpiry(@RequestBody CosmeticExpiry cosmeticExpiry) {
         // TODO: if it has a cosmeticId, loading name/brandName from Cosmetic?
         return ResponseEntity.ok(cosmeticExpiryService.createCosmeticExpiry(cosmeticExpiry));
     }
@@ -170,8 +170,8 @@ public class ExpiryController {
             tags = {"Expiry Operations"},
             parameters = {
                     @Parameter(name = "userId", description = "유저 ID", in = ParameterIn.PATH, required = true, schema = @Schema(type = "string")),
-                    @Parameter(name = "startDate", description = "시작 날짜", in = ParameterIn.QUERY, schema = @Schema(type = "LocalDate", description = "YYYY-MM-DD")),
-                    @Parameter(name = "endDate", description = "종료 날짜", in = ParameterIn.QUERY, schema = @Schema(type = "LocalDate", description = "YYYY-MM-DD")),
+                    @Parameter(name = "startDate", description = "시작 날짜", in = ParameterIn.QUERY, schema = @Schema(type = "object", description = "LocalDate YYYY-MM-DD")),
+                    @Parameter(name = "endDate", description = "종료 날짜", in = ParameterIn.QUERY, schema = @Schema(type = "object", description = "LocalDate YYYY-MM-DD")),
             },
             responses = {
                     @ApiResponse(

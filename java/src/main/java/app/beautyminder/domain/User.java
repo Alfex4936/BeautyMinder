@@ -59,6 +59,10 @@ public class User implements UserDetails {
     @Setter
     private Set<String> cosmeticIds = new HashSet<>(); // favourites
 
+    // TODO(2023-10-30): Implement search history retrieval
+    @Setter
+    private Set<String> keywordHistory = new HashSet<>(); // search history
+
     @Indexed
     @Setter
     private String baumann;

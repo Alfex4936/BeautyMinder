@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
@@ -55,7 +54,7 @@ public class ReviewController {
     @Operation(
             summary = "Add a new review",
             description = "새 리뷰를 추가합니다.",
-            requestBody = @RequestBody(description = "Review details and images"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Review details and images"),
             tags = {"Review Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "리뷰가 생성됨", content = @Content(schema = @Schema(implementation = Review.class))),
@@ -77,7 +76,7 @@ public class ReviewController {
     @Operation(
             summary = "Update an existing review",
             description = "기존 리뷰를 업데이트합니다.",
-            requestBody = @RequestBody(description = "Review update details and images"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Review update details and images"),
             tags = {"Review Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "리뷰가 업데이트됨", content = @Content(schema = @Schema(implementation = Review.class))),

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
+// TODO: change all to ADMIN_ROLE
 @ControllerAdvice
 @RequiredArgsConstructor
 @RestController

@@ -4,6 +4,9 @@ import app.beautyminder.dto.BaumannSurveyAnswerDTO;
 import app.beautyminder.dto.BaumannTypeDTO;
 import app.beautyminder.service.BaumannService;
 import app.beautyminder.service.LocalFileService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -12,10 +15,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,32 +39,33 @@ public class BaumannController {
             "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", "C13", "C14",
             "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10", "D11", "D12", "D13", "D14", "D15", "D16", "D17", "D18", "D19", "D20", "D21"
     );
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private final BaumannService baumannService;
     private final LocalFileService localFileService;
 
     @NotNull
     @SuppressWarnings("unchecked")
-    private static Map<String, JSONObject> getTestMap(JSONArray categoriesArray) {
-        Map<String, JSONObject> responses = new LinkedHashMap<>(); // I need an order.
+    private static Map<String, JsonNode> getTestMap(JsonNode categoriesArray) {
+        Map<String, JsonNode> responses = new LinkedHashMap<>(); // I need an order.
 
         // Define category mapping
         String[] categoryLetters = {"A", "B", "C", "D"};
 
         // Iterate through all categories and populate the responses map
         for (int i = 0; i < categoriesArray.size(); i++) {
-            JSONObject categoryObject = (JSONObject) categoriesArray.get(i);
-            JSONArray questionsArray = (JSONArray) categoryObject.get("questions");
+            JsonNode categoryObject = categoriesArray.get(i);
+            JsonNode questionsArray = categoryObject.get("questions");
 
             // Proceed if there are questions in this category
             if (questionsArray != null) {
                 for (int j = 0; j < questionsArray.size(); j++) {
-                    JSONObject questionObject = (JSONObject) questionsArray.get(j);
+                    JsonNode questionObject = questionsArray.get(j);
 
                     // Generate the key for the response map
                     String key = categoryLetters[i] + (j + 1);
 
                     // Create a new JSONObject to store the question_kr and options
-                    JSONObject newQuestionObject = new JSONObject();
+                    ObjectNode newQuestionObject = objectMapper.createObjectNode();
                     newQuestionObject.put("question_kr", questionObject.get("question_kr"));
                     newQuestionObject.put("options", questionObject.get("options"));
 
@@ -136,18 +136,18 @@ public class BaumannController {
 
         try {
             // Read JSON file
-            JSONObject jsonObject = localFileService.readJsonFile(BAUMANN_JSON_PATH);
+            JsonNode jsonObject = localFileService.readJsonFile(BAUMANN_JSON_PATH);
 
-            JSONObject surveyObject = (JSONObject) jsonObject.get("survey");
-            JSONArray categoriesArray = (JSONArray) surveyObject.get("questions");
+            JsonNode surveyObject = jsonObject.get("survey");
+            JsonNode categoriesArray = surveyObject.get("questions");
 
             // Create a map to store the responses with the scores from the survey inputs.
-            @NotNull Map<String, JSONObject> responses = getTestMap(categoriesArray);
+            @NotNull Map<String, JsonNode> responses = getTestMap(categoriesArray);
 
             // Return the JSON string in the response entity with the appropriate status code
             return ResponseEntity.ok(responses);
 
-        } catch (IOException | ParseException e) {
+        } catch (IOException e) {
             // Return an internal server error status (500) if there's an exception
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
         }

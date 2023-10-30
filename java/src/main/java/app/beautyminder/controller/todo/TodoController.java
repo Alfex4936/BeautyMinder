@@ -8,7 +8,6 @@ import app.beautyminder.dto.todo.UpdateTaskRequest;
 import app.beautyminder.service.TodoService;
 import app.beautyminder.service.auth.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +41,7 @@ public class TodoController {
     @Operation(
             summary = "Add a new todo",
             description = "새로운 Todo 항목을 추가합니다.",
-            requestBody = @RequestBody(description = "Todo details for creation"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo details for creation"),
             tags = {"Todo Operations"}
     )
     @PostMapping("/add")
@@ -73,7 +72,7 @@ public class TodoController {
     @Operation(
             summary = "Update an existing todo",
             description = "기존 Todo 항목을 업데이트합니다.",
-            requestBody = @RequestBody(description = "Todo details for update"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo details for update"),
             tags = {"Todo Operations"}
     )
     @PutMapping("/update")
@@ -104,7 +103,7 @@ public class TodoController {
     @Operation(
             summary = "Update a specific task within a todo",
             description = "Todo 항목 내의 특정 작업을 업데이트합니다.",
-            requestBody = @RequestBody(description = "Task update details"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Task update details"),
             tags = {"Todo Operations"}
     )
     @PostMapping("/update/task")

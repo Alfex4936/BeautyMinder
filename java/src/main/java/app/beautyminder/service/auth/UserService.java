@@ -9,6 +9,7 @@ import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.TodoRepository;
 import app.beautyminder.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class UserService {
@@ -32,7 +34,8 @@ public class UserService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
     private final TokenService tokenService;
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
+//    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;  // 비용이 높은 작업
     /*
     MongoRepository:
         Provides CRUD operations and simple query derivation.
@@ -72,7 +75,7 @@ public class UserService {
         // 사용자 생성
         User user = User.builder()
                 .email(dto.getEmail())
-                .password(encoder.encode(dto.getPassword()))
+                .password(bCryptPasswordEncoder.encode(dto.getPassword()))
                 .build();  // build the user first
 
         if (user.getCosmeticIds() == null) {
@@ -104,7 +107,7 @@ public class UserService {
         // 관리자 생성
         User admin = User.builder()
                 .email(dto.getEmail())
-                .password(encoder.encode(dto.getPassword()))
+                .password(bCryptPasswordEncoder.encode(dto.getPassword()))
                 .build();
 
         if (dto.getNickname() != null) {
@@ -242,7 +245,7 @@ public class UserService {
         User user = userRepository.findByEmail(resetToken.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        user.setPassword(encoder.encode(newPassword));
+        user.setPassword(bCryptPasswordEncoder.encode(newPassword));
         userRepository.save(user);
         passwordResetTokenRepository.delete(resetToken);
     }

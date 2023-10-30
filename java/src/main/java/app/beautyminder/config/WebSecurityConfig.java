@@ -14,9 +14,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -53,6 +52,7 @@ import java.util.Optional;
 import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
+@Slf4j
 @RequiredArgsConstructor
 @Configuration
 @EnableMethodSecurity
@@ -62,7 +62,6 @@ public class WebSecurityConfig {
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
     public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
-    private static final Logger logger = LoggerFactory.getLogger(WebSecurityConfig.class);
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService;
@@ -104,6 +103,7 @@ public class WebSecurityConfig {
         return source;
     }
 
+    // Whitelist approach
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
         MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector).servletPath("/path");
@@ -121,6 +121,7 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/")).permitAll()
                 .requestMatchers(antMatcher("/api/**")).permitAll()
 
+                .requestMatchers(antMatcher("/expiry/**")).permitAll()
                 .requestMatchers(antMatcher("/es-index/**")).permitAll()
                 .requestMatchers(antMatcher("/gpt/**")).permitAll()
                 .requestMatchers(antMatcher("/redis/**")).permitAll()
@@ -141,7 +142,7 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/user/signup-admin")).permitAll()
                 .requestMatchers(antMatcher("/user/sms/send")).permitAll()
 
-                .anyRequest().authenticated());
+                .anyRequest().permitAll());
 
         http.formLogin(f -> f
                         .loginPage("/login")
@@ -150,7 +151,7 @@ public class WebSecurityConfig {
                         .permitAll()
 //                .defaultSuccessUrl("/articles")
                         .failureHandler((request, response, exception) -> {
-                            logger.warn("Login failed: {}", exception.getMessage());
+                            log.warn("Login failed: {}", exception.getMessage());
 
                             Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);
 
@@ -163,7 +164,7 @@ public class WebSecurityConfig {
                                     );
                         })
                         .successHandler(((request, response, authentication) -> {
-                            logger.info("Login successful for user: {}", authentication.getName());
+                            log.info("Login successful for user: {}", authentication.getName());
 
                             app.beautyminder.domain.User user = (app.beautyminder.domain.User) authentication.getPrincipal();
                             String refreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
@@ -172,7 +173,7 @@ public class WebSecurityConfig {
 
                             // Generate access token
                             String accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
-                            logger.info("ACCESS TOKEN: {}", accessToken);
+                            log.info("ACCESS TOKEN: {}", accessToken);
 
                             response.setContentType("application/json");
                             response.setCharacterEncoding("utf-8");
@@ -192,7 +193,7 @@ public class WebSecurityConfig {
                 .logoutUrl("/logout")
                 .invalidateHttpSession(true)
                 .logoutSuccessHandler(((request, response, authentication) -> {
-                    logger.info("Logout successful for user: {}", authentication != null ? authentication.getName() : "Unknown");
+                    log.info("Logout successful for user: {}", authentication != null ? authentication.getName() : "Unknown");
 
                     if (authentication != null && authentication.getPrincipal() instanceof app.beautyminder.domain.User user) {
                         try {
@@ -201,7 +202,7 @@ public class WebSecurityConfig {
                             CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
                         } catch (Exception e) {
                             // log the error
-                            logger.error(e.getMessage());
+                            log.error(e.getMessage());
                         }
                     }
 
@@ -217,16 +218,16 @@ public class WebSecurityConfig {
                         new AntPathRequestMatcher("/api/**")));
 
         http.authenticationProvider(authenticationProvider());
-        http.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+//        http.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
 
-    @Bean
-    public TokenAuthenticationFilter tokenAuthenticationFilter() {
-        return new TokenAuthenticationFilter(tokenProvider, refreshTokenService, refreshTokenRepository);
-    }
+//    @Bean
+//    public TokenAuthenticationFilter tokenAuthenticationFilter() {
+//        return new TokenAuthenticationFilter(tokenProvider, refreshTokenService, refreshTokenRepository);
+//    }
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
@@ -249,7 +250,7 @@ public class WebSecurityConfig {
     }
 
     private void saveRefreshToken(User user, String newRefreshToken) {
-        logger.debug("Saving refresh token for user: {}", user.getUsername());
+        log.debug("Saving refresh token for user: {}", user.getUsername());
 
         LocalDateTime expiresAt = LocalDateTime.now().plus(REFRESH_TOKEN_DURATION);
 
@@ -265,7 +266,7 @@ public class WebSecurityConfig {
     }
 
     private void saveAccessToken(User user, String accessToken) {
-        logger.debug("Saving access token for user: {}", user.getUsername());
+        log.debug("Saving access token for user: {}", user.getUsername());
 
         RefreshToken refreshToken = refreshTokenRepository.findByUserId(user.getId())
                 .map(entity -> entity.update(accessToken))
@@ -275,7 +276,7 @@ public class WebSecurityConfig {
     }
 
     private void addRefreshTokenToCookie(HttpServletRequest request, HttpServletResponse response, String refreshToken) {
-        logger.debug("Adding refresh token to cookie.");
+        log.debug("Adding refresh token to cookie.");
 
         int cookieMaxAge = (int) REFRESH_TOKEN_DURATION.toSeconds();
 
@@ -298,7 +299,7 @@ public class WebSecurityConfig {
     }
 
     private void generateNewAccessTokenAndRespond(User user, HttpServletRequest request, HttpServletResponse response) {
-        logger.info("Generating new access token using refresh token for user: {}", user.getUsername());
+        log.info("Generating new access token using refresh token for user: {}", user.getUsername());
 
         String newAccessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
         String newRefreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
@@ -311,7 +312,7 @@ public class WebSecurityConfig {
     }
 
     private void handleFailure(HttpServletResponse response) {
-        logger.warn("Handling failure, redirecting to login page.");
+        log.warn("Handling failure, redirecting to login page.");
 
         // Set the content type of the response to JSON
         response.setContentType("application/json");
