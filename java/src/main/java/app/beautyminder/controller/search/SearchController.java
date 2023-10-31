@@ -1,7 +1,9 @@
 package app.beautyminder.controller.search;
 
+import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.EsCosmetic;
 import app.beautyminder.domain.EsReview;
+import app.beautyminder.domain.Review;
 import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
@@ -33,14 +35,16 @@ public class SearchController {
             description = "이름으로 화장품을 검색합니다.",
             tags = {"Search Operations"},
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Successful operation"),
+                    @ApiResponse(responseCode = "200", description = "Successful operation", content =
+                    @Content(array = @ArraySchema(
+                            schema = @Schema(implementation = Cosmetic.class)
+                    ))),
                     @ApiResponse(responseCode = "400", description = "Invalid parameters")
             }
     )
-    // TODO: EsCosmetic 말고 Cosmetic으로 넘겨주기
     @GetMapping("/cosmetic")
-    public ResponseEntity<List<EsCosmetic>> searchByName(@RequestParam String name) {
-        List<EsCosmetic> results = cosmeticSearchService.searchByName(name);
+    public ResponseEntity<List<Cosmetic>> searchByName(@RequestParam String name) {
+        List<Cosmetic> results = cosmeticSearchService.searchByName(name);
         if (!results.isEmpty()) {
             cosmeticRankService.collectSearchEvent(name.trim());
         }
@@ -54,14 +58,14 @@ public class SearchController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successful operation", content =
                     @Content(array = @ArraySchema(
-                            schema = @Schema(implementation = EsReview.class)
+                            schema = @Schema(implementation = Review.class)
                     ))),
                     @ApiResponse(responseCode = "400", description = "Invalid parameters")
             }
     )
     @GetMapping("/review")
-    public ResponseEntity<List<EsReview>> searchByContent(@RequestParam String content) {
-        List<EsReview> results = reviewSearchService.searchByContent(content);
+    public ResponseEntity<List<Review>> searchByContent(@RequestParam String content) {
+        List<Review> results = reviewSearchService.searchByContent(content);
         if (!results.isEmpty()) {
             cosmeticRankService.collectSearchEvent(content.trim());
         }
@@ -75,14 +79,14 @@ public class SearchController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successful operation", content =
                     @Content(array = @ArraySchema(
-                            schema = @Schema(implementation = EsCosmetic.class)
+                            schema = @Schema(implementation = Cosmetic.class)
                     ))),
                     @ApiResponse(responseCode = "400", description = "Invalid parameters")
             }
     )
     @GetMapping("/category")
-    public ResponseEntity<List<EsCosmetic>> searchByCategory(@RequestParam String category) {
-        List<EsCosmetic> results = cosmeticSearchService.searchByCategory(category);
+    public ResponseEntity<List<Cosmetic>> searchByCategory(@RequestParam String category) {
+        List<Cosmetic> results = cosmeticSearchService.searchByCategory(category);
         if (!results.isEmpty()) {
             cosmeticRankService.collectSearchEvent(category.trim());
         }
@@ -96,14 +100,14 @@ public class SearchController {
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successful operation", content =
                     @Content(array = @ArraySchema(
-                            schema = @Schema(implementation = EsCosmetic.class)
+                            schema = @Schema(implementation = Cosmetic.class)
                     ))),
                     @ApiResponse(responseCode = "400", description = "Invalid parameters")
             }
     )
     @GetMapping("/keyword")
-    public ResponseEntity<List<EsCosmetic>> searchByKeyword(@RequestParam String keyword) {
-        List<EsCosmetic> results = cosmeticSearchService.searchByKeyword(keyword);
+    public ResponseEntity<List<Cosmetic>> searchByKeyword(@RequestParam String keyword) {
+        List<Cosmetic> results = cosmeticSearchService.searchByKeyword(keyword);
         if (!results.isEmpty()) {
             cosmeticRankService.collectSearchEvent(keyword.trim());
         }

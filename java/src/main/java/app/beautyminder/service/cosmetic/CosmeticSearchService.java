@@ -87,17 +87,29 @@ public class CosmeticSearchService {
         }
     }
 
-    public List<EsCosmetic> searchByName(String name) {
-        return esCosmeticRepository.findByNameContaining(name);
+
+    public List<Cosmetic> searchByName(String name) {
+        List<EsCosmetic> esCosmetics = esCosmeticRepository.findByNameContaining(name);
+        return convertEsCosmeticToCosmetic(esCosmetics);
     }
 
-    public List<EsCosmetic> searchByCategory(String category) {
-        return esCosmeticRepository.findByCategory(category);
+    public List<Cosmetic> searchByCategory(String category) {
+        List<EsCosmetic> esCosmetics = esCosmeticRepository.findByCategory(category);
+        return convertEsCosmeticToCosmetic(esCosmetics);
     }
 
-    public List<EsCosmetic> searchByKeyword(String keyword) {
-        return esCosmeticRepository.findByKeywordsContains(keyword);
+    public List<Cosmetic> searchByKeyword(String keyword) {
+        List<EsCosmetic> esCosmetics = esCosmeticRepository.findByKeywordsContains(keyword);
+        return convertEsCosmeticToCosmetic(esCosmetics);
     }
 
+    private List<Cosmetic> convertEsCosmeticToCosmetic(List<EsCosmetic> esCosmetics) {
+        // Extract IDs from EsCosmetic list
+        List<String> ids = esCosmetics.stream()
+                .map(EsCosmetic::getId)
+                .collect(Collectors.toList());
 
+        // Fetch and return Cosmetic objects based on the extracted IDs
+        return cosmeticRepository.findAllById(ids);
+    }
 }

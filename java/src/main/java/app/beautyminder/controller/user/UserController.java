@@ -14,10 +14,10 @@ import app.beautyminder.service.auth.SmsService;
 import app.beautyminder.service.auth.TokenService;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticRankService;
-import app.beautyminder.service.cosmetic.CosmeticService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -220,6 +220,20 @@ public class UserController {
         }
     }
 
+    @Operation(
+            summary = "Get favorites of User",
+            description = "사용자의 즐겨찾기를 전부 불러옵니다.",
+            tags = {"User Operations"},
+            parameters = {
+                    @Parameter(name = "userId", description = "사용자의 ID")
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(array = @ArraySchema(
+                            schema = @Schema(implementation = Cosmetic.class)
+                    ))),
+
+            }
+    )
     @GetMapping("/{userId}/favorites")
     public ResponseEntity<List<Cosmetic>> getFavorites(@PathVariable String userId) {
         try {
@@ -234,6 +248,20 @@ public class UserController {
         }
     }
 
+    @Operation(
+            summary = "Get reviews of User",
+            description = "사용자의 리뷰를 전부 불러옵니다.",
+            tags = {"User Operations"},
+            parameters = {
+                    @Parameter(name = "userId", description = "사용자의 ID")
+            },
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(array = @ArraySchema(
+                            schema = @Schema(implementation = Review.class)
+                    ))),
+
+            }
+    )
     @GetMapping("/{userId}/reviews")
     public ResponseEntity<List<Review>> getUserReviews(@PathVariable String userId) {
         try {
@@ -248,6 +276,7 @@ public class UserController {
         }
     }
 
+    /* LOST PASSWORD ----------------------------  */
     @Operation(
             summary = "Send SMS for password reset",
             description = "비밀번호 재설정을 위한 SMS 전송",

@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -96,7 +97,7 @@ public class ReviewSearchService {
         }
     }
 
-    public List<EsReview> searchByContent(String content) {
+    public List<Review> searchByContent(String content) {
         FuzzyQueryBuilder fuzzyQueryBuilder = QueryBuilders.fuzzyQuery("content", content);
         SearchRequest searchRequest = new SearchRequest("reviews");
         searchRequest.source().query(fuzzyQueryBuilder);
@@ -104,13 +105,15 @@ public class ReviewSearchService {
         try {
             SearchResponse searchResponse = opensearchClient.search(searchRequest, RequestOptions.DEFAULT);
             SearchHits hits = searchResponse.getHits();
-            List<EsReview> esReviews = new ArrayList<>();
+            List<Review> reviews = new ArrayList<>();
+
             for (SearchHit hit : hits.getHits()) {
                 String sourceAsString = hit.getSourceAsString();
                 EsReview esReview = convertJsonToEsReview(sourceAsString);
-                esReviews.add(esReview);
+                Optional<Review> optReview = reviewRepository.findById(esReview.getId());
+                optReview.ifPresent(reviews::add);
             }
-            return esReviews;
+            return reviews;
         } catch (IOException e) {
             log.error("Exception occurred while searching reviews: ", e);
             return new ArrayList<>();
