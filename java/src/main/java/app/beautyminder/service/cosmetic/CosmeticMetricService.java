@@ -75,7 +75,7 @@ public class CosmeticMetricService {
 
     // Cosmetic Metrics collection (click/search hit)
     // Scheduled Batch Processing
-    @Scheduled(cron = "0 0/10 * * * ?") // Every 10 minutes
+    // @Scheduled(cron = "0 0/10 * * * ?") // Every 10 minutes
     @Transactional
     public void processEvents() {
         List<Event> events = eventQueue.dequeueAll();
@@ -125,17 +125,18 @@ public class CosmeticMetricService {
     }
 
 //    @Scheduled(cron = "0 0/10 * * * ?")  // Every 10 minutes
-    @Scheduled(cron = "*/35 * * * * ?")  // Every 35 seconds
+//    @Scheduled(cron = "*/35 * * * * ?")  // Every 35 seconds
     @Transactional
     public void processKeywordEvents() {
         List<KeywordEvent> events = eventQueue.dequeueAllKeywords();
-        long dataVolume = events.size();  // number of events
-        double adaptiveSigLevel = calculateSignificanceLevel(dataVolume);
-
         if (events.isEmpty()) {
             log.info("Keyword Redis batch empty");
             return;
         }
+
+        long dataVolume = events.size();  // number of events
+        double adaptiveSigLevel = calculateSignificanceLevel(dataVolume);
+
         Map<String, Long> keywordCountMap = new HashMap<>();
 
         for (KeywordEvent event : events) {
@@ -148,7 +149,8 @@ public class CosmeticMetricService {
 
             // Update running statistics for each keyword
             RunningStats stats = keywordStatsMap.computeIfAbsent(keyword, k -> new RunningStats());
-            stats.update(count);
+            stats.updateRecentCount(count);  // Update the recent count, not the total count
+
 
             /*
 
@@ -157,10 +159,9 @@ public class CosmeticMetricService {
 
              */
             // Default to incrementing on the first run, or check for significant deviation in subsequent runs
-            boolean shouldIncrement = stats.count.get() == 1 || stats.isSignificantDeviation(count, adaptiveSigLevel);
+            boolean shouldIncrement = stats.isSignificantDeviation(adaptiveSigLevel);
 
             if (shouldIncrement) {
-                // This keyword is trending; update its ranking in Redis
                 log.info("Incrementing Redis count for keyword: {} by {}", keyword, count);
                 redisTemplate.opsForHash().increment(KEYWORD_METRICS_KEY, keyword, count);
             }
@@ -171,7 +172,7 @@ public class CosmeticMetricService {
 
     // Scheduled Batch Processing to log top 10 keywords every 15mins
 //    @Scheduled(cron = "0 0 14 * * ?")
-    @Scheduled(cron = "0 0/15 * * * ?") // every 15min
+//    @Scheduled(cron = "0 0/15 * * * ?") // every 15min
     public void saveTop10Keywords() {
         // Get all keyword counts from Redis
         Map<Object, Object> keywordCounts = redisTemplate.opsForHash().entries(KEYWORD_METRICS_KEY);
@@ -366,27 +367,29 @@ public class CosmeticMetricService {
 
 
     static class RunningStats {
-        private final AtomicLong count = new AtomicLong();
+        private final AtomicLong recentCount = new AtomicLong();
+        private final AtomicLong totalCount = new AtomicLong();
         private final AtomicReference<Double> mean = new AtomicReference<>(0.0);
         private final AtomicReference<Double> M2 = new AtomicReference<>(0.0);
 
-        void update(long value) {
-            long count = this.count.incrementAndGet();
+        void updateRecentCount(long value) {
+            recentCount.set(value);  // Set the recent count
+            totalCount.addAndGet(value);  // Increment the total count by the recent count value
             double delta = value - mean.get();
-            mean.set(mean.get() + delta / count);
+            mean.set(mean.get() + delta / totalCount.get());  // Use totalCount.get() instead of count
             M2.set(M2.get() + delta * (value - mean.get()));
         }
 
-        boolean isSignificantDeviation(long recentCount, double significanceLevel) {
-            if (count.get() < 2) {
+        boolean isSignificantDeviation(double significanceLevel) {
+            if (totalCount.get() < 2) {
                 return false;  // Not enough data to determine deviation
             }
 
-            double variance = M2.get() / (count.get() - 1);
+            double variance = M2.get() / (totalCount.get() - 1);
             double stddev = Math.sqrt(variance);
 
             // Calculate the z-score
-            double z = (recentCount - mean.get()) / stddev;
+            double z = (recentCount.get() - mean.get()) / stddev;
 
             // Check if the absolute z-score is greater than the significance level
             return Math.abs(z) > significanceLevel;

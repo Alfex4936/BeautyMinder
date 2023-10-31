@@ -5,6 +5,7 @@ class MyUser(HttpUser):
     wait_time = between(5, 10)  # Wait time between requests in seconds
 
     keywords = ['스킨케어', '비타민', '독도', '바나나', '키위', '사과', '레몬']
+    keywords = ['바나나', '독도']
 
     @task
     def search(self):
