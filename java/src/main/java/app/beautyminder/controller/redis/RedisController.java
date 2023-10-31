@@ -1,7 +1,7 @@
 package app.beautyminder.controller.redis;
 
 import app.beautyminder.domain.Cosmetic;
-import app.beautyminder.service.cosmetic.CosmeticMetricService;
+import app.beautyminder.service.cosmetic.CosmeticRankService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,7 +21,7 @@ import java.util.List;
 @RequestMapping("/redis")
 public class RedisController {
 
-    private final CosmeticMetricService cosmeticMetricService;
+    private final CosmeticRankService cosmeticRankService;
 
     @Operation(
             summary = "Get N ranked products",
@@ -37,7 +37,7 @@ public class RedisController {
     @GetMapping("/top")
     public ResponseEntity<List<Cosmetic>> getTopRankedCosmetics(
             @RequestParam(defaultValue = "10") int size) {
-        List<Cosmetic> topRankedCosmetics = cosmeticMetricService.getTopRankedCosmetics(size);
+        List<Cosmetic> topRankedCosmetics = cosmeticRankService.getTopRankedCosmetics(size);
         return ResponseEntity.ok(topRankedCosmetics);
     }
 }

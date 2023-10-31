@@ -9,7 +9,7 @@ import app.beautyminder.dto.user.SignUpResponse;
 import app.beautyminder.service.auth.SmsService;
 import app.beautyminder.service.auth.TokenService;
 import app.beautyminder.service.auth.UserService;
-import app.beautyminder.service.cosmetic.CosmeticMetricService;
+import app.beautyminder.service.cosmetic.CosmeticRankService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,7 +25,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClientException;
 
@@ -46,7 +45,7 @@ public class UserController {
     private final UserService userService;
     private final SmsService smsService;
     private final TokenService tokenService;
-    private final CosmeticMetricService cosmeticMetricService;
+    private final CosmeticRankService cosmeticRankService;
 
     // Standard user sign-up
     @Operation(
@@ -181,7 +180,7 @@ public class UserController {
             User updatedUser = userService.addCosmeticById(userId, cosmeticId);
 
             // Redis
-            cosmeticMetricService.collectFavEvent(cosmeticId);
+            cosmeticRankService.collectFavEvent(cosmeticId);
 
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (NoSuchElementException e) {

@@ -2,7 +2,7 @@ package app.beautyminder.controller.search;
 
 import app.beautyminder.domain.EsCosmetic;
 import app.beautyminder.domain.EsReview;
-import app.beautyminder.service.cosmetic.CosmeticMetricService;
+import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +25,7 @@ import java.util.List;
 public class SearchController {
 
     private final CosmeticSearchService cosmeticSearchService;
-    private final CosmeticMetricService cosmeticMetricService;
+    private final CosmeticRankService cosmeticRankService;
     private final ReviewSearchService reviewSearchService;
 
     @Operation(
@@ -42,7 +42,7 @@ public class SearchController {
     public ResponseEntity<List<EsCosmetic>> searchByName(@RequestParam String name) {
         List<EsCosmetic> results = cosmeticSearchService.searchByName(name);
         if (!results.isEmpty()) {
-            cosmeticMetricService.collectSearchEvent(name.trim());
+            cosmeticRankService.collectSearchEvent(name.trim());
         }
         return ResponseEntity.ok(results);
     }
@@ -63,7 +63,7 @@ public class SearchController {
     public ResponseEntity<List<EsReview>> searchByContent(@RequestParam String content) {
         List<EsReview> results = reviewSearchService.searchByContent(content);
         if (!results.isEmpty()) {
-            cosmeticMetricService.collectSearchEvent(content.trim());
+            cosmeticRankService.collectSearchEvent(content.trim());
         }
         return ResponseEntity.ok(results);
     }
@@ -84,7 +84,7 @@ public class SearchController {
     public ResponseEntity<List<EsCosmetic>> searchByCategory(@RequestParam String category) {
         List<EsCosmetic> results = cosmeticSearchService.searchByCategory(category);
         if (!results.isEmpty()) {
-            cosmeticMetricService.collectSearchEvent(category.trim());
+            cosmeticRankService.collectSearchEvent(category.trim());
         }
         return ResponseEntity.ok(results);
     }
@@ -105,14 +105,14 @@ public class SearchController {
     public ResponseEntity<List<EsCosmetic>> searchByKeyword(@RequestParam String keyword) {
         List<EsCosmetic> results = cosmeticSearchService.searchByKeyword(keyword);
         if (!results.isEmpty()) {
-            cosmeticMetricService.collectSearchEvent(keyword.trim());
+            cosmeticRankService.collectSearchEvent(keyword.trim());
         }
         return ResponseEntity.ok(results);
     }
 
     @GetMapping
     public ResponseEntity<?> searchAnything(@RequestParam String anything) {
-        cosmeticMetricService.collectSearchEvent(anything.trim());
+        cosmeticRankService.collectSearchEvent(anything.trim());
         return ResponseEntity.ok("Searched: " + anything);
     }
 }

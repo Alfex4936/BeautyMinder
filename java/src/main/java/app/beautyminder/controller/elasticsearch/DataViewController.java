@@ -1,7 +1,7 @@
 package app.beautyminder.controller.elasticsearch;
 
 import app.beautyminder.dto.CosmeticMetricData;
-import app.beautyminder.service.cosmetic.CosmeticMetricService;
+import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import java.util.List;
 @RequestMapping("/data-view")
 public class DataViewController {
     private final CosmeticSearchService cosmeticSearchService;
-    private final CosmeticMetricService cosmeticMetricService;
+    private final CosmeticRankService cosmeticRankService;
     private final ReviewSearchService reviewSearchService;
 
     @GetMapping("/review/analyze")
@@ -43,7 +43,7 @@ public class DataViewController {
 
     @GetMapping("/cosmetic-counts")
     public ResponseEntity<List<CosmeticMetricData>> getCosmeticData() {
-        List<CosmeticMetricData> data = cosmeticMetricService.getAllCosmeticCounts();
+        List<CosmeticMetricData> data = cosmeticRankService.getAllCosmeticCounts();
         return ResponseEntity.ok(data);
     }
 }

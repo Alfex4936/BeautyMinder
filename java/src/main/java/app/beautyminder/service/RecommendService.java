@@ -1,7 +1,7 @@
 package app.beautyminder.service;
 
 import app.beautyminder.domain.Review;
-import app.beautyminder.service.cosmetic.CosmeticMetricService;
+import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class RecommendService {
      */
 
     private final CosmeticSearchService cosmeticSearchService;
-    private final CosmeticMetricService cosmeticMetricService;
+    private final CosmeticRankService cosmeticRankService;
     private final ReviewSearchService reviewSearchService;
     private final ReviewService reviewService;
 

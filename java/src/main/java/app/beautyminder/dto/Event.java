@@ -1,6 +1,6 @@
 package app.beautyminder.dto;
 
-import app.beautyminder.service.cosmetic.CosmeticMetricService;
+import app.beautyminder.service.cosmetic.CosmeticRankService;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +10,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Event {
     private String cosmeticId;
-    private CosmeticMetricService.ActionType type;
+    private CosmeticRankService.ActionType type;
 
 }

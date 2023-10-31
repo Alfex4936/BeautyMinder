@@ -13,8 +13,13 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.connection.RedisHashCommands;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +32,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class CosmeticMetricService {
+public class CosmeticRankService {
 
     // Redis structure: "cosmeticMetrics:{cosmeticId}" -> {"clicks": "10", "hits": "5", "favs": "3"}
     private static final String COSMETIC_METRICS_KEY_TEMPLATE = "cosmeticMetrics:%s";
@@ -36,7 +41,12 @@ public class CosmeticMetricService {
     private final EventQueue eventQueue;
     private final String KEYWORD_METRICS_KEY = "keywordMetrics";
     private final Map<String, RunningStats> keywordStatsMap = new HashMap<>();
+
+    @Getter
+    private String cronExpression = "*/35 * * * * ?"; // every 35 seconds
+
     private static final Integer HIGH_VOLUME_THRESHOLD = 100; // imagine average searches is around 100
+    private static final Integer LOW_VOLUME_THRESHOLD = 10; // imagine low searches is around 10
     private static final double HIGH_SIG_LEVEL = 3.0;
     private static final double LOW_SIG_LEVEL = 2.0;
     /*
@@ -75,7 +85,7 @@ public class CosmeticMetricService {
 
     // Cosmetic Metrics collection (click/search hit)
     // Scheduled Batch Processing
-    // @Scheduled(cron = "0 0/10 * * * ?") // Every 10 minutes
+     @Scheduled(cron = "0 0/10 * * * ?") // Every 10 minutes
     @Transactional
     public void processEvents() {
         List<Event> events = eventQueue.dequeueAll();
@@ -115,6 +125,30 @@ public class CosmeticMetricService {
     }
 
     // -------- Keyword collection
+    @Bean
+    public ScheduledTaskRegistrar scheduledTaskRegistrar() {
+        ScheduledTaskRegistrar registrar = new ScheduledTaskRegistrar();
+        registrar.addTriggerTask(this::processKeywordEvents, triggerContext -> {
+            CronTrigger trigger = new CronTrigger(getCronExpression());
+            return trigger.nextExecution(triggerContext);
+        });
+
+        return registrar;
+    }
+
+    public void updateCronExpressionBasedOnVolume(long dataVolume) {
+        // Here, set a new cron expression based on the data volume
+        if (dataVolume < LOW_VOLUME_THRESHOLD) {
+            setCronExpression("*/60 * * * * ?");  // Set to every 60 seconds if volume is low
+        } else {
+            setCronExpression("*/35 * * * * ?");  // Set back to every 35 seconds if volume is normal/high
+        }
+    }
+
+    public void setCronExpression(String newExpression) {
+        cronExpression = newExpression;
+    }
+
     public double calculateSignificanceLevel(long dataVolume) {
         // Increase significance level during high data volume periods
         if (dataVolume > HIGH_VOLUME_THRESHOLD) {
@@ -124,13 +158,12 @@ public class CosmeticMetricService {
         }
     }
 
-//    @Scheduled(cron = "0 0/10 * * * ?")  // Every 10 minutes
-//    @Scheduled(cron = "*/35 * * * * ?")  // Every 35 seconds
     @Transactional
     public void processKeywordEvents() {
         List<KeywordEvent> events = eventQueue.dequeueAllKeywords();
         if (events.isEmpty()) {
             log.info("Keyword Redis batch empty");
+            updateCronExpressionBasedOnVolume(0);
             return;
         }
 
@@ -143,36 +176,43 @@ public class CosmeticMetricService {
             keywordCountMap.merge(event.getKeyword(), 1L, Long::sum);
         }
 
-        for (Map.Entry<String, Long> entry : keywordCountMap.entrySet()) {
-            String keyword = entry.getKey();
-            Long count = entry.getValue();
+        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            RedisHashCommands hashCommands = connection.hashCommands();
 
-            // Update running statistics for each keyword
-            RunningStats stats = keywordStatsMap.computeIfAbsent(keyword, k -> new RunningStats());
-            stats.updateRecentCount(count);  // Update the recent count, not the total count
+            for (Map.Entry<String, Long> entry : keywordCountMap.entrySet()) {
+                String keyword = entry.getKey();
+                Long count = entry.getValue();
 
+                // Update running statistics for each keyword
+                RunningStats stats = keywordStatsMap.computeIfAbsent(keyword, k -> new RunningStats());
+                stats.updateRecentCount(count);  // Update the recent count, not the total count
 
-            /*
+                /*
+                    Increasing the significanceLevel (e.g., to 3.0)
+                        would make the system less sensitive to deviations, requiring a larger change in search frequency to consider a keyword as trending.
+                        This might result in fewer keywords being identified as trending but with higher confidence that the change is significant.
+                    Decreasing the significanceLevel (e.g., to 1.0)
+                        would make the system more sensitive to deviations, potentially identifying more keywords as trending.
+                        However, this might also increase the likelihood of identifying noise or less meaningful trends.
+                 */
+                // Default to incrementing on the first run, or check for significant deviation in subsequent runs
+                boolean shouldIncrement = stats.isSignificantDeviation(adaptiveSigLevel);
 
-            Increasing the significanceLevel (e.g., to 3.0) would make the system less sensitive to deviations, requiring a larger change in search frequency to consider a keyword as trending. This might result in fewer keywords being identified as trending but with higher confidence that the change is significant.
-            Decreasing the significanceLevel (e.g., to 1.0) would make the system more sensitive to deviations, potentially identifying more keywords as trending. However, this might also increase the likelihood of identifying noise or less meaningful trends.
-
-             */
-            // Default to incrementing on the first run, or check for significant deviation in subsequent runs
-            boolean shouldIncrement = stats.isSignificantDeviation(adaptiveSigLevel);
-
-            if (shouldIncrement) {
-                log.info("Incrementing Redis count for keyword: {} by {}", keyword, count);
-                redisTemplate.opsForHash().increment(KEYWORD_METRICS_KEY, keyword, count);
+                if (shouldIncrement) {
+                    log.info("Incrementing Redis count for keyword: {} by {}", keyword, count);
+                    hashCommands.hIncrBy(KEYWORD_METRICS_KEY.getBytes(), keyword.getBytes(), count);
+                }
             }
-        }
+            return null; // Return value can be ignored when using executePipelined
+        });
 
         log.info("REDIS: Processed keyword batches ({})", dataVolume);
+
+        updateCronExpressionBasedOnVolume(dataVolume);
     }
 
     // Scheduled Batch Processing to log top 10 keywords every 15mins
-//    @Scheduled(cron = "0 0 14 * * ?")
-//    @Scheduled(cron = "0 0/15 * * * ?") // every 15min
+    @Scheduled(cron = "0 0/15 * * * ?") // every 15min
     public void saveTop10Keywords() {
         // Get all keyword counts from Redis
         Map<Object, Object> keywordCounts = redisTemplate.opsForHash().entries(KEYWORD_METRICS_KEY);

@@ -2,7 +2,7 @@ package app.beautyminder.controller.cosmetic;
 
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.service.ReviewService;
-import app.beautyminder.service.cosmetic.CosmeticMetricService;
+import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.cosmetic.CosmeticService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,7 +23,7 @@ public class CosmeticController {
 
     private final ReviewService reviewService;
     private final CosmeticService cosmeticService;
-    private final CosmeticMetricService cosmeticMetricService;
+    private final CosmeticRankService cosmeticRankService;
 
     @Operation(
             summary = "Get All Cosmetics",
@@ -135,7 +135,7 @@ public class CosmeticController {
     )
     @PostMapping("/click/{cosmeticId}")
     public ResponseEntity<Void> incrementClickCount(@PathVariable String cosmeticId) {
-        cosmeticMetricService.collectClickEvent(cosmeticId);
+        cosmeticRankService.collectClickEvent(cosmeticId);
         return ResponseEntity.ok().build();
     }
 
@@ -152,7 +152,7 @@ public class CosmeticController {
     )
     @PostMapping("/hit/{cosmeticId}")
     public ResponseEntity<Void> incrementHitCount(@PathVariable String cosmeticId) {
-        cosmeticMetricService.collectHitEvent(cosmeticId);
+        cosmeticRankService.collectHitEvent(cosmeticId);
         return ResponseEntity.ok().build();
     }
 
