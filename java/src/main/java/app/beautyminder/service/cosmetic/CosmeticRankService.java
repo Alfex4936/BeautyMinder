@@ -188,6 +188,7 @@ public class CosmeticRankService {
                 stats.updateRecentCount(count);  // Update the recent count, not the total count
 
                 /*
+                통계적 유의성
                     Increasing the significanceLevel (e.g., to 3.0)
                         would make the system less sensitive to deviations, requiring a larger change in search frequency to consider a keyword as trending.
                         This might result in fewer keywords being identified as trending but with higher confidence that the change is significant.

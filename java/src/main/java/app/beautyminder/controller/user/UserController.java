@@ -1,15 +1,20 @@
 package app.beautyminder.controller.user;
 
+import app.beautyminder.domain.Cosmetic;
+import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.PasswordResetResponse;
 import app.beautyminder.dto.sms.SmsResponseDTO;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.dto.user.ResetPasswordRequest;
 import app.beautyminder.dto.user.SignUpResponse;
+import app.beautyminder.repository.CosmeticRepository;
+import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.service.auth.SmsService;
 import app.beautyminder.service.auth.TokenService;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticRankService;
+import app.beautyminder.service.cosmetic.CosmeticService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,6 +37,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -45,6 +51,8 @@ public class UserController {
     private final UserService userService;
     private final SmsService smsService;
     private final TokenService tokenService;
+    private final CosmeticRepository cosmeticRepository;
+    private final ReviewRepository reviewRepository;
     private final CosmeticRankService cosmeticRankService;
 
     // Standard user sign-up
@@ -209,6 +217,34 @@ public class UserController {
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (NoSuchElementException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/{userId}/favorites")
+    public ResponseEntity<List<Cosmetic>> getFavorites(@PathVariable String userId) {
+        try {
+            User user = userService.findById(userId);
+
+            // Fetch the actual Cosmetic objects by their IDs
+            List<Cosmetic> cosmetics = cosmeticRepository.findAllById(user.getCosmeticIds());
+
+            return ResponseEntity.ok(cosmetics);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/{userId}/reviews")
+    public ResponseEntity<List<Review>> getUserReviews(@PathVariable String userId) {
+        try {
+            User user = userService.findById(userId);
+
+            // Fetch all the reviews made by the user
+            List<Review> reviews = reviewRepository.findByUser(user);
+
+            return ResponseEntity.ok(reviews);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 

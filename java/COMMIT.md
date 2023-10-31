@@ -4,7 +4,13 @@
 - 🌟 [Feature] 새로운 기능 추가할 때
 - 🐛 [Fix] 버그 수정할 때
 - 🚀 [Performance] 성능 향상을 위한 코드 변경할 때
-- git commit -m "🐛 [Fix] realtime keyword ranking"
+- git commit -m "🚀 [Redis] Implement Redis Pipelining and Dynamic Scheduling for Realtime Ranking" -m ""
+
+Description:
+- Incorporated Redis pipelining in processKeywordEvents method to optimize Redis interactions and improve performance.
+- Introduced dynamic scheduling for processKeywordEvents method to adjust the execution frequency based on event volume, enhancing system responsiveness to varying load conditions.
+- Updated cron expression dynamically in processKeywordEvents method to either increase or decrease the frequency of method execution depending on the volume of events.
+- This change aims to enhance the performance and adaptability of the realtime ranking system to varying load conditions."
 
 # 🏗️ 구조
 

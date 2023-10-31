@@ -2,6 +2,7 @@ package app.beautyminder.repository;
 
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
+import app.beautyminder.domain.User;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -9,6 +10,7 @@ import org.springframework.data.mongodb.repository.Query;
 import java.util.List;
 
 public interface ReviewRepository extends MongoRepository<Review, String> {
+    List<Review> findByUser(User user);
     List<Review> findByCosmetic(Cosmetic cosmetic);
 
     @Query("{ 'rating' :  { $gte:  ?0 }, 'user.baumann' :  ?1 }")
