@@ -1,6 +1,6 @@
 # BeautyMinder 💄✨
 
-BeautyMinder is the bloom of our capstone design venture initiated in September 2023.
+BeautyMinder is the culmination of our capstone design class, commenced in September 2023.
 
 It manifests as a cosmetic recommendation app, meticulously tuned to individual skin types as determined through the Baumann skin type assessment.
 
@@ -18,7 +18,7 @@ It manifests as a cosmetic recommendation app, meticulously tuned to individual 
 | Area                  | Technology                                      |
 |-----------------------|-------------------------------------------------|
 | **Frontend Framework**| Flutter                                         |
-| **Backend Server**    | AWS EC2 (Docker, Spring Boot v3.1, Redis)            |
+| **Backend Server**    | AWS EC2 (Docker: Spring Boot v3.1+Redis+Logstash)            |
 | **Database**          | MongoDB (hosted on Atlas)|
 | **Real-Time Metrics** | Redis                                           |
 | **Search Engine**     | Elasticsearch (AWS OpenSearch)                                   |
