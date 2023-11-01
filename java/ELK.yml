@@ -1,7 +1,25 @@
 version: '3.8'
 services:
+  redis:
+    container_name: beauty-redis
+    image: redis:latest
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+    secrets:
+      - redis_password
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   logstash:
-    container_name: logstash
+    container_name: beauty-logstash
     image: opensearchproject/logstash-oss-with-opensearch-output-plugin:8.9.0
     ports:
       - "5044:5044"
@@ -11,3 +29,7 @@ services:
     volumes:
       - ./logstash/config:/usr/share/logstash/config
       - ./logstash/pipeline:/usr/share/logstash/pipeline
+
+secrets:
+  redis_password:
+    file: redis.env

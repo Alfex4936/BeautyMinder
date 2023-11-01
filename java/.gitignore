@@ -1,7 +1,9 @@
 # Compiled class file
 *.class
 
+redis/redis.conf
 logstash/pipeline/spring-boot-logs.conf
+redis.env
 
 # Log file
 *.log

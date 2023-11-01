@@ -209,7 +209,7 @@ public class CosmeticRankService {
     }
 
     // Scheduled Batch Processing to log top 10 keywords every 15mins
-    @Scheduled(cron = "0 0/15 * * * ?") // every 15min
+    @Scheduled(cron = "0 0/5 * * * ?") // every 15min
     public void saveTop10Keywords() {
         // Get all keyword counts from Redis
         Map<Object, Object> keywordCounts = redisTemplate.opsForHash().entries(KEYWORD_METRICS_KEY);
@@ -257,7 +257,7 @@ public class CosmeticRankService {
 
     // Collects keyword search events
     public void collectSearchEvent(String keyword) {
-        eventQueue.enqueueKeyword(new KeywordEvent(keyword));
+        eventQueue.enqueueKeyword(new KeywordEvent(keyword.trim()));
     }
 
     public void collectClickEvent(String cosmeticId) {
