@@ -11,6 +11,7 @@ import java.util.List;
 
 public interface ReviewRepository extends MongoRepository<Review, String> {
     List<Review> findByUser(User user);
+
     List<Review> findByCosmetic(Cosmetic cosmetic);
 
     @Query("{ 'rating' :  { $gte:  ?0 }, 'user.baumann' :  ?1 }")

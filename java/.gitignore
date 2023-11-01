@@ -1,6 +1,8 @@
 # Compiled class file
 *.class
 
+logstash/pipeline/spring-boot-logs.conf
+
 # Log file
 *.log
 

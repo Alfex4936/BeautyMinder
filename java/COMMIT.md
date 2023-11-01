@@ -4,7 +4,7 @@
 - 🌟 [Feature] 새로운 기능 추가할 때
 - 🐛 [Fix] 버그 수정할 때
 - 🚀 [Performance] 성능 향상을 위한 코드 변경할 때
-- git commit -m "🌐 [API] GET favorites and reviews of user"
+- git commit -m "🌟 [Log] Stream system logs in realtime to Logstash" -m "Logstash -> Elasticsearch"
 
 # 🏗️ 구조
 

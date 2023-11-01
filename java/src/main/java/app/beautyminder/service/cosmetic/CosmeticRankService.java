@@ -36,19 +36,15 @@ public class CosmeticRankService {
 
     // Redis structure: "cosmeticMetrics:{cosmeticId}" -> {"clicks": "10", "hits": "5", "favs": "3"}
     private static final String COSMETIC_METRICS_KEY_TEMPLATE = "cosmeticMetrics:%s";
+    private static final Integer HIGH_VOLUME_THRESHOLD = 100; // imagine average searches is around 100
+    private static final Integer LOW_VOLUME_THRESHOLD = 10; // imagine low searches is around 10
+    private static final double HIGH_SIG_LEVEL = 3.0;
+    private static final double LOW_SIG_LEVEL = 2.0;
     private final CosmeticRepository cosmeticRepository;
     private final KeywordRankRepository keywordRankRepository;
     private final EventQueue eventQueue;
     private final String KEYWORD_METRICS_KEY = "keywordMetrics";
     private final Map<String, RunningStats> keywordStatsMap = new HashMap<>();
-
-    @Getter
-    private String cronExpression = "*/35 * * * * ?"; // every 35 seconds
-
-    private static final Integer HIGH_VOLUME_THRESHOLD = 100; // imagine average searches is around 100
-    private static final Integer LOW_VOLUME_THRESHOLD = 10; // imagine low searches is around 10
-    private static final double HIGH_SIG_LEVEL = 3.0;
-    private static final double LOW_SIG_LEVEL = 2.0;
     /*
 
     현재 실시간 수집 중인 정보:
@@ -58,11 +54,11 @@ public class CosmeticRankService {
 
      */
     private final double CLICK_WEIGHT = 1.8;
-
-
     // clicks might be considered more valuable as they represent a user taking a clear action based on their interest
     private final double HIT_WEIGHT = 1.1;
     private final double FAV_WEIGHT = 2.0;
+    @Getter
+    private String cronExpression = "*/35 * * * * ?"; // every 35 seconds
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -85,7 +81,7 @@ public class CosmeticRankService {
 
     // Cosmetic Metrics collection (click/search hit)
     // Scheduled Batch Processing
-     @Scheduled(cron = "0 0/10 * * * ?") // Every 10 minutes
+    @Scheduled(cron = "0 0/10 * * * ?") // Every 10 minutes
     @Transactional
     public void processEvents() {
         List<Event> events = eventQueue.dequeueAll();

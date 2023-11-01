@@ -11,8 +11,9 @@ public enum ErrorCode {
     ACCESS_DENIED_ERROR(HttpStatus.UNAUTHORIZED, "E4", "올바른 인증이 필요합니다."),
     NOT_FOUND(HttpStatus.NOT_FOUND, "E5", "존재하지 않는 엔티티입니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "E5", "존재하지 않는 유저입니다."),
+    MISSING_REQUEST_PARAMETER(HttpStatus.NOT_FOUND, "E6", "필요한 요청 파라미터가 잘못되었습니다."),
+    VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "E7", "올바르지 않은 요청 JSON 형식입니다.");
 
-    ARTICLE_NOT_FOUND(HttpStatus.NOT_FOUND, "A1", "존재하지 않는 아티클입니다.");
 
     private final String message;
 

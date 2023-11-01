@@ -1,7 +1,6 @@
 package app.beautyminder.controller.redis;
 
 import app.beautyminder.domain.Cosmetic;
-import app.beautyminder.domain.KeywordRank;
 import app.beautyminder.repository.KeywordRankRepository;
 import app.beautyminder.service.cosmetic.CosmeticRankService;
 import io.swagger.v3.oas.annotations.Operation;

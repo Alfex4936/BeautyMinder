@@ -34,7 +34,7 @@ public class DataViewController {
         String cosmeticsData = cosmeticSearchService.viewCosmeticsData();
         return ResponseEntity.ok(cosmeticsData);
     }
-    
+
     @GetMapping("/cosmetic-metrics")
     public ResponseEntity<String> viewCosmeticMetricsData() throws IOException {
         String cosmeticsData = cosmeticSearchService.viewCosmeticMetricsData();

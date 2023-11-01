@@ -10,6 +10,7 @@ import app.beautyminder.dto.user.ResetPasswordRequest;
 import app.beautyminder.dto.user.SignUpResponse;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.ReviewRepository;
+import app.beautyminder.service.FileStorageService;
 import app.beautyminder.service.auth.SmsService;
 import app.beautyminder.service.auth.TokenService;
 import app.beautyminder.service.auth.UserService;
@@ -32,6 +33,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
@@ -51,6 +53,8 @@ public class UserController {
     private final UserService userService;
     private final SmsService smsService;
     private final TokenService tokenService;
+    private final FileStorageService fileStorageService;
+
     private final CosmeticRepository cosmeticRepository;
     private final ReviewRepository reviewRepository;
     private final CosmeticRankService cosmeticRankService;
@@ -274,6 +278,14 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @PostMapping("/{userId}/upload")
+    public String uploadProfileImage(@PathVariable String userId, @RequestParam("image") MultipartFile image) throws Exception {
+        String imageUrl = fileStorageService.storeFile(image);
+        userService.updateUserFields(userId, Map.of("profileImage", imageUrl));
+
+        return imageUrl;
     }
 
     /* LOST PASSWORD ----------------------------  */

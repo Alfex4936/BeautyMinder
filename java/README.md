@@ -478,3 +478,11 @@ PUT /reviews
   }
 }
 ```
+
+# ELK
+
+Spring boot의 실시간 로그가 Logstash에 스트리밍되어 ElasticSearch에 전달됩니다.
+
+로그 필터링 = Spring Boot REST API 요청 + Spring Boot ERROR
+
+![logstash](https://github.com/LeeZEun/beautyMinder/assets/2356749/ac44a1c8-7f66-4441-8b13-9153eff03a58)

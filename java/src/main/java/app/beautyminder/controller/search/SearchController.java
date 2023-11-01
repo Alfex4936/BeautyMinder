@@ -1,8 +1,6 @@
 package app.beautyminder.controller.search;
 
 import app.beautyminder.domain.Cosmetic;
-import app.beautyminder.domain.EsCosmetic;
-import app.beautyminder.domain.EsReview;
 import app.beautyminder.domain.Review;
 import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;

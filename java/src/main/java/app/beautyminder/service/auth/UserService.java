@@ -34,7 +34,7 @@ public class UserService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
     private final TokenService tokenService;
-//    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
+    //    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
     private final BCryptPasswordEncoder bCryptPasswordEncoder;  // 비용이 높은 작업
     /*
     MongoRepository:
