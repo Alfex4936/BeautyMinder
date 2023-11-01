@@ -281,7 +281,7 @@ public class UserController {
     }
 
     @PostMapping("/{userId}/upload")
-    public String uploadProfileImage(@PathVariable String userId, @RequestParam("image") MultipartFile image) throws Exception {
+    public String uploadProfileImage(@PathVariable String userId, @RequestParam("image") MultipartFile image) {
         String imageUrl = fileStorageService.storeFile(image);
         userService.updateUserFields(userId, Map.of("profileImage", imageUrl));
 

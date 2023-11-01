@@ -1,5 +1,20 @@
 version: '3.8'
 services:
+  spring-boot:
+    container_name: beauty-spring-boot
+    build:
+      context: ./build/libs
+      dockerfile: Dockerfile.spring
+    depends_on:
+      redis:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    links:
+      - redis
+
   redis:
     container_name: beauty-redis
     image: redis:latest
@@ -17,6 +32,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    links:
+      - logstash
 
   logstash:
     container_name: beauty-logstash
@@ -29,7 +46,16 @@ services:
     volumes:
       - ./logstash/config:/usr/share/logstash/config
       - ./logstash/pipeline:/usr/share/logstash/pipeline
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9600 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 secrets:
   redis_password:
     file: redis.env
+
+#networks:
+#  beauty-bridge:
+#    driver: bridge

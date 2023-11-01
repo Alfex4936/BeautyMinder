@@ -59,8 +59,8 @@ public class CosmeticRankService {
     private final double FAV_WEIGHT = 2.0;
     @Getter
     private String cronExpression = "*/35 * * * * ?"; // every 35 seconds
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @PostConstruct
     @Scheduled(cron = "0 0 4 * * ?") // everyday 4am
