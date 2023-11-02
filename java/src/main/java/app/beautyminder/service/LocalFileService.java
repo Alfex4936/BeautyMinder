@@ -2,6 +2,10 @@ package app.beautyminder.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -9,11 +13,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@AllArgsConstructor
 @Service
 public class LocalFileService {
+    @Qualifier("webApplicationContext")
+    private final ResourceLoader resourceLoader;
+
+    private final ObjectMapper objectMapper;
+
     public JsonNode readJsonFile(String filePath) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readTree(new File(filePath));
+        Resource resource = resourceLoader.getResource(filePath);
+        try (InputStream inputStream = resource.getInputStream()) {
+            return objectMapper.readTree(inputStream);
+        } catch (IllegalArgumentException e) {
+            return objectMapper.readTree(new File(filePath));
+        }
     }
 
     public List<String> listFilesInDirectory(String directoryPath) {

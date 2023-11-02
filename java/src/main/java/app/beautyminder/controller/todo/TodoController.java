@@ -7,7 +7,9 @@ import app.beautyminder.dto.todo.AddTodoResponse;
 import app.beautyminder.dto.todo.UpdateTaskRequest;
 import app.beautyminder.service.TodoService;
 import app.beautyminder.service.auth.UserService;
+import app.beautyminder.util.ValidUserId;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +34,7 @@ public class TodoController {
             tags = {"Todo Operations"}
     )
     @GetMapping("/all")
-    public Map<String, Object> getTodos(@RequestParam("userId") String userId) {
+    public Map<String, Object> getTodos(@ValidUserId String userId) {
         User user = userService.findById(userId);
         List<Todo> existingTodos = todoService.findTodosByUserId(user.getId());
         return createResponse("Here are the todos", existingTodos.isEmpty() ? Collections.emptyList() : existingTodos);
@@ -126,7 +128,7 @@ public class TodoController {
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, Object> handleUserNotFound(IllegalArgumentException e) {
-        return createResponse("No such user", Collections.emptyList());
+        return createResponse("No such user: " + e.getCause(), Collections.emptyList());
     }
 
     @ExceptionHandler(Exception.class)

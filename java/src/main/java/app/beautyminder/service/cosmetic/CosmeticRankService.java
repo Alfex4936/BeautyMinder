@@ -12,7 +12,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisHashCommands;
 import org.springframework.data.redis.core.RedisCallback;
@@ -57,13 +56,12 @@ public class CosmeticRankService {
     // clicks might be considered more valuable as they represent a user taking a clear action based on their interest
     private final double HIT_WEIGHT = 1.1;
     private final double FAV_WEIGHT = 2.0;
+    private final RedisTemplate<String, Object> redisTemplate;
     @Getter
     private String cronExpression = "*/35 * * * * ?"; // every 35 seconds
 
-    private final RedisTemplate<String, Object> redisTemplate;
-
     @PostConstruct
-    @Scheduled(cron = "0 0 4 * * ?") // everyday 4am
+    @Scheduled(cron = "0 0 4 * * ?", zone = "Asia/Seoul") // everyday 4am
     public void resetCounts() {
         Set<String> keys = redisTemplate.keys("cosmeticMetrics:*");
 
@@ -81,7 +79,7 @@ public class CosmeticRankService {
 
     // Cosmetic Metrics collection (click/search hit)
     // Scheduled Batch Processing
-    @Scheduled(cron = "0 0/10 * * * ?") // Every 10 minutes
+    @Scheduled(cron = "0 0/10 * * * ?", zone = "Asia/Seoul") // Every 10 minutes
     @Transactional
     public void processEvents() {
         List<Event> events = eventQueue.dequeueAll();
@@ -124,8 +122,10 @@ public class CosmeticRankService {
     @Bean
     public ScheduledTaskRegistrar scheduledTaskRegistrar() {
         ScheduledTaskRegistrar registrar = new ScheduledTaskRegistrar();
+
         registrar.addTriggerTask(this::processKeywordEvents, triggerContext -> {
-            CronTrigger trigger = new CronTrigger(getCronExpression());
+            CronTrigger trigger = new CronTrigger(getCronExpression(), TimeZone.getTimeZone("Asia/Seoul"));
+
             return trigger.nextExecution(triggerContext);
         });
 
@@ -209,7 +209,7 @@ public class CosmeticRankService {
     }
 
     // Scheduled Batch Processing to log top 10 keywords every 15mins
-    @Scheduled(cron = "0 0/5 * * * ?") // every 15min
+    @Scheduled(cron = "0 0/15 * * * ?", zone = "Asia/Seoul") // every 15min
     public void saveTop10Keywords() {
         // Get all keyword counts from Redis
         Map<Object, Object> keywordCounts = redisTemplate.opsForHash().entries(KEYWORD_METRICS_KEY);
@@ -257,7 +257,7 @@ public class CosmeticRankService {
 
     // Collects keyword search events
     public void collectSearchEvent(String keyword) {
-        eventQueue.enqueueKeyword(new KeywordEvent(keyword.trim()));
+        eventQueue.enqueueKeyword(new KeywordEvent(sanitizeKeyword(keyword)));
     }
 
     public void collectClickEvent(String cosmeticId) {
@@ -270,6 +270,12 @@ public class CosmeticRankService {
 
     public void collectFavEvent(String cosmeticId) {
         collectEvent(cosmeticId, ActionType.FAV);
+    }
+
+    public String sanitizeKeyword(String keyword) {
+        String trimmed = keyword.toLowerCase().trim();
+        // This will replace any character that is not a Korean letter or a number with an empty string
+        return trimmed.replaceAll("[^\\p{IsHangul}\\p{IsDigit}\\p{IsAlphabetic}]+", "").trim();
     }
 
     private void updateRedisMetrics(String cosmeticId, CosmeticMetricData data) {

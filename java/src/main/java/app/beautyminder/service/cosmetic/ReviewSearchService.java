@@ -39,7 +39,7 @@ public class ReviewSearchService {
     private final ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     //    @PostConstruct
-    @Scheduled(cron = "0 0 2 * * ?") // everyday 2am
+    @Scheduled(cron = "0 0 2 * * ?", zone = "Asia/Seoul") // everyday 2am
     public void indexReviews() {
         List<Review> reviews = reviewRepository.findAll();  // Fetch all reviews from MongoDB
         List<EsReview> esReviews = reviews.stream()

@@ -11,4 +11,4 @@ COPY beautyminder-1.0.jar /usr/app/beautyminder-1.0.jar
 WORKDIR /usr/app
 
 # Command to run the application
-ENTRYPOINT ["java", "-jar", "beautyminder-1.0.jar"]
+ENTRYPOINT ["java", "-Duser.timezone=Asia/Seoul", "-jar", "beautyminder-1.0.jar"]

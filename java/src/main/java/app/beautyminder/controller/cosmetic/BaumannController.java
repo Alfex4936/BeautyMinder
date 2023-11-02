@@ -14,7 +14,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,12 +30,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
 @RestController
 @RequestMapping("/baumann")
 public class BaumannController {
 
-    private static final String BAUMANN_JSON_PATH = "src/main/resources/baumann.json";
+    private static final String BAUMANN_JSON_PATH = "classpath:baumann.json";
     private static final Set<String> REQUIRED_KEYS = Set.of(
             "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11",
             "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "B12", "B13", "B14", "B15", "B16",
@@ -40,6 +43,9 @@ public class BaumannController {
             "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10", "D11", "D12", "D13", "D14", "D15", "D16", "D17", "D18", "D19", "D20", "D21"
     );
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+
+
     private final BaumannService baumannService;
     private final LocalFileService localFileService;
 
