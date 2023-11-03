@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Document(collection = "reviews")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -38,10 +39,40 @@ public class Review {
     @CreatedDate
     private LocalDateTime createdAt;
 
+    @Setter
+    private boolean isFiltered = false; // Field for offensive content flag
+
+    // Inner class to hold NLP analysis results
+    @Getter
+    @Setter
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
+    @AllArgsConstructor
+    @Builder
+    public static class NlpAnalysis {
+        private double offensivenessProbability;
+        private Map<String, Double> similarities;
+    }
+
+    // Field for NLP analysis results
+    private NlpAnalysis nlpAnalysis;
+
+    // Constructor using builder pattern for NlpAnalysis
+    @Builder(builderMethodName = "reviewBuilder")
+    public Review(String content, Integer rating, List<String> images, User user, Cosmetic cosmetic, boolean isFiltered, NlpAnalysis nlpAnalysis) {
+        this.content = content;
+        this.rating = rating;
+        this.images = images;
+        this.user = user;
+        this.cosmetic = cosmetic;
+        this.isFiltered = isFiltered;
+        this.nlpAnalysis = nlpAnalysis;
+    }
+
     @Builder
     public Review(String content, Integer rating) {
         this.content = content;
         this.rating = rating;
+        this.isFiltered = false;
     }
 
     public void update(Review reviewDetails) {
@@ -64,5 +95,4 @@ public class Review {
             this.cosmetic = reviewDetails.getCosmetic();
         }
     }
-
 }

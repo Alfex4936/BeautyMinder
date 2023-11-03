@@ -249,7 +249,8 @@ public class CosmeticRankService {
 
         // Extract the top 10 keywords
         List<String> top10Keywords = sortedEntries.stream()
-                .map(entry -> entry.getKey() + ":" + entry.getValue())
+//                .map(entry -> entry.getKey() + ":" + entry.getValue())
+                .map(entry -> (String) entry.getKey())
                 .toList();
 
         if (top10Keywords.isEmpty()) {
@@ -261,24 +262,24 @@ public class CosmeticRankService {
 
         LocalDate today = LocalDate.now();
 
-        KeywordRank keywordRank = KeywordRank.builder()
-                .date(today)
-                .rankings(top10Keywords)
-                .build();
+//        KeywordRank keywordRank = KeywordRank.builder()
+//                .date(today)
+//                .rankings(top10Keywords)
+//                .build();
 
-//        KeywordRank keywordRank = keywordRankRepository.findByDate(today)
-//                .map(existingKeywordRank -> {
-//                    // Update the rankings of the existing KeywordRank
-//                    existingKeywordRank.setRankings(top10Keywords);
-//                    return existingKeywordRank;
-//                })
-//                .orElseGet(() ->
-//                        // Create a new KeywordRank instance if it doesn't exist
-//                        KeywordRank.builder()
-//                                .date(today)
-//                                .rankings(top10Keywords)
-//                                .build()
-//                );
+        KeywordRank keywordRank = keywordRankRepository.findByDate(today)
+                .map(existingKeywordRank -> {
+                    // Update the rankings of the existing KeywordRank
+                    existingKeywordRank.setRankings(top10Keywords);
+                    return existingKeywordRank;
+                })
+                .orElseGet(() ->
+                        // Create a new KeywordRank instance if it doesn't exist
+                        KeywordRank.builder()
+                                .date(today)
+                                .rankings(top10Keywords)
+                                .build()
+                );
 
         // Save the KeywordRank instance to the database
         keywordRankRepository.save(keywordRank);
@@ -454,7 +455,7 @@ public class CosmeticRankService {
         // Time decay factor
         private static final double DECAY_FACTOR = 0.95;
         // The unit for time decay, e.g., if decay is per hour, then unit is HOUR_IN_MILLIS
-        private static final long TIME_UNIT = 60000;
+        private static final long TIME_UNIT = 120000; // 2min
 
         void updateRecentCount(long value) {
             long currentTime = System.currentTimeMillis();
@@ -500,12 +501,6 @@ public class CosmeticRankService {
         // Getter for recentCount
         public long getRecentCount() {
             return recentCount.get();
-        }
-        public long getTotalCount() {
-            return totalCount.get();
-        }
-        public Double getMean() {
-            return mean.get();
         }
     }
 }

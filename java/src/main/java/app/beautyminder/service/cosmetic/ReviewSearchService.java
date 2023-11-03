@@ -82,7 +82,7 @@ public class ReviewSearchService {
     }
 
 
-    public void deleteAllIndices() {
+    public void delete() {
         try {
             Request request = new Request("DELETE", "/reviews");
             Response response = opensearchClient.getLowLevelClient().performRequest(request);

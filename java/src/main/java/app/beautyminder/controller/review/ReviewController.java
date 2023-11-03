@@ -69,7 +69,7 @@ public class ReviewController {
         Review review = Review.builder()
                 .content(reviewDTO.getContent())
                 .rating(reviewDTO.getRating())
-                .build();
+                .isFiltered(false).build();
         return reviewService.addReview(review, images);
     }
 

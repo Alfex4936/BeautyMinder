@@ -72,7 +72,7 @@ public class CosmeticSearchService {
         return EntityUtils.toString(response.getEntity());
     }
 
-    public void deleteAllIndices() {
+    public void delete() {
         try {
             Request request = new Request("DELETE", "/cosmetics");
             Response response = opensearchClient.getLowLevelClient().performRequest(request);

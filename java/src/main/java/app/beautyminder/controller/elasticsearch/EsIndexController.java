@@ -1,10 +1,18 @@
 package app.beautyminder.controller.elasticsearch;
 
+import app.beautyminder.service.LogService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.util.EntityUtils;
+import org.opensearch.client.Request;
+import org.opensearch.client.Response;
+import org.opensearch.client.RestHighLevelClient;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
@@ -12,11 +20,13 @@ import java.io.IOException;
 @ControllerAdvice
 @RequiredArgsConstructor
 @RestController
+@Slf4j
 @RequestMapping("/es-index")
 public class EsIndexController {
 
     private final CosmeticSearchService cosmeticSearchService;
     private final ReviewSearchService reviewSearchService;
+    private final LogService logService;
 
     @GetMapping("/cosmetics/list")
     public ResponseEntity<String> listAllIndices() throws IOException {
@@ -31,14 +41,14 @@ public class EsIndexController {
     }
 
     @DeleteMapping("/cosmetics/delete")
-    public ResponseEntity<Void> deleteAllIndices() {
-        cosmeticSearchService.deleteAllIndices();
+    public ResponseEntity<Void> deleteCosmeticDocuments() {
+        logService.deleteAllDocuments("cosmetics");
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/reviews/delete")
-    public ResponseEntity<String> dropReviewIndices() {
-        reviewSearchService.deleteAllIndices();
+    @DeleteMapping("/reviews/delete")
+    public ResponseEntity<String> dropReviewDocuments() {
+        logService.deleteAllDocuments("reviews");
         return ResponseEntity.ok("Deleted review indices successfully");
     }
 
@@ -47,4 +57,7 @@ public class EsIndexController {
         reviewSearchService.indexReviews();
         return ResponseEntity.ok("Indexed review successfully!");
     }
+
+
+
 }
