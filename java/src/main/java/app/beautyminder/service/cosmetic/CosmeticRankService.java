@@ -22,6 +22,7 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,10 +36,10 @@ public class CosmeticRankService {
 
     // Redis structure: "cosmeticMetrics:{cosmeticId}" -> {"clicks": "10", "hits": "5", "favs": "3"}
     private static final String COSMETIC_METRICS_KEY_TEMPLATE = "cosmeticMetrics:%s";
-    private static final Integer HIGH_VOLUME_THRESHOLD = 100; // imagine average searches is around 100
+    private static final Integer HIGH_VOLUME_THRESHOLD = 1000; // imagine average searches is around 1000
     private static final Integer LOW_VOLUME_THRESHOLD = 10; // imagine low searches is around 10
-    private static final double HIGH_SIG_LEVEL = 3.0;
-    private static final double LOW_SIG_LEVEL = 2.0;
+    private static final double HIGH_SIG_LEVEL = 2.0;
+    private static final double LOW_SIG_LEVEL = 1.0;
     private final CosmeticRepository cosmeticRepository;
     private final KeywordRankRepository keywordRankRepository;
     private final EventQueue eventQueue;
@@ -58,7 +59,7 @@ public class CosmeticRankService {
     private final double FAV_WEIGHT = 2.0;
     private final RedisTemplate<String, Object> redisTemplate;
     @Getter
-    private String cronExpression = "*/35 * * * * ?"; // every 35 seconds
+    private String cronExpression = "*/15 * * * * ?"; // every 35 seconds
 
     @PostConstruct
     @Scheduled(cron = "0 0 4 * * ?", zone = "Asia/Seoul") // everyday 4am
@@ -74,7 +75,7 @@ public class CosmeticRankService {
         redisTemplate.delete(KEYWORD_METRICS_KEY);
         keywordStatsMap.clear();
 
-        log.info("REDIS: Reset all cosmetic metrics.");
+        log.info("BEMINDER: REDIS: Reset all cosmetic metrics.");
     }
 
     // Cosmetic Metrics collection (click/search hit)
@@ -135,9 +136,9 @@ public class CosmeticRankService {
     public void updateCronExpressionBasedOnVolume(long dataVolume) {
         // Here, set a new cron expression based on the data volume
         if (dataVolume < LOW_VOLUME_THRESHOLD) {
-            setCronExpression("*/60 * * * * ?");  // Set to every 60 seconds if volume is low
+            setCronExpression("*/30 * * * * ?");  // Set to every n seconds if volume is low
         } else {
-            setCronExpression("*/35 * * * * ?");  // Set back to every 35 seconds if volume is normal/high
+            setCronExpression("*/15 * * * * ?");  // Set back to every n seconds if volume is normal/high
         }
     }
 
@@ -209,17 +210,35 @@ public class CosmeticRankService {
     }
 
     // Scheduled Batch Processing to log top 10 keywords every 15mins
-    @Scheduled(cron = "0 0/15 * * * ?", zone = "Asia/Seoul") // every 15min
+    @Scheduled(cron = "0 0/5 * * * ?", zone = "Asia/Seoul") // every 5min
     public void saveTop10Keywords() {
         // Get all keyword counts from Redis
         Map<Object, Object> keywordCounts = redisTemplate.opsForHash().entries(KEYWORD_METRICS_KEY);
 
         // Sort keywords by counts in descending order
         List<Map.Entry<Object, Object>> sortedEntries = keywordCounts.entrySet().stream()
-                .sorted((e1, e2) -> Long.compare(
-                        Long.parseLong((String) e2.getValue()),
-                        Long.parseLong((String) e1.getValue())
-                ))
+                .sorted((e1, e2) -> {
+                    RunningStats stats1 = keywordStatsMap.get(e1.getKey());
+                    RunningStats stats2 = keywordStatsMap.get(e2.getKey());
+
+                    if (stats1 == null || stats2 == null) {
+                        // Handle the case where a keyword has no RunningStats
+                        return stats1 == null ? 1 : -1;
+                    }
+
+                    long count1 = stats1.getRecentCount();
+                    long count2 = stats2.getRecentCount();
+
+                    // If both counts are the same, use significance to determine the trend
+                    if (count1 == count2) {
+                        double sig1 = stats1.isSignificantDeviation(HIGH_SIG_LEVEL) ? 1 : 0;
+                        double sig2 = stats2.isSignificantDeviation(HIGH_SIG_LEVEL) ? 1 : 0;
+                        return Double.compare(sig2, sig1);
+                    }
+
+                    // Otherwise, sort by recent count
+                    return Long.compare(count2, count1);
+                })
                 .limit(10)
                 .toList();
 
@@ -230,7 +249,7 @@ public class CosmeticRankService {
 
         // Extract the top 10 keywords
         List<String> top10Keywords = sortedEntries.stream()
-                .map(entry -> (String) entry.getKey())
+                .map(entry -> entry.getKey() + ":" + entry.getValue())
                 .toList();
 
         if (top10Keywords.isEmpty()) {
@@ -238,13 +257,28 @@ public class CosmeticRankService {
             return;
         }
 
-        log.info("Saving top 10 keywords: {}", top10Keywords);
+        log.info("BEMINDER: Saving top 10 keywords: {}", top10Keywords);
 
-        // Create a new KeywordRank instance
+        LocalDate today = LocalDate.now();
+
         KeywordRank keywordRank = KeywordRank.builder()
+                .date(today)
                 .rankings(top10Keywords)
                 .build();
 
+//        KeywordRank keywordRank = keywordRankRepository.findByDate(today)
+//                .map(existingKeywordRank -> {
+//                    // Update the rankings of the existing KeywordRank
+//                    existingKeywordRank.setRankings(top10Keywords);
+//                    return existingKeywordRank;
+//                })
+//                .orElseGet(() ->
+//                        // Create a new KeywordRank instance if it doesn't exist
+//                        KeywordRank.builder()
+//                                .date(today)
+//                                .rankings(top10Keywords)
+//                                .build()
+//                );
 
         // Save the KeywordRank instance to the database
         keywordRankRepository.save(keywordRank);
@@ -414,28 +448,64 @@ public class CosmeticRankService {
         private final AtomicLong totalCount = new AtomicLong();
         private final AtomicReference<Double> mean = new AtomicReference<>(0.0);
         private final AtomicReference<Double> M2 = new AtomicReference<>(0.0);
+        private final AtomicLong lastUpdated = new AtomicLong();
+        private final AtomicReference<Double> lastValue = new AtomicReference<>(0.0);
+
+        // Time decay factor
+        private static final double DECAY_FACTOR = 0.95;
+        // The unit for time decay, e.g., if decay is per hour, then unit is HOUR_IN_MILLIS
+        private static final long TIME_UNIT = 60000;
 
         void updateRecentCount(long value) {
-            recentCount.set(value);  // Set the recent count
-            totalCount.addAndGet(value);  // Increment the total count by the recent count value
-            double delta = value - mean.get();
-            mean.set(mean.get() + delta / totalCount.get());  // Use totalCount.get() instead of count
-            M2.set(M2.get() + delta * (value - mean.get()));
+            long currentTime = System.currentTimeMillis();
+            long timeDiff = currentTime - lastUpdated.getAndUpdate(x -> currentTime); // Update lastUpdated
+
+            // Apply decay factor on every update since updates are frequent
+            double decay = Math.pow(DECAY_FACTOR, timeDiff / (double) TIME_UNIT);
+            recentCount.updateAndGet(x -> (long) (x * decay + value));
+
+            long newTotalCount = totalCount.incrementAndGet();
+            double oldMean = mean.get();
+
+            // Calculate the new mean
+            double newMean = oldMean + (value - oldMean) / newTotalCount;
+            mean.set(newMean); // Set the new mean
+
+            // Update M2 for variance calculation
+            double delta = value - oldMean;
+            double delta2 = value - newMean;
+            M2.getAndUpdate(m -> m + delta * delta2);
+
+            lastValue.set((double) value); // Update lastValue to the new value
         }
 
         boolean isSignificantDeviation(double significanceLevel) {
             if (totalCount.get() < 2) {
-                return false;  // Not enough data to determine deviation
+                return false; // Not enough data to determine deviation
             }
 
             double variance = M2.get() / (totalCount.get() - 1);
             double stddev = Math.sqrt(variance);
 
-            // Calculate the z-score
-            double z = (recentCount.get() - mean.get()) / stddev;
+            // Use the lastValue to retrieve the last individual measurement
+            double lastMeasurement = lastValue.get();
+
+            // In isSignificantDeviation, use lastValue.get() to retrieve the last value
+            double z = (lastMeasurement - mean.get()) / stddev;
 
             // Check if the absolute z-score is greater than the significance level
             return Math.abs(z) > significanceLevel;
+        }
+
+        // Getter for recentCount
+        public long getRecentCount() {
+            return recentCount.get();
+        }
+        public long getTotalCount() {
+            return totalCount.get();
+        }
+        public Double getMean() {
+            return mean.get();
         }
     }
 }

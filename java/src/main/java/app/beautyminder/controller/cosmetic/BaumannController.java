@@ -44,8 +44,6 @@ public class BaumannController {
     );
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-
-
     private final BaumannService baumannService;
     private final LocalFileService localFileService;
 
@@ -137,7 +135,7 @@ public class BaumannController {
                     @ApiResponse(responseCode = "500", description = "설문지 파싱 실패")
             }
     )
-    @GetMapping("/survey") // Get survey questions.
+    @GetMapping(path = "/survey", produces=MediaType.APPLICATION_JSON_VALUE) // Get survey questions.
     public ResponseEntity<?> getBaumannSurvey() {
 
         try {

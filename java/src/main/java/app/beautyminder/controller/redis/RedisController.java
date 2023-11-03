@@ -59,4 +59,16 @@ public class RedisController {
                 .map(rank -> ResponseEntity.ok(rank.getRankings()))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList()));
     }
+
+    @GetMapping("/batch")
+    public ResponseEntity<?> runBatchRedis() {
+        cosmeticRankService.processKeywordEvents();
+        return ResponseEntity.ok("good");
+    }
+
+    @GetMapping("/eval")
+    public ResponseEntity<?> runKeywordRank() {
+        cosmeticRankService.saveTop10Keywords();
+        return ResponseEntity.ok("good");
+    }
 }
