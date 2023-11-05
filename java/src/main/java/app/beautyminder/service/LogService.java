@@ -1,11 +1,5 @@
 package app.beautyminder.service;
 
-import app.beautyminder.domain.EsReview;
-import app.beautyminder.domain.Review;
-import app.beautyminder.repository.ReviewRepository;
-import app.beautyminder.repository.elastic.EsReviewRepository;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.util.EntityUtils;
@@ -15,23 +9,19 @@ import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.Response;
 import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.index.query.FuzzyQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.SearchHit;
-import org.opensearch.search.SearchHits;
 import org.opensearch.search.builder.SearchSourceBuilder;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,7 +33,7 @@ public class LogService {
 
     public List<String> getTodaysLogs() throws IOException {
         // Format today's date as "YYYY.MM.dd"
-        String todaysDate = LocalDate.now().format(DateTimeFormatter.ofPattern("YYYY.MM.dd"));
+        String todaysDate = LocalDate.now(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("YYYY.MM.dd"));
         // Construct the index name
         String todaysIndex = "logstash-logs-" + todaysDate;
 

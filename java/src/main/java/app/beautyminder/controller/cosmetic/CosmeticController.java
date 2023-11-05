@@ -1,7 +1,6 @@
 package app.beautyminder.controller.cosmetic;
 
 import app.beautyminder.domain.Cosmetic;
-import app.beautyminder.service.ReviewService;
 import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.cosmetic.CosmeticService;
 import io.swagger.v3.oas.annotations.Operation;

@@ -12,6 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+      ref: seokwon  # Specify the branch here
     
     - name: Install curl (for nektos/act local CI testing)
       if: ${{ env.ACT }}
@@ -42,5 +44,5 @@ jobs:
         git config --local user.name "GitHub Action"
         git add ./java/api-ref/API-*.html
         git commit -m "📚 API doc $(date +'%Y-%m-%d')" || echo "No changes to commit"
-        git push origin HEAD:seokwon  # Pushes to branch 'B'
+        git push origin seokwon
 

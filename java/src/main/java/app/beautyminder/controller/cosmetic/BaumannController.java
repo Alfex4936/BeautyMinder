@@ -15,9 +15,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -70,8 +67,8 @@ public class BaumannController {
 
                     // Create a new JSONObject to store the question_kr and options
                     ObjectNode newQuestionObject = objectMapper.createObjectNode();
-                    newQuestionObject.put("question_kr", questionObject.get("question_kr"));
-                    newQuestionObject.put("options", questionObject.get("options"));
+                    newQuestionObject.set("question_kr", questionObject.get("question_kr"));
+                    newQuestionObject.set("options", questionObject.get("options"));
 
                     // Put the new JSONObject into the map with the generated key
                     responses.put(key, newQuestionObject);
@@ -135,7 +132,7 @@ public class BaumannController {
                     @ApiResponse(responseCode = "500", description = "설문지 파싱 실패")
             }
     )
-    @GetMapping(path = "/survey", produces=MediaType.APPLICATION_JSON_VALUE) // Get survey questions.
+    @GetMapping(path = "/survey", produces = MediaType.APPLICATION_JSON_VALUE) // Get survey questions.
     public ResponseEntity<?> getBaumannSurvey() {
 
         try {

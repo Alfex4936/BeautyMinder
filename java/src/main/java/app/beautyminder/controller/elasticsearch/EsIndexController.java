@@ -5,14 +5,8 @@ import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.util.EntityUtils;
-import org.opensearch.client.Request;
-import org.opensearch.client.Response;
-import org.opensearch.client.RestHighLevelClient;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 
@@ -57,7 +51,6 @@ public class EsIndexController {
         reviewSearchService.indexReviews();
         return ResponseEntity.ok("Indexed review successfully!");
     }
-
 
 
 }

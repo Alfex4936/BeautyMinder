@@ -60,12 +60,28 @@ public class RedisController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList()));
     }
 
+    @Operation(
+            summary = "Forcefully run redis batch for top 10 ranking",
+            description = "강제로 Redis 배치 보내기",
+            tags = {"Redis Operations"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = String.class)))
+            }
+    )
     @GetMapping("/batch")
     public ResponseEntity<?> runBatchRedis() {
         cosmeticRankService.processKeywordEvents();
         return ResponseEntity.ok("good");
     }
 
+    @Operation(
+            summary = "Forcefully save top 10 keywords",
+            description = "강제로 실시간 랭킹 저장하기",
+            tags = {"Redis Operations"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = String.class)))
+            }
+    )
     @GetMapping("/eval")
     public ResponseEntity<?> runKeywordRank() {
         cosmeticRankService.saveTop10Keywords();

@@ -41,18 +41,6 @@ public class Review {
 
     @Setter
     private boolean isFiltered = false; // Field for offensive content flag
-
-    // Inner class to hold NLP analysis results
-    @Getter
-    @Setter
-    @NoArgsConstructor(access = AccessLevel.PROTECTED)
-    @AllArgsConstructor
-    @Builder
-    public static class NlpAnalysis {
-        private double offensivenessProbability;
-        private Map<String, Double> similarities;
-    }
-
     // Field for NLP analysis results
     private NlpAnalysis nlpAnalysis;
 
@@ -94,5 +82,16 @@ public class Review {
         if (reviewDetails.getCosmetic() != null) {
             this.cosmetic = reviewDetails.getCosmetic();
         }
+    }
+
+    // Inner class to hold NLP analysis results
+    @Getter
+    @Setter
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
+    @AllArgsConstructor
+    @Builder
+    public static class NlpAnalysis {
+        private double offensivenessProbability;
+        private Map<String, Double> similarities;
     }
 }

@@ -445,17 +445,16 @@ public class CosmeticRankService {
 
 
     static class RunningStats {
+        // Time decay factor
+        private static final double DECAY_FACTOR = 0.95;
+        // The unit for time decay, e.g., if decay is per hour, then unit is HOUR_IN_MILLIS
+        private static final long TIME_UNIT = 120000; // 2min
         private final AtomicLong recentCount = new AtomicLong();
         private final AtomicLong totalCount = new AtomicLong();
         private final AtomicReference<Double> mean = new AtomicReference<>(0.0);
         private final AtomicReference<Double> M2 = new AtomicReference<>(0.0);
         private final AtomicLong lastUpdated = new AtomicLong();
         private final AtomicReference<Double> lastValue = new AtomicReference<>(0.0);
-
-        // Time decay factor
-        private static final double DECAY_FACTOR = 0.95;
-        // The unit for time decay, e.g., if decay is per hour, then unit is HOUR_IN_MILLIS
-        private static final long TIME_UNIT = 120000; // 2min
 
         void updateRecentCount(long value) {
             long currentTime = System.currentTimeMillis();

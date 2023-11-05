@@ -9,7 +9,6 @@ import app.beautyminder.service.TodoService;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.util.ValidUserId;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

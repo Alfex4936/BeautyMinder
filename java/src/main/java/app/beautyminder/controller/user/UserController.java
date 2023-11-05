@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +29,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
@@ -134,7 +136,7 @@ public class UserController {
     @Operation(
             summary = "Get user profile",
             description = "사용자 프로필 가져오기",
-            tags = {"User Operations"},
+            tags = {"User Profile Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "유저 데이터 성공적으로 불러옴", content = @Content(schema = @Schema(implementation = User.class))),
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = User.class)))
@@ -154,7 +156,7 @@ public class UserController {
             summary = "Update user profile",
             description = "사용자 프로필 업데이트",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(implementation = Map.class)), description = "Profile updates"),
-            tags = {"User Operations"},
+            tags = {"User Profile Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "유저 업데이트 완료", content = @Content(schema = @Schema(implementation = User.class))),
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = User.class)))
@@ -176,7 +178,7 @@ public class UserController {
     @Operation(
             summary = "Add to User Favorite",
             description = "사용자의 즐겨찾기에 화장품을 추가합니다.",
-            tags = {"User Operations"},
+            tags = {"User Profile Operations"},
             parameters = {
                     @Parameter(name = "userId", description = "사용자의 ID"),
                     @Parameter(name = "cosmeticId", description = "화장품의 ID")
@@ -203,7 +205,7 @@ public class UserController {
     @Operation(
             summary = "Delete a favourite of User",
             description = "사용자의 즐겨찾기에 화장품을 삭제합니다.",
-            tags = {"User Operations"},
+            tags = {"User Profile Operations"},
             parameters = {
                     @Parameter(name = "userId", description = "사용자의 ID"),
                     @Parameter(name = "cosmeticId", description = "화장품의 ID")
@@ -227,7 +229,7 @@ public class UserController {
     @Operation(
             summary = "Get favorites of User",
             description = "사용자의 즐겨찾기를 전부 불러옵니다.",
-            tags = {"User Operations"},
+            tags = {"User Profile Operations"},
             parameters = {
                     @Parameter(name = "userId", description = "사용자의 ID")
             },
@@ -255,7 +257,7 @@ public class UserController {
     @Operation(
             summary = "Get reviews of User",
             description = "사용자의 리뷰를 전부 불러옵니다.",
-            tags = {"User Operations"},
+            tags = {"User Profile Operations"},
             parameters = {
                     @Parameter(name = "userId", description = "사용자의 ID")
             },
@@ -280,8 +282,38 @@ public class UserController {
         }
     }
 
+    @Operation(
+            summary = "Upload Profile Image",
+            description = "유저 프로필 사진 업로드하기",
+            tags = {"User Profile Operations"},
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Image uploaded successfully",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = String.class),
+                                    examples = @ExampleObject(
+                                            name = "Image URL",
+                                            value = "\"http://example.com/image.jpg\"",
+                                            summary = "URL of the uploaded image"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(responseCode = "400", description = "Invalid user ID or image data"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
     @PostMapping("/{userId}/upload")
-    public String uploadProfileImage(@PathVariable String userId, @RequestParam("image") MultipartFile image) {
+    public String uploadProfileImage(
+            @Parameter(description = "User ID as a MongoDB _id string", example = "507f1f77bcf86cd799439011")
+            @PathVariable String userId,
+
+            @Parameter(description = "Profile image file to upload",
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            examples = @ExampleObject(name = "file", summary = "A 'binary' file")))
+            @RequestParam("image") MultipartFile image
+    ) {
         String imageUrl = fileStorageService.storeFile(image);
         userService.updateUserFields(userId, Map.of("profileImage", imageUrl));
 
@@ -291,7 +323,7 @@ public class UserController {
     /* LOST PASSWORD ----------------------------  */
     @Operation(
             summary = "Send SMS for password reset",
-            description = "비밀번호 재설정을 위한 SMS 전송",
+            description = "비밀번호 재설정을 위한 SMS 전송 (- 제외한 번호)",
             tags = {"Password Reset Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "SMS 전송 완료", content = @Content(schema = @Schema(implementation = String.class))),

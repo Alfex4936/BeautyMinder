@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -222,6 +223,13 @@ public class WebSecurityConfig {
         return http.build();
     }
 
+    @Bean
+    public FilterRegistrationBean<CustomLoggerFilter> loggingFilter() {
+        FilterRegistrationBean<CustomLoggerFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new CustomLoggerFilter());
+        registrationBean.addUrlPatterns("/*");
+        return registrationBean;
+    }
 
 //    @Bean
 //    public TokenAuthenticationFilter tokenAuthenticationFilter() {

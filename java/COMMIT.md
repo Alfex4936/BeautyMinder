@@ -4,7 +4,7 @@
 - 🌟 [Feature] 새로운 기능 추가할 때
 - 🐛 [Fix] 버그 수정할 때
 - 🚀 [Performance] 성능 향상을 위한 코드 변경할 때
-- git commit -m "🚀 [Rank] Decay over time and update equations"
+- git commit -m "🌟 [New] Stream logs to Elasticsearch, update review db"
 
 # 🏗️ 구조
 
@@ -47,4 +47,4 @@
 
 # 🚇 CI/CD
 
-- 🚇: CI/CD 설정을 변경할 때
+- 🚇 : CI/CD 설정을 변경할 때
