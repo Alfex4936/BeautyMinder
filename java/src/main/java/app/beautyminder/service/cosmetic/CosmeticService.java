@@ -7,12 +7,17 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
 public class CosmeticService {
 
     private final CosmeticRepository cosmeticRepository;
+
+    public Optional<Cosmetic> findById(String cosmeticId) {
+        return cosmeticRepository.findById(cosmeticId);
+    }
 
     public List<Cosmetic> getAllCosmetics() {
         return cosmeticRepository.findAll();

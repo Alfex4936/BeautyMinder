@@ -1,5 +1,7 @@
 package app.beautyminder.service;
 
+import app.beautyminder.domain.Cosmetic;
+import app.beautyminder.domain.Review;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
@@ -7,6 +9,12 @@ import app.beautyminder.service.cosmetic.ReviewSearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -30,51 +38,65 @@ public class RecommendService {
     private final ReviewService reviewService;
     private final CosmeticRepository cosmeticRepository;
 
-//    public List<Cosmetic> recommendProducts(String baumannSkinType) {
-//        Set<String> combinedCosmeticIds = new HashSet<>();
-//
-//        // Method 1: Reviews filtered by Baumann type
-//        combinedCosmeticIds.addAll(getCosmeticIdsByBaumann(baumannSkinType));
-//
-//        // Method 2: Reviews filtered by NLP probabilities
-//        combinedCosmeticIds.addAll(getCosmeticIdsByProbability(baumannSkinType));
-//
-//        // Method 3: Trending cosmetics
-//        combinedCosmeticIds.addAll(getTrendingCosmeticIds());
-//
-//        // Method 4: Cosmetics favored by users with similar Baumann skin types
+    public List<Cosmetic> recommendProducts(String baumannSkinType) {
+        Set<String> combinedCosmeticIds = new HashSet<>();
+
+        // Method 1: Reviews filtered by Baumann type
+        combinedCosmeticIds.addAll(getCosmeticIdsByBaumann(baumannSkinType));
+
+        // Method 2: Reviews filtered by NLP probabilities
+        combinedCosmeticIds.addAll(getCosmeticIdsByProbability(baumannSkinType));
+
+        // Method 3: Trending cosmetics
+        combinedCosmeticIds.addAll(getTrendingCosmeticIds());
+
+        // Method 4: Cosmetics favored by users with similar Baumann skin types
 //        combinedCosmeticIds.addAll(getSimilarUsersFavorites(baumannSkinType));
 //
 //        // Method 6: Personalized picks based on past reviews
 //        combinedCosmeticIds.addAll(getPersonalizedPicks(baumannSkinType));
-//
-//        // Method : Remove cosmetics that user already have in pouch.
+
+        // Method : Remove cosmetics that user already have in pouch.
 //        combinedCosmeticIds.removeAll();
-//
-//        // Retrieve cosmetics by the combined IDs
-//        return cosmeticRepository.findAllById(combinedCosmeticIds);
-//    }
-//
-//
-//    private Set<String> getCosmeticIdsByBaumann(String baumannSkinType) {
-//        List<Review> filteredReviewsByBaumann = reviewService.getReviewsOfBaumann(3, baumannSkinType);
-//        return filteredReviewsByBaumann.stream()
-//                .map(review -> review.getCosmetic().getId())
-//                .collect(Collectors.toSet());
-//    }
-//
-//    private Set<String> getCosmeticIdsByProbability(String baumannSkinType) {
-//        // Get reviews filtered by the probability scores from the NLP analysis
-//        List<Review> probablyBaumannReviews = reviewService.getReviewsForRecommendation(3, baumannSkinType);
-//        return probablyBaumannReviews.stream()
-//                .map(review -> review.getCosmetic().getId())
-//                .collect(Collectors.toSet());
-//    }
-//
-//    private Set<String> getTrendingCosmeticIds() {
-//        // Implementation of fetching IDs of trending cosmetics
-//    }
-//
+
+        // Retrieve cosmetics by the combined IDs
+        return cosmeticRepository.findAllById(combinedCosmeticIds);
+    }
+
+
+    private Set<String> getCosmeticIdsByBaumann(String baumannSkinType) {
+        List<Review> filteredReviewsByBaumann = reviewService.getReviewsOfBaumann(3, baumannSkinType);
+
+        // Convert to list to shuffle
+        List<String> cosmeticIds = filteredReviewsByBaumann.stream()
+                .map(review -> review.getCosmetic().getId())
+                .collect(Collectors.toList());
+
+        // Shuffle the list to randomize the order
+        Collections.shuffle(cosmeticIds);
+
+        // Return the first 10 elements, or the size of the list if it contains fewer than 10
+        return cosmeticIds.stream()
+                .limit(10)
+                .collect(Collectors.toSet()); // Use LinkedHashSet to preserve order
+    }
+
+    private Set<String> getCosmeticIdsByProbability(String baumannSkinType) {
+        // Get reviews filtered by the probability scores from the NLP analysis
+        List<Review> probablyBaumannReviews = reviewService.getReviewsForRecommendation(3, baumannSkinType);
+        return probablyBaumannReviews.stream()
+                .map(review -> review.getCosmetic().getId())
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> getTrendingCosmeticIds() {
+        // Implementation of fetching IDs of trending cosmetics
+        List<Cosmetic> cosmetics = cosmeticRankService.getTopRankedCosmetics(10);
+        return cosmetics.stream()
+                .map(Cosmetic::getId)
+                .collect(Collectors.toSet());
+    }
+
 //    private Set<String> getSimilarUsersFavorites(String baumannSkinType) {
 //        // Implementation of fetching IDs of cosmetics favored by users with similar Baumann skin types
 //    }

@@ -14,6 +14,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.multipart.MultipartException;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -50,11 +51,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     protected ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
-        String errorDetails = String.format(
-                "Request method '%s' not supported for the endpoint. Supported methods are %s.",
-                e.getMethod(),
-                Arrays.toString(e.getSupportedMethods())
-        );
+        String errorDetails = String.format("Request method '%s' not supported for the endpoint. Supported methods are %s.", e.getMethod(), Arrays.toString(e.getSupportedMethods()));
 
         log.error("Method not supported: {}", errorDetails);
         return createErrorResponseEntity(ErrorCode.METHOD_NOT_ALLOWED);
@@ -64,20 +61,10 @@ public class GlobalExceptionHandler {
     protected ResponseEntity<ErrorResponse> handle(MethodArgumentNotValidException e) {
         StringBuilder errorDetails = new StringBuilder();
         for (FieldError error : e.getBindingResult().getFieldErrors()) {
-            errorDetails.append("Field error in object '")
-                    .append(error.getObjectName())
-                    .append("' on field '")
-                    .append(error.getField())
-                    .append("': rejected value [")
-                    .append(error.getRejectedValue())
-                    .append("]; ")
-                    .append(error.getDefaultMessage())
-                    .append(". ");
+            errorDetails.append("Field error in object '").append(error.getObjectName()).append("' on field '").append(error.getField()).append("': rejected value [").append(error.getRejectedValue()).append("]; ").append(error.getDefaultMessage()).append(". ");
         }
         for (ObjectError error : e.getBindingResult().getGlobalErrors()) {
-            errorDetails.append("Object error: ")
-                    .append(error.getDefaultMessage())
-                    .append(". ");
+            errorDetails.append("Object error: ").append(error.getDefaultMessage()).append(". ");
         }
 
         log.error("Validation failed: {}", errorDetails);
@@ -86,14 +73,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     protected ResponseEntity<ErrorResponse> handle(MissingServletRequestParameterException e) {
-        String errorDetails = String.format(
-                "Required request parameter '%s' of type %s is not present",
-                e.getParameterName(),
-                e.getParameterType()
-        );
+        String errorDetails = String.format("Required request parameter '%s' of type %s is not present", e.getParameterName(), e.getParameterType());
 
         log.error("Missing request parameter: {}", errorDetails);
         return createErrorResponseEntity(ErrorCode.MISSING_REQUEST_PARAMETER);
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    protected ResponseEntity<ErrorResponse> handleMultipartException(MultipartException e) {
+        String errorDetails = String.format("Wrong Multipart format: '%s'", e.getMessage());
+
+        log.error("Cannot digest multipart data: {}", errorDetails);
+        return createErrorResponseEntity(ErrorCode.INVALID_MULTIPART);
     }
 
     @ExceptionHandler(OpenSearchStatusException.class)
@@ -106,8 +97,6 @@ public class GlobalExceptionHandler {
 
 
     private ResponseEntity<ErrorResponse> createErrorResponseEntity(ErrorCode errorCode) {
-        return new ResponseEntity<>(
-                ErrorResponse.of(errorCode),
-                errorCode.getStatus());
+        return new ResponseEntity<>(ErrorResponse.of(errorCode), errorCode.getStatus());
     }
 }

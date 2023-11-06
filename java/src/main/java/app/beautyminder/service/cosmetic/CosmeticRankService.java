@@ -422,7 +422,6 @@ public class CosmeticRankService {
                 data.setHitCount(Long.valueOf((String) metrics.getOrDefault(ActionType.HIT.getActionString(), "0")));
                 data.setFavCount(Long.valueOf((String) metrics.getOrDefault(ActionType.FAV.getActionString(), "0")));
 
-
                 allCounts.add(data);
             }
         }
@@ -484,7 +483,7 @@ public class CosmeticRankService {
                 return false; // Not enough data to determine deviation
             }
 
-            double variance = M2.get() / (totalCount.get() - 1);
+            double variance = M2.get() / (totalCount.get() - 1); // can never be divided by zero as first escape
             double stddev = Math.sqrt(variance);
 
             // Use the lastValue to retrieve the last individual measurement

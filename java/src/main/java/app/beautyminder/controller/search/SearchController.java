@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,18 +30,7 @@ public class SearchController {
     private final CosmeticRankService cosmeticRankService;
     private final ReviewSearchService reviewSearchService;
 
-    @Operation(
-            summary = "Search Cosmetics by Name",
-            description = "이름으로 화장품을 검색합니다.",
-            tags = {"Search Operations"},
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Successful operation", content =
-                    @Content(array = @ArraySchema(
-                            schema = @Schema(implementation = Cosmetic.class)
-                    ))),
-                    @ApiResponse(responseCode = "400", description = "Invalid parameters")
-            }
-    )
+    @Operation(summary = "Search Cosmetics by Name", description = "이름으로 화장품을 검색합니다.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/cosmetic")
     public ResponseEntity<List<Cosmetic>> searchByName(@RequestParam String name) {
         List<Cosmetic> results = cosmeticSearchService.searchByName(name);
@@ -49,18 +40,7 @@ public class SearchController {
         return ResponseEntity.ok(results);
     }
 
-    @Operation(
-            summary = "Search Reviews by Content",
-            description = "콘텐츠로 리뷰를 검색합니다.",
-            tags = {"Search Operations"},
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Successful operation", content =
-                    @Content(array = @ArraySchema(
-                            schema = @Schema(implementation = Review.class)
-                    ))),
-                    @ApiResponse(responseCode = "400", description = "Invalid parameters")
-            }
-    )
+    @Operation(summary = "Search Reviews by Content", description = "콘텐츠로 리뷰를 검색합니다.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Review.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/review")
     public ResponseEntity<List<Review>> searchByContent(@RequestParam String content) {
         List<Review> results = reviewSearchService.searchByContent(content);
@@ -70,18 +50,7 @@ public class SearchController {
         return ResponseEntity.ok(results);
     }
 
-    @Operation(
-            summary = "Search Cosmetics by Category",
-            description = "카테고리로 화장품을 검색합니다.",
-            tags = {"Search Operations"},
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Successful operation", content =
-                    @Content(array = @ArraySchema(
-                            schema = @Schema(implementation = Cosmetic.class)
-                    ))),
-                    @ApiResponse(responseCode = "400", description = "Invalid parameters")
-            }
-    )
+    @Operation(summary = "Search Cosmetics by Category", description = "카테고리로 화장품을 검색합니다.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/category")
     public ResponseEntity<List<Cosmetic>> searchByCategory(@RequestParam String category) {
         List<Cosmetic> results = cosmeticSearchService.searchByCategory(category);
@@ -91,18 +60,7 @@ public class SearchController {
         return ResponseEntity.ok(results);
     }
 
-    @Operation(
-            summary = "Search Cosmetics by Keyword",
-            description = "키워드로 화장품을 검색합니다.",
-            tags = {"Search Operations"},
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Successful operation", content =
-                    @Content(array = @ArraySchema(
-                            schema = @Schema(implementation = Cosmetic.class)
-                    ))),
-                    @ApiResponse(responseCode = "400", description = "Invalid parameters")
-            }
-    )
+    @Operation(summary = "Search Cosmetics by Keyword", description = "키워드로 화장품을 검색합니다.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/keyword")
     public ResponseEntity<List<Cosmetic>> searchByKeyword(@RequestParam String keyword) {
         List<Cosmetic> results = cosmeticSearchService.searchByKeyword(keyword);
@@ -112,9 +70,22 @@ public class SearchController {
         return ResponseEntity.ok(results);
     }
 
+    @Operation(summary = "Search Cosmetics by anything", description = "모든 데이터(화장품 이름,카테고리,키워드 + 리뷰 텍스트)를 검색합니다.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class, type = "array")))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping
-    public ResponseEntity<?> searchAnything(@RequestParam String anything) {
+    public ResponseEntity<Set<Cosmetic>> searchAnything(@RequestParam String anything) {
+
+        List<Cosmetic> keywordResult = cosmeticSearchService.searchByKeyword(anything);
+        List<Cosmetic> cateResult = cosmeticSearchService.searchByCategory(anything);
+        List<Cosmetic> nameResult = cosmeticSearchService.searchByName(anything);
+        List<Cosmetic> reviewResult = reviewSearchService.searchByContent(anything).stream().map(Review::getCosmetic).toList();
+
+        Set<Cosmetic> finalResult = new HashSet<>();
+        finalResult.addAll(keywordResult);
+        finalResult.addAll(cateResult);
+        finalResult.addAll(nameResult);
+        finalResult.addAll(reviewResult);
+
         cosmeticRankService.collectSearchEvent(anything.trim());
-        return ResponseEntity.ok("Searched: " + anything);
+        return ResponseEntity.ok(finalResult);
     }
 }

@@ -1,17 +1,16 @@
 package app.beautyminder.dto;
 
-import app.beautyminder.domain.Cosmetic;
 import com.mongodb.lang.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
-public class ReviewDTO {
+public class ReviewUpdateDTO {
     private String content;
     private Integer rating;
     @Nullable
-    private String cosmeticId;
-    @Nullable
-    private String userId;
+    private List<String> imagesToDelete; // URLs or IDs of images to delete
 }

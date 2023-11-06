@@ -21,6 +21,10 @@ public class CustomLoggerFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+        MultiReadHttpServletRequest wrappedRequest = new MultiReadHttpServletRequest(request);
+        HttpServletResponseCapturingWrapper wrappedResponse = new HttpServletResponseCapturingWrapper(response);
+
         try {
             // Generate or get existing correlation ID
             String correlationId = Optional.ofNullable(request.getHeader(CORRELATION_ID_HEADER_NAME))
@@ -39,8 +43,14 @@ public class CustomLoggerFilter extends OncePerRequestFilter {
             log.info("BEMINDER: Incoming request {} {} from IP {} for user {}", request.getMethod(), pathWithQueryString, userIp, username);
 
             long startTime = System.currentTimeMillis();
-            filterChain.doFilter(request, response);
+            filterChain.doFilter(wrappedRequest, wrappedResponse);
             long duration = System.currentTimeMillis() - startTime;
+
+            if (wrappedResponse.getStatus() != HttpServletResponse.SC_OK) {
+                // Log the request body for non-200 responses
+                String requestBody = wrappedRequest.getBody();
+                log.info("BEMINDER: Error with request body: {}", requestBody);
+            }
 
             log.info("BEMINDER: Outgoing response for {} {} with status {} for user {} took {}ms",
                     request.getMethod(), pathWithQueryString, response.getStatus(), username, duration);

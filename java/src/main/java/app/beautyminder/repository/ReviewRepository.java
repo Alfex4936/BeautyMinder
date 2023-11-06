@@ -28,4 +28,6 @@ public interface ReviewRepository extends MongoRepository<Review, String> {
             "{ $sample : { 'size' : ?3 } }"
     })
     List<Review> findRandomReviewsByRatingAndCosmetic(Integer minRating, Integer maxRating, String cosmeticId, Integer limit);
+
+    boolean existsByUserIdAndCosmeticId(String userId, String cosmeticId);
 }

@@ -4,6 +4,8 @@ import app.beautyminder.dto.BaumannSurveyAnswerDTO;
 import app.beautyminder.dto.BaumannTypeDTO;
 import app.beautyminder.service.BaumannService;
 import app.beautyminder.service.LocalFileService;
+import app.beautyminder.service.auth.UserService;
+import app.beautyminder.util.ValidUserId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -31,6 +33,8 @@ import java.util.Set;
 @RestController
 @RequestMapping("/baumann")
 public class BaumannController {
+
+    private final UserService userService;
 
     private static final String BAUMANN_JSON_PATH = "classpath:baumann.json";
     private static final Set<String> REQUIRED_KEYS = Set.of(
@@ -173,8 +177,8 @@ public class BaumannController {
                     @ApiResponse(responseCode = "400", description = "설문지 답변 부족")
             }
     )
-    @PostMapping("/test")
-    public ResponseEntity<BaumannTypeDTO> getBaumann(@Valid @RequestBody BaumannSurveyAnswerDTO baumannSurveyAnswerDTO) {
+    @PostMapping("/test/{userId}")
+    public ResponseEntity<BaumannTypeDTO> getBaumann(@PathVariable @ValidUserId String userId, @Valid @RequestBody BaumannSurveyAnswerDTO baumannSurveyAnswerDTO) {
         Map<String, Integer> responses = baumannSurveyAnswerDTO.getResponses();
 
         // Validate if all keys are present
@@ -193,6 +197,8 @@ public class BaumannController {
 
         // If all keys are present
         BaumannTypeDTO resultJson = baumannService.calculateResults(responses);
+
+        userService.updateUserFields(userId, Map.of("baumann", resultJson.getSkinType()));
         return ResponseEntity.ok(resultJson);
     }
 

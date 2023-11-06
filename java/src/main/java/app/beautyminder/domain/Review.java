@@ -22,10 +22,13 @@ public class Review {
     @Id
     private String id;
 
+    @Setter
     private String content;
+    @Setter
     private Integer rating;
 
     @Builder.Default
+    @Setter
     private List<String> images = new ArrayList<>();
 
     @DBRef
