@@ -1,9 +1,11 @@
 package app.beautyminder.controller.cosmetic;
 
+import app.beautyminder.domain.User;
 import app.beautyminder.dto.BaumannSurveyAnswerDTO;
 import app.beautyminder.dto.BaumannTypeDTO;
 import app.beautyminder.service.BaumannService;
 import app.beautyminder.service.LocalFileService;
+import app.beautyminder.service.MongoService;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.util.ValidUserId;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -34,7 +36,7 @@ import java.util.Set;
 @RequestMapping("/baumann")
 public class BaumannController {
 
-    private final UserService userService;
+    private final MongoService mongoService;
 
     private static final String BAUMANN_JSON_PATH = "classpath:baumann.json";
     private static final Set<String> REQUIRED_KEYS = Set.of(
@@ -198,7 +200,7 @@ public class BaumannController {
         // If all keys are present
         BaumannTypeDTO resultJson = baumannService.calculateResults(responses);
 
-        userService.updateUserFields(userId, Map.of("baumann", resultJson.getSkinType()));
+        mongoService.updateFields(userId, Map.of("baumann", resultJson.getSkinType()), User.class);
         return ResponseEntity.ok(resultJson);
     }
 

@@ -4,11 +4,13 @@ import app.beautyminder.service.auth.UserService;
 import lombok.AllArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.server.ResponseStatusException;
 
 @AllArgsConstructor
 @Component
@@ -27,7 +29,7 @@ public class UserIdValidationResolver implements HandlerMethodArgumentResolver {
 
         // Check for -1
         if ("-1".equals(userId)) {
-            throw new IllegalArgumentException("User ID cannot be -1");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User ID cannot be -1");
         }
 
         // Check if user exists in the database

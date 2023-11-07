@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opensearch.OpenSearchStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -95,6 +96,15 @@ public class GlobalExceptionHandler {
         return createErrorResponseEntity(ErrorCode.ELASTICSEARCH_ERROR);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    protected ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        // Log the detailed error message for server-side debugging.
+        String errorDetails = "Required request body is missing or not readable. Please check your request payload.";
+        log.error("{}: {}", errorDetails, e.getMessage());
+
+        // Create an ErrorResponse object and return it with a BAD_REQUEST status.
+        return createErrorResponseEntity(ErrorCode.MISSING_OR_UNREADABLE_BODY);
+    }
 
     private ResponseEntity<ErrorResponse> createErrorResponseEntity(ErrorCode errorCode) {
         return new ResponseEntity<>(ErrorResponse.of(errorCode), errorCode.getStatus());

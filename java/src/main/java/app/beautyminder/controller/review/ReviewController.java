@@ -71,7 +71,7 @@ public class ReviewController {
                     @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
             }
     )
-    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE}, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Review> createReview(@RequestPart("review") @Valid ReviewDTO reviewDTO, @RequestPart("images") MultipartFile[] images) {
         // Delegate the check to the service layer
         Review createdReview = reviewService.createReview(reviewDTO, images);

@@ -97,13 +97,18 @@ public class ReviewService {
                 review.setRating(reviewUpdateDetails.getRating());
             }
 
-            // Handle the image upload
-            if (images != null && images.length > 0) {
-                Arrays.stream(images).forEach(image -> {
-                    String imageUrl = fileStorageService.storeFile(image);
-                    // Add the new image URL to the review's list
-                    review.getImages().add(imageUrl);
-                });
+            // Inside the updateReview method where you handle the image upload
+            if (images != null) {
+                for (MultipartFile image : images) {
+                    String originalFilename = image.getOriginalFilename();
+                    if (originalFilename != null) {
+                        // Remove the old image if it exists
+                        review.getImages().removeIf(img -> img.contains(originalFilename));
+                        // Store the new image and add its URL to the review
+                        String imageUrl = fileStorageService.storeFile(image);
+                        review.getImages().add(imageUrl);
+                    }
+                }
             }
 
             // Save the updated review

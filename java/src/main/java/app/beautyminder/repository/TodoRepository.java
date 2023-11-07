@@ -29,4 +29,6 @@ public interface TodoRepository extends MongoRepository<Todo, String> {
     List<Todo> findByTaskKeywordAndUserId(String userId, String keyword);
 
     void deleteByUserId(String userId);
+
+    boolean existsByDateAndUserId(LocalDate date, String userId);
 }

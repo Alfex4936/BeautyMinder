@@ -25,9 +25,9 @@ public class Todo {
     @Indexed
     private LocalDate date;
 
-    // or flexible way? private Map<String, List<String>> tasksByCategory;
-    private List<String> morningTasks;
-    private List<String> dinnerTasks;
+    private List<TodoTask> tasks;
+
+    private boolean isDone;
 
     @DBRef
     @Indexed
@@ -37,10 +37,9 @@ public class Todo {
     private LocalDateTime createdAt;
 
     @Builder
-    public Todo(LocalDate date, List<String> morningTasks, List<String> dinnerTasks, User user) {
+    public Todo(LocalDate date, List<TodoTask> tasks, User user) {
         this.date = date;
-        this.morningTasks = morningTasks;
-        this.dinnerTasks = dinnerTasks;
+        this.tasks = tasks;
         this.user = user;
     }
 }

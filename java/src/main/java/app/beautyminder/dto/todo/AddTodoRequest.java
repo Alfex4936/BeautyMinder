@@ -1,5 +1,6 @@
 package app.beautyminder.dto.todo;
 
+import app.beautyminder.domain.TodoTask;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,5 @@ import java.util.List;
 public class AddTodoRequest {
     private String userId;
     private LocalDate date;
-    private List<String> morningTasks;
-    private List<String> dinnerTasks;
+    private List<TodoTask> tasks;
 }

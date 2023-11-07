@@ -1,25 +1,37 @@
 package app.beautyminder.service;
 
 import app.beautyminder.domain.Todo;
+import app.beautyminder.domain.TodoTask;
+import app.beautyminder.domain.User;
+import app.beautyminder.dto.todo.TaskUpdateDTO;
+import app.beautyminder.dto.todo.TodoUpdateDTO;
 import app.beautyminder.repository.TodoRepository;
+import com.mongodb.client.result.DeleteResult;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
 public class TodoService {
 
     private final TodoRepository todoRepository;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     public Todo createTodo(Todo todo) {
-        return todoRepository.save(todo);
-    }
-
-    public Todo updateTodo(Todo todo) {
         return todoRepository.save(todo);
     }
 
@@ -55,19 +67,57 @@ public class TodoService {
         return todoRepository.findByTaskKeywordAndUserId(userId, keyword);
     }
 
-    public Todo updateSpecificTask(String todoId, String timeOfDay, int taskIndex, String newTask) {
-        Optional<Todo> optionalTodo = todoRepository.findById(todoId);
-        if (optionalTodo.isPresent()) {
-            Todo todo = optionalTodo.get();
-            List<String> tasks = "morning".equalsIgnoreCase(timeOfDay) ? todo.getMorningTasks() : todo.getDinnerTasks();
-            if (taskIndex >= 0 && taskIndex < tasks.size()) {
-                tasks.set(taskIndex, newTask);
-                return todoRepository.save(todo);
-            } else {
-                throw new IllegalArgumentException("Invalid task index");
-            }
-        } else {
-            throw new IllegalArgumentException("Todo not found");
+    public boolean existsByDateAndUserId(LocalDate date, String id) {
+        return todoRepository.existsByDateAndUserId(date,id);
+    }
+
+    public Optional<Todo> updateTodoTasks(String todoId, TodoUpdateDTO todoUpdateDTO) {
+        return Optional.ofNullable(mongoTemplate.findOne(Query.query(Criteria.where("id").is(todoId)), Todo.class))
+                .map(todo -> {
+                    // Handle task deletions
+                    Optional.ofNullable(todoUpdateDTO.getTaskIdsToDelete())
+                            .ifPresent(idsToDelete -> todo.getTasks().removeIf(task -> idsToDelete.contains(task.getTaskId())));
+
+                    // Handle task updates
+                    Optional.ofNullable(todoUpdateDTO.getTasksToUpdate())
+                            .ifPresent(updates -> updates.forEach(update -> updateTaskWithChanges(todo, update)));
+
+                    // Handle adding new tasks
+                    Optional.ofNullable(todoUpdateDTO.getTasksToAdd())
+                            .ifPresent(tasksToAdd -> tasksToAdd.forEach(add ->
+                                    todo.getTasks().add(new TodoTask(UUID.randomUUID().toString(), add.getDescription(), add.getCategory(), false))));
+
+                    mongoTemplate.save(todo);
+                    return todo;
+                });
+    }
+
+    private void updateTaskWithChanges(Todo todo, TaskUpdateDTO update) {
+        todo.getTasks().stream()
+                .filter(task -> task.getTaskId().equals(update.getTaskId()))
+                .findFirst()
+                .ifPresent(taskToUpdate -> {
+                    Optional.ofNullable(update.getDescription()).ifPresent(taskToUpdate::setDescription);
+                    Optional.ofNullable(update.getCategory()).ifPresent(taskToUpdate::setCategory);
+                    Optional.ofNullable(update.getIsDone()).ifPresent(taskToUpdate::setDone);
+                });
+    }
+
+    public boolean deleteTodoById(String id) {
+        DeleteResult result = mongoTemplate.remove(Query.query(Criteria.where("id").is(id)), Todo.class);
+        return result.getDeletedCount() > 0;
+    }
+
+    public boolean deleteTaskFromTodoById(String todoId, String taskId) {
+        Todo todo = mongoTemplate.findOne(Query.query(Criteria.where("id").is(todoId)), Todo.class);
+        if (todo == null) {
+            return false;
         }
+
+        boolean removed = todo.getTasks().removeIf(task -> task.getTaskId().equals(taskId));
+        if (removed) {
+            mongoTemplate.save(todo);
+        }
+        return removed;
     }
 }

@@ -11,6 +11,7 @@ import app.beautyminder.dto.user.SignUpResponse;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.service.FileStorageService;
+import app.beautyminder.service.MongoService;
 import app.beautyminder.service.auth.SmsService;
 import app.beautyminder.service.auth.TokenService;
 import app.beautyminder.service.auth.UserService;
@@ -53,6 +54,7 @@ import java.util.Optional;
 public class UserController {
 
     private final UserService userService;
+    private final MongoService mongoService;
     private final SmsService smsService;
     private final TokenService tokenService;
     private final FileStorageService fileStorageService;
@@ -167,7 +169,7 @@ public class UserController {
     // Can take any field in User class
     @PatchMapping("/update/{userId}")
     public ResponseEntity<?> updateProfile(@PathVariable String userId, @RequestBody Map<String, Object> updates) {
-        Optional<User> optionalUser = userService.updateUserFields(userId, updates);
+        Optional<User> optionalUser = mongoService.updateFields(userId, updates, User.class);
         if (optionalUser.isPresent()) {
             return ResponseEntity.ok(optionalUser.get());
         } else {
@@ -315,7 +317,7 @@ public class UserController {
             @RequestParam("image") MultipartFile image
     ) {
         String imageUrl = fileStorageService.storeFile(image);
-        userService.updateUserFields(userId, Map.of("profileImage", imageUrl));
+        mongoService.updateFields(userId, Map.of("profileImage", imageUrl), User.class);
 
         return imageUrl;
     }
