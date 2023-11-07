@@ -65,6 +65,7 @@ public class BaumannService {
         metadata.put("sensitivityMax", 64);
         metadata.put("pigmentationMax", 57);
         metadata.put("elasticityMax", 85);
+        metadata.put("moistureRetentionMax", 100);
 
         return new BaumannTypeDTO(skinType, scores, metadata);
     }

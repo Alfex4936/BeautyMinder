@@ -1,6 +1,7 @@
 package app.beautyminder.controller.cosmetic;
 
 import app.beautyminder.domain.CosmeticExpiry;
+import app.beautyminder.repository.CosmeticExpiryRepository;
 import app.beautyminder.service.cosmetic.CosmeticExpiryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,17 +12,22 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/expiry")
 public class ExpiryController {
     private final CosmeticExpiryService cosmeticExpiryService;
+    private final CosmeticExpiryRepository cosmeticExpiryRepository;
 
     @Operation(
             summary = "Create Expiry Item",
@@ -32,7 +38,7 @@ public class ExpiryController {
                     @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = CosmeticExpiry.class))),
             }
     )
-    @PostMapping()
+    @PostMapping("/create")
     public ResponseEntity<CosmeticExpiry> createCosmeticExpiry(@RequestBody CosmeticExpiry cosmeticExpiry) {
         // TODO: if it has a cosmeticId, loading name/brandName from Cosmetic?
         return ResponseEntity.ok(cosmeticExpiryService.createCosmeticExpiry(cosmeticExpiry));
@@ -134,8 +140,11 @@ public class ExpiryController {
     )
     @PutMapping("/user/{userId}/expiry/{expiryId}")
     public ResponseEntity<CosmeticExpiry> updateCosmeticExpiry(
-            @PathVariable String userId, @PathVariable String expiryId, @Valid @RequestBody CosmeticExpiry updatedExpiry) {
-        return ResponseEntity.ok(cosmeticExpiryService.updateCosmeticExpiry(userId, expiryId, updatedExpiry));
+            @PathVariable String userId, @PathVariable String expiryId, @RequestBody Map<String, Object> updates) {
+        return cosmeticExpiryRepository.findByUserIdAndId(userId, expiryId)
+                .flatMap(e -> cosmeticExpiryService.updateCosmeticExpiry(e.getId(), updates))
+                .map(ResponseEntity::ok) // Map the CosmeticExpiry to a ResponseEntity
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cannot find CosmeticExpiry"));
     }
 
     @Operation(

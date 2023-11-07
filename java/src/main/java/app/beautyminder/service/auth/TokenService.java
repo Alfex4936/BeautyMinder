@@ -42,13 +42,15 @@ public class TokenService {
         return passwordResetToken;
     }
 
-    public void validateResetToken(String token) {
+    public PasswordResetToken validateResetToken(String token) {
         PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));
 
         if (passwordResetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("Reset token has expired");
         }
+
+        return passwordResetToken;
     }
 }
 

@@ -2,6 +2,7 @@ package app.beautyminder.service.cosmetic;
 
 import app.beautyminder.domain.CosmeticExpiry;
 import app.beautyminder.repository.CosmeticExpiryRepository;
+import app.beautyminder.service.MongoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -18,6 +20,7 @@ import java.util.Optional;
 public class CosmeticExpiryService {
 
     private final CosmeticExpiryRepository cosmeticExpiryRepository;
+    private final MongoService mongoService;
 
     public CosmeticExpiry createCosmeticExpiry(CosmeticExpiry cosmeticExpiry) {
         return cosmeticExpiryRepository.save(cosmeticExpiry);
@@ -40,14 +43,8 @@ public class CosmeticExpiryService {
         }
     }
 
-    public CosmeticExpiry updateCosmeticExpiry(String userId, String expiryId, CosmeticExpiry updatedExpiry) {
-        Optional<CosmeticExpiry> existingExpiry = cosmeticExpiryRepository.findByUserIdAndId(userId, expiryId);
-        if (existingExpiry.isPresent()) {
-            updatedExpiry.setId(expiryId);
-            return cosmeticExpiryRepository.save(updatedExpiry);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cosmetic expiry not found");
-        }
+    public Optional<CosmeticExpiry> updateCosmeticExpiry(String expiryId, Map<String, Object> updates) {
+        return mongoService.updateFields(expiryId, updates, CosmeticExpiry.class);
     }
 
     public void deleteCosmeticExpiry(String userId, String expiryId) {

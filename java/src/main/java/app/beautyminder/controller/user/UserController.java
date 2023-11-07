@@ -1,11 +1,13 @@
 package app.beautyminder.controller.user;
 
 import app.beautyminder.domain.Cosmetic;
+import app.beautyminder.domain.PasswordResetToken;
 import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.PasswordResetResponse;
 import app.beautyminder.dto.sms.SmsResponseDTO;
 import app.beautyminder.dto.user.AddUserRequest;
+import app.beautyminder.dto.user.ForgotPasswordRequest;
 import app.beautyminder.dto.user.ResetPasswordRequest;
 import app.beautyminder.dto.user.SignUpResponse;
 import app.beautyminder.repository.CosmeticRepository;
@@ -37,6 +39,7 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
@@ -46,6 +49,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+
+import static java.util.function.Predicate.not;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -306,7 +311,7 @@ public class UserController {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
-    @PostMapping("/{userId}/upload")
+    @PostMapping(value = "/{userId}/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public String uploadProfileImage(
             @Parameter(description = "User ID as a MongoDB _id string", example = "507f1f77bcf86cd799439011")
             @PathVariable String userId,
@@ -316,6 +321,7 @@ public class UserController {
                             examples = @ExampleObject(name = "file", summary = "A 'binary' file")))
             @RequestParam("image") MultipartFile image
     ) {
+        // TODO: delete a image first when done with api works
         String imageUrl = fileStorageService.storeFile(image);
         mongoService.updateFields(userId, Map.of("profileImage", imageUrl), User.class);
 
@@ -333,7 +339,7 @@ public class UserController {
             }
     )
     // FORGOT PASSWORD
-    @PostMapping("/sms/send/{phoneNumber}")
+    @GetMapping("/sms/send/{phoneNumber}")
     public ResponseEntity<String> sendSms(@PathVariable String phoneNumber) throws JsonProcessingException, RestClientException, URISyntaxException, InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException {
         // TODO: check user's phone number and change content
         if (phoneNumber == null || phoneNumber.isEmpty()) {
@@ -360,14 +366,14 @@ public class UserController {
             }
     )
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
-        if (email == null || email.isEmpty()) {
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        String email = request.getEmail();
+        if (email == null || email.isBlank()) {
             return ResponseEntity.badRequest().body("Email is required");
         }
 
         try {
-            userService.requestPasswordReset(email);  // This method should create token and send email
+            userService.requestPasswordReset(email); // This method should create token and send email
             return ResponseEntity.ok("Password reset email sent");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -385,13 +391,18 @@ public class UserController {
             }
     )
     @GetMapping("/reset-password")
-    public ResponseEntity<String> validateResetToken(@RequestParam("token") String token) {
+    public ModelAndView showResetPasswordForm(@RequestParam("token") String token) {
+        ModelAndView modelAndView = new ModelAndView("reset-password");
         try {
-            tokenService.validateResetToken(token);
-            return ResponseEntity.ok("Token is valid");
+            PasswordResetToken resetToken = tokenService.validateResetToken(token);
+            modelAndView.addObject("email", resetToken.getEmail());
+            modelAndView.addObject("token", token);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            // handle invalid token case, maybe setting a specific message or redirecting
+            modelAndView.addObject("error", "The reset token is invalid or has expired.");
+//            modelAndView.setViewName("error-page");
         }
+        return modelAndView;
     }
 
     @Operation(
@@ -405,18 +416,19 @@ public class UserController {
             }
     )
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
-        String token = request.getToken();
-        String newPassword = request.getPassword();
-        if (token == null || token.isEmpty() || newPassword == null || newPassword.isEmpty()) {
-            return ResponseEntity.badRequest().body("Token and password are required");
-        }
-
-        try {
-            userService.resetPassword(token, newPassword);
-            return ResponseEntity.ok("Password reset successfully");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<String> resetPassword(@ModelAttribute ResetPasswordRequest request) {
+        return Optional.ofNullable(request.getToken())
+                .filter(not(String::isBlank))
+                .flatMap(token -> Optional.ofNullable(request.getPassword())
+                        .filter(not(String::isBlank))
+                        .map(newPassword -> {
+                            try {
+                                userService.resetPassword(token, newPassword);
+                                return ResponseEntity.ok("Password reset successfully");
+                            } catch (IllegalArgumentException e) {
+                                return ResponseEntity.badRequest().body(e.getMessage());
+                            }
+                        }))
+                .orElseGet(() -> ResponseEntity.badRequest().body("Token and password are required"));
     }
 }
