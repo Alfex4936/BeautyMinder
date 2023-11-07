@@ -7,9 +7,11 @@ import app.beautyminder.dto.ReviewDTO;
 import app.beautyminder.dto.ReviewUpdateDTO;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.ReviewRepository;
+import app.beautyminder.repository.UserRepository;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticService;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @RequiredArgsConstructor
@@ -32,6 +35,7 @@ public class ReviewService {
     private final FileStorageService fileStorageService;
     private final CosmeticService cosmeticService;
     private final UserService userService;
+    private final UserRepository userRepository;
     private final CosmeticRepository cosmeticRepository;
     private final MongoTemplate mongoTemplate;
 
@@ -40,7 +44,19 @@ public class ReviewService {
     }
 
     public void deleteReview(String id) {
+        Review review = getReviewById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
+
+        Cosmetic cosmetic = cosmeticService.findById(review.getCosmetic().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cosmetic not found"));
+
+        // Update cosmetic's review score and save it
+        cosmetic.updateAverageRating(-review.getRating(), false);
+        cosmeticRepository.save(cosmetic);
+
+        // Delete the review by id
         reviewRepository.deleteById(id);
+
     }
 
 
@@ -59,7 +75,7 @@ public class ReviewService {
                 .build();
 
         // Update cosmetic's review score and save it
-        cosmetic.updateAverageRating(review.getRating());
+        cosmetic.updateAverageRating(review.getRating(), true);
         cosmeticRepository.save(cosmetic);
 
         // Store images and set image URLs in review
@@ -130,20 +146,42 @@ public class ReviewService {
     }
 
     public List<Review> getReviewsOfBaumann(Integer minRating, String userBaumann) {
-        return reviewRepository.findReviewsByRatingAndUserBaumann(minRating, userBaumann);
+        // First, find all users with the specified Baumann skin type.
+        List<User> usersWithBaumann = userRepository.findByBaumann(userBaumann);
+
+        // Extract the IDs from the users and convert them to ObjectId instances.
+        List<ObjectId> userIds = usersWithBaumann.stream()
+                .map(user -> new ObjectId(user.getId()))
+                .collect(Collectors.toList());
+
+        // Now, find all reviews that have a minimum rating and whose user ID is in the list of user IDs.
+        return reviewRepository.findReviewsByRatingAndUserIds(minRating, userIds);
     }
 
-    // Method to get reviews based on Baumann skin type and probability greater than 0.5
     public List<Review> getReviewsForRecommendation(Integer minRating, String userBaumann) {
         // Split the user's Baumann skin type into individual characters
         String[] baumannTypes = userBaumann.split("");
 
-        // Build the criteria for each Baumann type with probability > 0.5
-        Criteria criteria = Criteria.where("rating").gte(minRating);
-        Stream.of(baumannTypes).forEach(type -> criteria.and("nlpAnalysis." + type).gt(0.5));
+        // Initialize the criteria for the rating
+        Criteria ratingCriteria = Criteria.where("rating").gte(minRating);
 
-        // Create the query using the criteria
-        Query query = new Query(criteria);
+        // List to hold combined criteria for any two Baumann types
+        List<Criteria> combinedBaumannCriteria = new ArrayList<>();
+
+        // Combine each Baumann type with every other type to check for any two matches
+        for (int i = 0; i < baumannTypes.length; i++) {
+            for (int j = i + 1; j < baumannTypes.length; j++) {
+                Criteria firstTypeCriteria = Criteria.where("nlpAnalysis." + baumannTypes[i]).gt(Double.valueOf("0.5"));
+                Criteria secondTypeCriteria = Criteria.where("nlpAnalysis." + baumannTypes[j]).gt(Double.valueOf("0.5"));
+                combinedBaumannCriteria.add(new Criteria().andOperator(firstTypeCriteria, secondTypeCriteria));
+            }
+        }
+
+        // Create the final criteria using 'or' operator to combine all two-type matches
+        Criteria finalCriteria = ratingCriteria.andOperator(new Criteria().orOperator(combinedBaumannCriteria.toArray(new Criteria[0])));
+
+        // Create the query using the final criteria
+        Query query = new Query(finalCriteria);
 
         // Execute the query to fetch the filtered reviews
         return mongoTemplate.find(query, Review.class);

@@ -51,8 +51,12 @@ public class Cosmetic {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void updateAverageRating(int newRating) {
-        this.reviewCount++;
+    public void updateAverageRating(int newRating, boolean isNew) {
+        if (isNew) {
+            this.reviewCount++;
+        } else {
+            this.reviewCount--;
+        }
         this.totalRating += newRating;
         this.averageRating = (float) this.totalRating / this.reviewCount;
         this.averageRating = Math.round(this.averageRating * 100.0) / 100.0f;  // Round to 2 decimal places

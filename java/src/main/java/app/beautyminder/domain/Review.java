@@ -97,4 +97,5 @@ public class Review {
         private double offensivenessProbability;
         private Map<String, Double> similarities;
     }
+
 }

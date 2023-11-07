@@ -49,15 +49,9 @@ public class TodoController {
                 return ResponseEntity.badRequest().body(new AddTodoResponse("Todo already exists for this date", null));
             }
 
-            List<TodoTask> tasks = request.getTasks().stream()
-                    .map(taskDto -> new TodoTask(UUID.randomUUID().toString(), taskDto.getDescription(), taskDto.getCategory(), false))
-                    .collect(Collectors.toList());
+            List<TodoTask> tasks = request.getTasks().stream().map(taskDto -> new TodoTask(UUID.randomUUID().toString(), taskDto.getDescription(), taskDto.getCategory(), false)).collect(Collectors.toList());
 
-            Todo todo = Todo.builder()
-                    .date(request.getDate())
-                    .tasks(tasks)
-                    .user(user)
-                    .build();
+            Todo todo = Todo.builder().date(request.getDate()).tasks(tasks).user(user).build();
 
             Todo savedTodo = todoService.createTodo(todo);
             return ResponseEntity.ok(new AddTodoResponse("Todo added successfully", savedTodo));
@@ -66,25 +60,21 @@ public class TodoController {
         }
     }
 
-    @Operation(summary = "Update an existing todo", description = "기존 Todo 항목을 업데이트합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo details for update"), tags = {"Todo Operations"})
+    @Operation(summary = "Update an existing todo by fields", description = "기존 Todo 항목을 업데이트합니다. (DB call 방식)", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo details for update"), tags = {"Todo Operations"})
     @PutMapping("/update/fields/{todoId}")
     public ResponseEntity<AddTodoResponse> updateTodoByFields(@PathVariable String todoId, @RequestBody Map<String, Object> updates) {
         Optional<Todo> updatedTodo = mongoService.updateFields(todoId, updates, Todo.class);
 
-        return updatedTodo.map(todo -> ResponseEntity.ok(new AddTodoResponse("Updated Todo", todo)))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(new AddTodoResponse("Failed to update Todo", null)));
+        return updatedTodo.map(todo -> ResponseEntity.ok(new AddTodoResponse("Updated Todo", todo))).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(new AddTodoResponse("Failed to update Todo", null)));
     }
 
-
+    @Operation(summary = "Update an existing todo", description = "기존 Todo 항목을 업데이트합니다. (JSON 방식)", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo update"), tags = {"Todo Operations"})
     @PutMapping("/update/{todoId}")
-    public ResponseEntity<AddTodoResponse> updateTodoByTask(@PathVariable String todoId,
-                                                      @RequestBody TodoUpdateDTO todoUpdateDTO) {
+    public ResponseEntity<AddTodoResponse> updateTodoByTask(@PathVariable String todoId, @RequestBody TodoUpdateDTO todoUpdateDTO) {
         try {
             Optional<Todo> updatedTodo = todoService.updateTodoTasks(todoId, todoUpdateDTO);
 
-            return updatedTodo.map(todo -> ResponseEntity.ok(new AddTodoResponse("Updated Todo", todo)))
-                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(new AddTodoResponse("Failed to update Todo", null)));
+            return updatedTodo.map(todo -> ResponseEntity.ok(new AddTodoResponse("Updated Todo", todo))).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(new AddTodoResponse("Failed to update Todo", null)));
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
@@ -105,6 +95,7 @@ public class TodoController {
         }
     }
 
+    @Operation(summary = "Delete a task", description = "Task를 삭제합니다. (use /delete/id)", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo update"), tags = {"Todo Operations"})
     @DeleteMapping("/delete/{todoId}/task/{taskId}")
     public ResponseEntity<String> deleteTask(@PathVariable String todoId, @PathVariable String taskId) {
         try {

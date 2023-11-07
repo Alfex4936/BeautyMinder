@@ -7,8 +7,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -72,7 +75,7 @@ public class FileStorageService {
                 return new ByteArrayResource(bytes);
             }
         } catch (AmazonS3Exception | IOException e) {
-            throw new FileStorageException("Could not retrieve file. Please try again!", e);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not retrieve file. Please try again!", e);
         }
     }
 

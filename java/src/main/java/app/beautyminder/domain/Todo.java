@@ -27,7 +27,7 @@ public class Todo {
 
     private List<TodoTask> tasks;
 
-    private boolean isDone;
+    private boolean isDone; // all tasks done status
 
     @DBRef
     @Indexed

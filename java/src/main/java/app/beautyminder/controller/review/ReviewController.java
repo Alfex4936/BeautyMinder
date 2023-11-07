@@ -14,8 +14,10 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,9 +28,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/review")
@@ -99,17 +103,7 @@ public class ReviewController {
     )
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<?> deleteReview(@PathVariable("id") String id) {
-        // Check if the review exists
-        Review review = reviewService.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
-
         // TODO: Check if the authenticated user is allowed to delete this review
-//        if (!currentUserCanDeleteReview(review)) {
-//            throw new ResponseStatusException(
-//                    HttpStatus.FORBIDDEN,
-//                    "You do not have permission to delete this review."
-//            );
-//        }
 
         // Perform the delete operation
         reviewService.deleteReview(id);
@@ -120,10 +114,28 @@ public class ReviewController {
 
 
     @Operation(summary = "Load an image", description = "이미지를 로드합니다.", tags = {"Image Operations"}, responses = {@ApiResponse(responseCode = "200", description = "이미지 로드 성공", content = @Content(schema = @Schema(implementation = Resource.class))), @ApiResponse(responseCode = "404", description = "이미지를 찾을 수 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
-    @GetMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Resource> loadImage(@RequestParam("filename") String filename) {
+    @GetMapping(value = "/image")
+    public ResponseEntity<Resource> loadImage(@RequestParam("filename") String filename, HttpServletRequest request) {
+
         Resource file = fileStorageService.loadFile(filename);
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"").body(file);
+
+        // Try to determine file's content type
+        String contentType = null;
+        try {
+            contentType = request.getServletContext().getMimeType(file.getFile().getAbsolutePath());
+        } catch (IOException ex) {
+            log.error(ex.getMessage());
+        }
+
+        // Fallback to the default content type if type could not be determined
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
+                .body(file);
     }
 
 }
