@@ -21,6 +21,7 @@ import java.util.*;
 @Service
 public class MongoService {
 
+    private final Map<Class<?>, Set<String>> bannedFieldsPerClass = new HashMap<>();
     /*
     MongoRepository:
         Provides CRUD operations and simple query derivation.
@@ -34,8 +35,6 @@ public class MongoService {
     */
     @Autowired
     private MongoTemplate mongoTemplate;
-
-    private final Map<Class<?>, Set<String>> bannedFieldsPerClass = new HashMap<>();
 
     public MongoService(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;

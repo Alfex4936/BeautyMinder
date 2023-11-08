@@ -21,8 +21,8 @@ keywords = [
     "마스카라",  # Mascara
     "콘실러",  # Concealer
     "프라이머",  # Primer
-    "네일 폴리시",  # Nail Polish
-    "화장품 세트",  # Cosmetic Set
+    "네일",  # Nail Polish
+    "세트",  # Cosmetic Set
     "향수"  # Perfume
 ]
 
@@ -72,12 +72,12 @@ class MyUser(HttpUser):
             self.client.get(f"/search?anything={keyword}")
             self.keyword_counts[keyword] += 1
 
-#     @task
+    @task
     def search(self):
         keyword = self.weighted_choice()
         self.client.get(f"/search?anything={keyword}")
 
-    @task
+    # @task
     def search_n(self):
         # Go through each keyword and perform the search the specified number of times
         for keyword in self.keyword_search_counts.keys():

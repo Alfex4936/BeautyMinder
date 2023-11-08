@@ -15,12 +15,6 @@ public class HttpServletResponseCapturingWrapper extends HttpServletResponseWrap
     }
 
     @Override
-    public void setStatus(int sc) {
-        super.setStatus(sc);
-        this.httpStatus = sc;
-    }
-
-    @Override
     public void sendError(int sc) throws IOException {
         super.sendError(sc);
         this.httpStatus = sc;
@@ -40,5 +34,11 @@ public class HttpServletResponseCapturingWrapper extends HttpServletResponseWrap
 
     public int getStatus() {
         return httpStatus;
+    }
+
+    @Override
+    public void setStatus(int sc) {
+        super.setStatus(sc);
+        this.httpStatus = sc;
     }
 }

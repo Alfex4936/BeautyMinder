@@ -6,7 +6,6 @@ import app.beautyminder.dto.BaumannTypeDTO;
 import app.beautyminder.service.BaumannService;
 import app.beautyminder.service.LocalFileService;
 import app.beautyminder.service.MongoService;
-import app.beautyminder.service.auth.UserService;
 import app.beautyminder.util.ValidUserId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,8 +35,6 @@ import java.util.Set;
 @RequestMapping("/baumann")
 public class BaumannController {
 
-    private final MongoService mongoService;
-
     private static final String BAUMANN_JSON_PATH = "classpath:baumann.json";
     private static final Set<String> REQUIRED_KEYS = Set.of(
             "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11",
@@ -46,7 +43,7 @@ public class BaumannController {
             "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10", "D11", "D12", "D13", "D14", "D15", "D16", "D17", "D18", "D19", "D20", "D21"
     );
     private static final ObjectMapper objectMapper = new ObjectMapper();
-
+    private final MongoService mongoService;
     private final BaumannService baumannService;
     private final LocalFileService localFileService;
 

@@ -14,7 +14,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -99,8 +101,11 @@ public class CosmeticSearchService {
     }
 
     public List<Cosmetic> searchByKeyword(String keyword) {
-        List<EsCosmetic> esCosmetics = esCosmeticRepository.findByKeywordsContains(keyword);
-        return convertEsCosmeticToCosmetic(esCosmetics);
+        Set<EsCosmetic> multipleQueries = new HashSet<>();
+        for (var word : keyword.split(" ")) {
+            multipleQueries.addAll(esCosmeticRepository.findByKeywordsContains(word));
+        }
+        return convertEsCosmeticToCosmetic(multipleQueries.stream().toList());
     }
 
     private List<Cosmetic> convertEsCosmeticToCosmetic(List<EsCosmetic> esCosmetics) {

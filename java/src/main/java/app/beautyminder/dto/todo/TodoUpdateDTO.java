@@ -1,6 +1,5 @@
 package app.beautyminder.dto.todo;
 
-import com.mongodb.lang.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 

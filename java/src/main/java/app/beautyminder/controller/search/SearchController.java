@@ -84,8 +84,9 @@ public class SearchController {
         finalResult.addAll(cateResult);
         finalResult.addAll(nameResult);
         finalResult.addAll(reviewResult);
-
-        cosmeticRankService.collectSearchEvent(anything.trim());
+        if (!finalResult.isEmpty()) {
+            cosmeticRankService.collectSearchEvent(anything.trim());
+        }
 //        return ResponseEntity.ok("ok");
         return ResponseEntity.ok(finalResult);
     }

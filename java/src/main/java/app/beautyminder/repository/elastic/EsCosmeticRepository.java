@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface EsCosmeticRepository extends ElasticsearchRepository<EsCosmetic, String> {
+
     List<EsCosmetic> findByNameContaining(String name);
 
     List<EsCosmetic> findByCategory(String category);

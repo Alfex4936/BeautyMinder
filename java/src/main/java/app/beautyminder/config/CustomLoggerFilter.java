@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -18,6 +17,28 @@ import java.util.Optional;
 public class CustomLoggerFilter extends OncePerRequestFilter {
 
     private static final String CORRELATION_ID_HEADER_NAME = "X-Correlation-ID";
+
+    public static String getRemoteIP(HttpServletRequest request) {
+        // List of headers that might contain the client IP if request passed through proxies
+        String[] headerNames = {
+                "X-Forwarded-For",
+                "Proxy-Client-IP",
+                "WL-Proxy-Client-IP",
+                "HTTP_X_FORWARDED_FOR",
+                "X-Real-IP"
+        };
+
+        for (String header : headerNames) {
+            String ip = request.getHeader(header);
+            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+                // In case the header contains a list of IPs, take the first valid IP
+                return ip.split(",")[0].trim();
+            }
+        }
+
+        // If none of the headers contain an IP, fall back to the remote address
+        return request.getRemoteAddr();
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -61,27 +82,5 @@ public class CustomLoggerFilter extends OncePerRequestFilter {
             // Clear MDC data
             MDC.clear();
         }
-    }
-
-    public static String getRemoteIP(HttpServletRequest request) {
-        // List of headers that might contain the client IP if request passed through proxies
-        String[] headerNames = {
-                "X-Forwarded-For",
-                "Proxy-Client-IP",
-                "WL-Proxy-Client-IP",
-                "HTTP_X_FORWARDED_FOR",
-                "X-Real-IP"
-        };
-
-        for (String header : headerNames) {
-            String ip = request.getHeader(header);
-            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
-                // In case the header contains a list of IPs, take the first valid IP
-                return ip.split(",")[0].trim();
-            }
-        }
-
-        // If none of the headers contain an IP, fall back to the remote address
-        return request.getRemoteAddr();
     }
 }

@@ -19,6 +19,7 @@ public interface UserRepository extends MongoRepository<User, String> {
     List<User> findByProfileImageIsNotNull();
 
     List<User> findByCreatedAtAfter(LocalDateTime date);
+
     List<User> findByBaumann(String baumannSkinType);
 
     @Query("{'$or': [{'email': ?0}, {'nickname': ?1}]}")

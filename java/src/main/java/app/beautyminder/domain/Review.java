@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Document(collection = "reviews")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -85,6 +86,19 @@ public class Review {
         if (reviewDetails.getCosmetic() != null) {
             this.cosmetic = reviewDetails.getCosmetic();
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Review review = (Review) o;
+        return Objects.equals(id, review.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     // Inner class to hold NLP analysis results

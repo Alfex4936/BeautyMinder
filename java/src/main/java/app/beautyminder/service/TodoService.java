@@ -2,7 +2,6 @@ package app.beautyminder.service;
 
 import app.beautyminder.domain.Todo;
 import app.beautyminder.domain.TodoTask;
-import app.beautyminder.domain.User;
 import app.beautyminder.dto.todo.TaskUpdateDTO;
 import app.beautyminder.dto.todo.TodoUpdateDTO;
 import app.beautyminder.repository.TodoRepository;
@@ -12,14 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -68,7 +63,7 @@ public class TodoService {
     }
 
     public boolean existsByDateAndUserId(LocalDate date, String id) {
-        return todoRepository.existsByDateAndUserId(date,id);
+        return todoRepository.existsByDateAndUserId(date, id);
     }
 
     public Optional<Todo> updateTodoTasks(String todoId, TodoUpdateDTO todoUpdateDTO) {

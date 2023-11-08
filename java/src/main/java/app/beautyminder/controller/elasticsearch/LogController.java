@@ -34,7 +34,7 @@ public class LogController {
             description = "Spring Boot 서버 로그 보기 (from Elasticsearch, UTC time)",
             tags = {"Log Operations"},
             responses = {
-                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Object.class, type="array")))
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Object.class, type = "array")))
             }
     )
     @GetMapping("/spring")
@@ -65,7 +65,7 @@ public class LogController {
             description = "Spring Boot 서버 로그 삭제 (from Elasticsearch, UTC time)",
             tags = {"Log Operations"},
             responses = {
-                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Object.class, type="array")))
+                    @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Object.class, type = "array")))
             }
     )
     @DeleteMapping("/spring/delete")

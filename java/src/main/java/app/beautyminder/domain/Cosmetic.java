@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Document(collection = "cosmetics") // mongodb
 @AllArgsConstructor
@@ -60,5 +61,18 @@ public class Cosmetic {
         this.totalRating += newRating;
         this.averageRating = (float) this.totalRating / this.reviewCount;
         this.averageRating = Math.round(this.averageRating * 100.0) / 100.0f;  // Round to 2 decimal places
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Cosmetic cosmetic = (Cosmetic) o;
+        return Objects.equals(id, cosmetic.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
