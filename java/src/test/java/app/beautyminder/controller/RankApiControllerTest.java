@@ -1,14 +1,9 @@
 package app.beautyminder.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,7 +13,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @Slf4j
 public class RankApiControllerTest {
@@ -26,6 +20,7 @@ public class RankApiControllerTest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final Map<String, Integer> keywordSearchCount = new HashMap<>();
+    private static final Map<String, Integer> keywordSearchCount2 = new HashMap<>();
 
     static {
         keywordSearchCount.put("스킨케어", 1000);  // Skincare
@@ -41,9 +36,6 @@ public class RankApiControllerTest {
         keywordSearchCount.put("에센스", 65);     // Essence
     }
 
-
-    private static final Map<String, Integer> keywordSearchCount2 = new HashMap<>();
-
     static {
         keywordSearchCount2.put("스킨케어", 15);  // Skincare
         keywordSearchCount2.put("파운데이션", 900); // Foundation
@@ -53,19 +45,59 @@ public class RankApiControllerTest {
 //    @Autowired
 //    private MockMvc mockMvc;
 
+    @Test
+    public void testSingleUpdate() {
+        RunningStats stats = new RunningStats();
+        stats.updateRecentCount(300);
+        log.info("{}", stats);
+        assertEquals(300, stats.getRecentCount());
+        assertEquals(1, stats.getTotalCount());
+        assertEquals(300.0, stats.getMean(), 0.001);
+    }
+
+    @Test
+    public void testSignificantDeviation() {
+        RunningStats stats = new RunningStats();
+        assertEquals(stats.getTotalCount(), 0);
+
+        stats.updateRecentCount(100);
+        assertEquals(stats.getMean(), 100.0, 0.001);
+        assertEquals(stats.getTotalCount(), 1);
+
+        stats.updateRecentCount(105);
+        assertEquals(stats.getMean(), (100 + 105) / 2.0, 0.001);
+        assertFalse(stats.isSignificantDeviation(1.0));
+
+        // Test case with a larger sample size to provide a meaningful standard deviation
+        for (int i = 0; i < 1000; i++) {
+            stats.updateRecentCount(100);
+        }
+
+        stats.updateRecentCount(150); // This should be a significant deviation
+        assertTrue(stats.isSignificantDeviation(4.0));
+    }
+
+    private List<String> deserializeKeywords(String response) {
+        // Deserialize the JSON response into a List of keywords
+        try {
+            return Arrays.asList(objectMapper.readValue(response, String[].class));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to deserialize response", e);
+        }
+    }
+
     @ToString
     static class RunningStats {
+        // Time decay factor
+        private static final double DECAY_FACTOR = 0.95;
+        // The unit for time decay, e.g., if decay is per hour, then unit is HOUR_IN_MILLIS
+        private static final long TIME_UNIT = 60000;
         private final AtomicLong recentCount = new AtomicLong();
         private final AtomicLong totalCount = new AtomicLong();
         private final AtomicReference<Double> mean = new AtomicReference<>(0.0);
         private final AtomicReference<Double> M2 = new AtomicReference<>(0.0);
         private final AtomicLong lastUpdated = new AtomicLong();
         private final AtomicReference<Double> lastValue = new AtomicReference<>(0.0);
-
-        // Time decay factor
-        private static final double DECAY_FACTOR = 0.95;
-        // The unit for time decay, e.g., if decay is per hour, then unit is HOUR_IN_MILLIS
-        private static final long TIME_UNIT = 60000;
 
         void updateRecentCount(long value) {
             long currentTime = System.currentTimeMillis();
@@ -112,52 +144,13 @@ public class RankApiControllerTest {
         public long getRecentCount() {
             return recentCount.get();
         }
+
         public long getTotalCount() {
             return totalCount.get();
         }
+
         public Double getMean() {
             return mean.get();
-        }
-    }
-
-    @Test
-    public void testSingleUpdate() {
-        RunningStats stats = new RunningStats();
-        stats.updateRecentCount(300);
-        log.info("{}", stats);
-        assertEquals(300, stats.getRecentCount());
-        assertEquals(1, stats.getTotalCount());
-        assertEquals(300.0, stats.getMean(), 0.001);
-    }
-
-    @Test
-    public void testSignificantDeviation() {
-        RunningStats stats = new RunningStats();
-        assertEquals(stats.getTotalCount(),0);
-
-        stats.updateRecentCount(100);
-        assertEquals(stats.getMean(),100.0, 0.001);
-        assertEquals(stats.getTotalCount(),1);
-
-        stats.updateRecentCount(105);
-        assertEquals(stats.getMean(), (100 + 105) / 2.0, 0.001);
-        assertFalse(stats.isSignificantDeviation(1.0));
-
-        // Test case with a larger sample size to provide a meaningful standard deviation
-        for (int i = 0; i < 1000; i++) {
-            stats.updateRecentCount(100);
-        }
-
-        stats.updateRecentCount(150); // This should be a significant deviation
-        assertTrue(stats.isSignificantDeviation(4.0));
-    }
-
-    private List<String> deserializeKeywords(String response) {
-        // Deserialize the JSON response into a List of keywords
-        try {
-            return Arrays.asList(objectMapper.readValue(response, String[].class));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to deserialize response", e);
         }
     }
 }

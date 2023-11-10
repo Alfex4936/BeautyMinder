@@ -38,27 +38,20 @@ class TokenApiControllerTest {
 
     @Autowired
     protected ObjectMapper objectMapper;
-
-    @Autowired
-    private WebApplicationContext context;
-
     @Autowired
     JwtProperties jwtProperties;
-
     @Autowired
     UserRepository userRepository;
-
     @Autowired
     UserService userService;
-
     @Autowired
     RefreshTokenRepository refreshTokenRepository;
-
     @Autowired
     TokenService tokenService;
-
     String userId;
     User user;
+    @Autowired
+    private WebApplicationContext context;
 
     @BeforeEach
     public void mockMvcSetUp() {
@@ -118,7 +111,7 @@ class TokenApiControllerTest {
     @BeforeEach
     public void runUp() {
         user = userRepository.save(User.builder()
-                .email("user@gmail.com")
+                .email("usertest@gmail.com")
                 .password("test")
                 .build());
 
