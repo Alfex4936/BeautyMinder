@@ -1,10 +1,8 @@
 package app.beautyminder.controller;
 
 import app.beautyminder.domain.Review;
-import app.beautyminder.domain.User;
 import app.beautyminder.dto.ReviewUpdateDTO;
-import app.beautyminder.repository.UserRepository;
-import app.beautyminder.service.ReviewService;
+import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.service.auth.UserService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,11 +50,7 @@ class ReviewApiControllerTest {
     @Autowired
     private WebApplicationContext context;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private UserService userService;
-    @Autowired
-    private ReviewService reviewService;
     private String userId;
     private String reviewId;
 
@@ -69,12 +63,11 @@ class ReviewApiControllerTest {
 
     @BeforeAll
     public void initialize() {
-        User user = userRepository.save(User.builder()
-                .email(TEST_USER_EMAIL)
-                .password(TEST_USER_PASSWORD)
-                .build());
+        AddUserRequest addUserRequest = new AddUserRequest();
+        addUserRequest.setEmail(TEST_USER_EMAIL);
+        addUserRequest.setPassword(TEST_USER_PASSWORD);
 
-        userId = user.getId();
+        userId = userService.saveUser(addUserRequest);
     }
 
     @Test
@@ -179,7 +172,6 @@ class ReviewApiControllerTest {
         try {
             // Final cleanup logic to run after all tests
             userService.deleteUserAndRelatedData(userId);
-            reviewService.deleteReview(reviewId);
         } catch (Exception e) {
             System.err.println("Cleanup failed: " + e.getMessage());
         }
