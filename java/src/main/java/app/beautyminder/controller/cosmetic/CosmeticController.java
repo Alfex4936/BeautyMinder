@@ -37,6 +37,7 @@ public class CosmeticController {
         if (cosmetic == null) {
             return ResponseEntity.notFound().build();
         }
+        cosmeticRankService.collectClickEvent(id);
         return ResponseEntity.ok(cosmetic);
     }
 

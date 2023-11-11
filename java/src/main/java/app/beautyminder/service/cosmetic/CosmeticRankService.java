@@ -100,7 +100,7 @@ public class CosmeticRankService {
             updateRedisMetrics(cosmeticId, data);
         }
 
-        log.info("REDIS: Sending batches");
+        log.info("BEMINDER: REDIS: Sending batches of click/hit rank");
     }
 
     // -------- Keyword collection

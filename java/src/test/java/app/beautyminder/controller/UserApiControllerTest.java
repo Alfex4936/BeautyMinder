@@ -57,8 +57,6 @@ class UserApiControllerTest {
 
     @Autowired
     private WebApplicationContext context;
-    @Value("${naver.cloud.sms.sender-phone}")
-    private String phoneNumber;
     private String accessToken;
     private String refreshToken;
 
@@ -84,7 +82,6 @@ class UserApiControllerTest {
 
         var map = new HashMap<>(Map.of("email", userEmail));
         map.put("password", "1234");
-        map.put("phoneNumber", phoneNumber);
 
         String requestBody = objectMapper.writeValueAsString(map);  // Convert map to JSON string
 
@@ -133,38 +130,6 @@ class UserApiControllerTest {
         resultActions
                 .andExpect(status().isOk());
     }
-
-//    @Order(4)
-//    @DisplayName("Test Add Todo")
-//    @Test
-//    public void testAddTodo() throws Exception {
-//        // given
-//        String url = "/todo/add";
-//
-//        Optional<User> optUser = userRepository.findByEmail(userEmail);
-//        if (optUser.isEmpty()) {
-//            throw new Exception("Non existent user");
-//        }
-//        User user = optUser.get();
-//
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        Map<String, Object> payload = new HashMap<>();
-//        payload.put("userId", user.getId());
-//        payload.put("data", "2023-09-25");
-//        payload.put("morningTasks", Arrays.asList("밥 먹기", "세수 하기"));
-//        payload.put("dinnerTasks", new ArrayList<>());
-//        String requestBody = objectMapper.writeValueAsString(payload);
-//
-//        // when
-//        mockMvc.perform(post(url)
-//                        .header("Authorization", "Bearer " + accessToken)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(requestBody))
-//
-//                // then
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.message").value("Todo added successfully"));
-//    }
 
     @Order(3)
     @DisplayName("Test Login")

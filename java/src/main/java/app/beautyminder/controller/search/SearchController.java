@@ -33,9 +33,12 @@ public class SearchController {
     @Operation(summary = "Search Cosmetics by Name", description = "이름으로 화장품을 검색합니다.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/cosmetic")
     public ResponseEntity<List<Cosmetic>> searchByName(@RequestParam String name) {
-        List<Cosmetic> results = cosmeticSearchService.searchByName(name);
+        String trimmedName = (name != null) ? name.trim() : "";
+        List<Cosmetic> results = cosmeticSearchService.searchByName(trimmedName);
+
         if (!results.isEmpty()) {
-            cosmeticRankService.collectSearchEvent(name.trim());
+            cosmeticRankService.collectSearchEvent(trimmedName);
+            results.forEach(cosmetic -> cosmeticRankService.collectHitEvent(cosmetic.getId()));
         }
         return ResponseEntity.ok(results);
     }
@@ -43,9 +46,11 @@ public class SearchController {
     @Operation(summary = "Search Reviews by Content", description = "콘텐츠로 리뷰를 검색합니다.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Review.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/review")
     public ResponseEntity<List<Review>> searchByContent(@RequestParam String content) {
-        List<Review> results = reviewSearchService.searchByContent(content);
+        String trimmedName = (content != null) ? content.trim() : "";
+        List<Review> results = reviewSearchService.searchByContent(trimmedName);
         if (!results.isEmpty()) {
-            cosmeticRankService.collectSearchEvent(content.trim());
+            cosmeticRankService.collectSearchEvent(trimmedName);
+            results.forEach(review -> cosmeticRankService.collectHitEvent(review.getCosmetic().getId()));
         }
         return ResponseEntity.ok(results);
     }
@@ -53,9 +58,11 @@ public class SearchController {
     @Operation(summary = "Search Cosmetics by Category", description = "카테고리로 화장품을 검색합니다.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/category")
     public ResponseEntity<List<Cosmetic>> searchByCategory(@RequestParam String category) {
-        List<Cosmetic> results = cosmeticSearchService.searchByCategory(category);
+        String trimmedName = (category != null) ? category.trim() : "";
+        List<Cosmetic> results = cosmeticSearchService.searchByCategory(trimmedName);
         if (!results.isEmpty()) {
-            cosmeticRankService.collectSearchEvent(category.trim());
+            cosmeticRankService.collectSearchEvent(trimmedName);
+            results.forEach(cosmetic -> cosmeticRankService.collectHitEvent(cosmetic.getId()));
         }
         return ResponseEntity.ok(results);
     }
@@ -63,9 +70,11 @@ public class SearchController {
     @Operation(summary = "Search Cosmetics by Keyword", description = "키워드로 화장품을 검색합니다.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/keyword")
     public ResponseEntity<List<Cosmetic>> searchByKeyword(@RequestParam String keyword) {
-        List<Cosmetic> results = cosmeticSearchService.searchByKeyword(keyword);
+        String trimmedName = (keyword != null) ? keyword.trim() : "";
+        List<Cosmetic> results = cosmeticSearchService.searchByKeyword(trimmedName);
         if (!results.isEmpty()) {
-            cosmeticRankService.collectSearchEvent(keyword.trim());
+            cosmeticRankService.collectSearchEvent(trimmedName);
+            results.forEach(cosmetic -> cosmeticRankService.collectHitEvent(cosmetic.getId()));
         }
         return ResponseEntity.ok(results);
     }
@@ -73,11 +82,12 @@ public class SearchController {
     @Operation(summary = "Search Cosmetics by anything", description = "모든 데이터(화장품 이름,카테고리,키워드 + 리뷰 텍스트)를 검색합니다.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class, type = "array")))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping
     public ResponseEntity<?> searchAnything(@RequestParam String anything) {
-//
-        List<Cosmetic> keywordResult = cosmeticSearchService.searchByKeyword(anything);
-        List<Cosmetic> cateResult = cosmeticSearchService.searchByCategory(anything);
-        List<Cosmetic> nameResult = cosmeticSearchService.searchByName(anything);
-        List<Cosmetic> reviewResult = reviewSearchService.searchByContent(anything).stream().map(Review::getCosmetic).toList();
+        String trimmedName = (anything != null) ? anything.trim() : "";
+
+        List<Cosmetic> keywordResult = cosmeticSearchService.searchByKeyword(trimmedName);
+        List<Cosmetic> cateResult = cosmeticSearchService.searchByCategory(trimmedName);
+        List<Cosmetic> nameResult = cosmeticSearchService.searchByName(trimmedName);
+        List<Cosmetic> reviewResult = reviewSearchService.searchByContent(trimmedName).stream().map(Review::getCosmetic).toList();
 
         Set<Cosmetic> finalResult = new HashSet<>();
         finalResult.addAll(keywordResult);
@@ -85,7 +95,8 @@ public class SearchController {
         finalResult.addAll(nameResult);
         finalResult.addAll(reviewResult);
         if (!finalResult.isEmpty()) {
-            cosmeticRankService.collectSearchEvent(anything.trim());
+            cosmeticRankService.collectSearchEvent(trimmedName);
+            finalResult.forEach(cosmetic -> cosmeticRankService.collectHitEvent(cosmetic.getId()));
         }
         return ResponseEntity.ok(finalResult);
     }

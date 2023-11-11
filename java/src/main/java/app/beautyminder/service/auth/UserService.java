@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -42,7 +43,6 @@ public class UserService {
     private final CosmeticExpiryService expiryService;
     private final FileStorageService fileStorageService;
 
-    //    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
     private final BCryptPasswordEncoder bCryptPasswordEncoder;  // 비용이 높은 작업
     @Value("${server.default.user}")
     private String defaultUserProfilePic;
@@ -52,12 +52,10 @@ public class UserService {
     // 일반 사용자 저장
     public String saveUser(AddUserRequest dto) {
         // 이메일 중복 체크
-        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("이메일이 이미 사용 중입니다.");
-        }
+        checkDuplicatedUser(dto.getEmail(), dto.getPhoneNumber());
 
         // 사용자 생성
-        User user = User.builder().email(dto.getEmail()).password(bCryptPasswordEncoder.encode(dto.getPassword())).build();  // build the user first
+        var user = User.builder().email(dto.getEmail()).password(bCryptPasswordEncoder.encode(dto.getPassword())).build();  // build the user first
 
         if (user.getCosmeticIds() == null) {
             user.setCosmeticIds(new HashSet<>());
@@ -84,11 +82,10 @@ public class UserService {
     // 관리자 저장
     public String saveAdmin(AddUserRequest dto) {
         // 이메일 중복 체크
-        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("이메일이 이미 사용 중입니다.");
-        }
+        checkDuplicatedUser(dto.getEmail(), dto.getPhoneNumber());
+
         // 관리자 생성
-        User admin = User.builder().email(dto.getEmail()).password(bCryptPasswordEncoder.encode(dto.getPassword())).build();
+        var admin = User.builder().email(dto.getEmail()).password(bCryptPasswordEncoder.encode(dto.getPassword())).build();
 
         if (dto.getNickname() != null) {
             admin.setNickname(dto.getNickname());
@@ -105,6 +102,22 @@ public class UserService {
         // 관리자 권한 추가
         admin.addAuthority("ROLE_ADMIN");
         return userRepository.save(admin).getId();
+    }
+
+    private void checkDuplicatedUser(String email, String phoneNumber) {
+        List<String> errors = new ArrayList<>();
+
+        userRepository.findByEmail(email)
+                .ifPresent(u -> errors.add("이메일이 이미 사용 중입니다."));
+
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            userRepository.findByPhoneNumber(phoneNumber)
+                    .ifPresent(u -> errors.add("전화번호가 이미 사용 중입니다."));
+        }
+
+        if (!errors.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.join(" ", errors));
+        }
     }
 
     // 사용자 ID로 조회
