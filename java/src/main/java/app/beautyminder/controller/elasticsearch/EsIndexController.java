@@ -51,6 +51,4 @@ public class EsIndexController {
         reviewSearchService.indexReviews();
         return ResponseEntity.ok("Indexed review successfully!");
     }
-
-
 }

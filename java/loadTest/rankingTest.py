@@ -4,17 +4,15 @@ import numpy as np
 
 
 keywords = [
-    "스킨케어",  # Skincare
     "메이크업",  # Makeup
-    "페이스 마스크",  # Face Mask
+    "페이스마스크",  # Face Mask
     "썬크림",  # Sunscreen
     "립스틱",  # Lipstick
     "아이섀도우",  # Eyeshadow
     "블러셔",  # Blusher
-    "페이스 파우더",  # Face Powder
-    "클렌징",  # Cleansing
+    "페이스파우더",  # Face Powder
     "토너",  # Toner
-    "모이스처라이저",  # Moisturizer
+    "비타민",  # Vitamin
     "에센스",  # Essence
     "세럼",  # Serum
     "아이라이너",  # Eyeliner
@@ -69,13 +67,13 @@ class MyUser(HttpUser):
 
     def search_keyword(self, keyword):
         if self.keyword_counts[keyword] < self.keyword_search_counts[keyword]:
-            self.client.get(f"/search?anything={keyword}")
+            self.client.get(f"/search/test?anything={keyword}")
             self.keyword_counts[keyword] += 1
 
     @task
     def search(self):
         keyword = self.weighted_choice()
-        self.client.get(f"/search?anything={keyword}")
+        self.client.get(f"/search/test?anything={keyword}")
 
     # @task
     def search_n(self):

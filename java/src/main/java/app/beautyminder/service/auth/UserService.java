@@ -8,8 +8,12 @@ import app.beautyminder.repository.PasswordResetTokenRepository;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.TodoRepository;
 import app.beautyminder.repository.UserRepository;
+import app.beautyminder.service.FileStorageService;
+import app.beautyminder.service.ReviewService;
+import app.beautyminder.service.cosmetic.CosmeticExpiryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -34,6 +38,10 @@ public class UserService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
     private final TokenService tokenService;
+    private final ReviewService reviewService;
+    private final CosmeticExpiryService expiryService;
+    private final FileStorageService fileStorageService;
+
     //    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();  // 비용이 높은 작업
     private final BCryptPasswordEncoder bCryptPasswordEncoder;  // 비용이 높은 작업
     @Value("${server.default.user}")
@@ -172,14 +180,30 @@ public class UserService {
      */
     @Transactional
     public void deleteUserAndRelatedData(String userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Wrong user id."));
+
         // Delete all Todo entries related to the user
-        todoRepository.deleteByUserId(userId);
+        todoRepository.deleteByUserId(new ObjectId(userId));
 
         // Delete all RefreshToken entries related to the user
-        refreshTokenRepository.deleteByUserId(userId);
+        refreshTokenRepository.deleteByUserId(new ObjectId(userId));
+
+        // Delete user profile picture from S3
+        if (!user.getProfileImage().isEmpty()) {
+            fileStorageService.deleteFile(user.getProfileImage());
+        }
+
+        // Delete all reviews made by the user and update cosmetics' scores
+        for (var review : reviewService.findAllByUser(user)) {
+            reviewService.deleteReview(review.getId());
+        }
+
+        // Delete all expiry items
+        expiryService.deleteAllByUserId(new ObjectId(userId));
 
         // Delete the User
         userRepository.deleteById(userId);
+
     }
 
     public void requestPasswordReset(String email) {

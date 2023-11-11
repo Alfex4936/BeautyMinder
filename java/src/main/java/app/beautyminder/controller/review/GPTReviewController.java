@@ -59,7 +59,7 @@ public class GPTReviewController {
             }
     )
     @GetMapping("/review/{id}")
-    public ResponseEntity<GPTReview> getGPTReview(@PathVariable String id) {
+    public ResponseEntity<?> getGPTReview(@PathVariable String id) {
         Cosmetic cosmetic = cosmeticService.getCosmeticById(id);
         if (cosmetic == null) {
             return ResponseEntity.notFound().build();

@@ -4,10 +4,12 @@ import app.beautyminder.domain.PasswordResetToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.repository.PasswordResetTokenRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @RequiredArgsConstructor
 @Service
@@ -28,7 +30,7 @@ public class TokenService {
         return token.toString();
     }
 
-    PasswordResetToken createPasswordResetToken(User user) {
+    public PasswordResetToken createPasswordResetToken(User user) {
         String token = generateToken(LENGTH);
 
         PasswordResetToken passwordResetToken = PasswordResetToken.builder()
@@ -51,6 +53,12 @@ public class TokenService {
         }
 
         return passwordResetToken;
+    }
+
+
+    @Scheduled(cron = "0 0 2 * * WED", zone = "Asia/Seoul") // Delete all expired tokens at wednesday 2am
+    public void deleteAllExpiredTokensOften() {
+        passwordResetTokenRepository.deleteByExpiryDateBefore(new Date());
     }
 }
 

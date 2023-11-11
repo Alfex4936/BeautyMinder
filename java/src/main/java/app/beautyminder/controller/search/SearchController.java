@@ -73,7 +73,7 @@ public class SearchController {
     @Operation(summary = "Search Cosmetics by anything", description = "모든 데이터(화장품 이름,카테고리,키워드 + 리뷰 텍스트)를 검색합니다.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class, type = "array")))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping
     public ResponseEntity<?> searchAnything(@RequestParam String anything) {
-
+//
         List<Cosmetic> keywordResult = cosmeticSearchService.searchByKeyword(anything);
         List<Cosmetic> cateResult = cosmeticSearchService.searchByCategory(anything);
         List<Cosmetic> nameResult = cosmeticSearchService.searchByName(anything);
@@ -87,7 +87,13 @@ public class SearchController {
         if (!finalResult.isEmpty()) {
             cosmeticRankService.collectSearchEvent(anything.trim());
         }
-//        return ResponseEntity.ok("ok");
         return ResponseEntity.ok(finalResult);
+    }
+
+    @Operation(summary = "Search rank", description = "부르지 마시오.", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class, type = "array")))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
+    @GetMapping("/test")
+    public ResponseEntity<?> searchRank(@RequestParam String anything) {
+        cosmeticRankService.collectSearchEvent(anything.trim());
+        return ResponseEntity.ok("ok");
     }
 }

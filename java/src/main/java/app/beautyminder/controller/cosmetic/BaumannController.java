@@ -9,7 +9,6 @@ import app.beautyminder.service.MongoService;
 import app.beautyminder.util.ValidUserId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -26,9 +25,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 @AllArgsConstructor
 @RestController
@@ -42,42 +41,36 @@ public class BaumannController {
             "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", "C13", "C14",
             "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10", "D11", "D12", "D13", "D14", "D15", "D16", "D17", "D18", "D19", "D20", "D21"
     );
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final MongoService mongoService;
     private final BaumannService baumannService;
     private final LocalFileService localFileService;
 
     @NotNull
-    @SuppressWarnings("unchecked")
-    private static Map<String, JsonNode> getTestMap(JsonNode categoriesArray) {
-        Map<String, JsonNode> responses = new LinkedHashMap<>(); // I need an order.
+    private Map<String, JsonNode> getTestMap(JsonNode categoriesArray) {
+        var responses = new LinkedHashMap<String, JsonNode>(); // I need an order.
 
         // Define category mapping
         String[] categoryLetters = {"A", "B", "C", "D"};
 
         // Iterate through all categories and populate the responses map
-        for (int i = 0; i < categoriesArray.size(); i++) {
-            JsonNode categoryObject = categoriesArray.get(i);
-            JsonNode questionsArray = categoryObject.get("questions");
+        IntStream.range(0, categoriesArray.size()).forEach(i -> {
+            var categoryObject = categoriesArray.get(i);
+            var questionsArray = categoryObject.get("questions");
 
-            // Proceed if there are questions in this category
             if (questionsArray != null) {
-                for (int j = 0; j < questionsArray.size(); j++) {
-                    JsonNode questionObject = questionsArray.get(j);
+                IntStream.range(0, questionsArray.size()).forEach(j -> {
+                    var questionObject = questionsArray.get(j);
+                    var key = categoryLetters[i] + (j + 1);
 
-                    // Generate the key for the response map
-                    String key = categoryLetters[i] + (j + 1);
-
-                    // Create a new JSONObject to store the question_kr and options
-                    ObjectNode newQuestionObject = objectMapper.createObjectNode();
+                    var newQuestionObject = objectMapper.createObjectNode();
                     newQuestionObject.set("question_kr", questionObject.get("question_kr"));
                     newQuestionObject.set("options", questionObject.get("options"));
 
-                    // Put the new JSONObject into the map with the generated key
                     responses.put(key, newQuestionObject);
-                }
+                });
             }
-        }
+        });
         return responses;
     }
 
@@ -178,12 +171,11 @@ public class BaumannController {
     )
     @PostMapping("/test/{userId}")
     public ResponseEntity<BaumannTypeDTO> getBaumann(@PathVariable @ValidUserId String userId, @Valid @RequestBody BaumannSurveyAnswerDTO baumannSurveyAnswerDTO) {
-        Map<String, Integer> responses = baumannSurveyAnswerDTO.getResponses();
+        var responses = baumannSurveyAnswerDTO.getResponses();
 
         // Validate if all keys are present
-        Set<String> keys = responses.keySet();
-        List<String> missingKeys = REQUIRED_KEYS.stream()
-                .filter(requiredKey -> !keys.contains(requiredKey))
+        var missingKeys = REQUIRED_KEYS.stream()
+                .filter(requiredKey -> !responses.containsKey(requiredKey))
                 .toList();
 
         if (!missingKeys.isEmpty()) {
@@ -195,9 +187,11 @@ public class BaumannController {
         }
 
         // If all keys are present
-        BaumannTypeDTO resultJson = baumannService.calculateResults(responses);
+        var resultJson = baumannService.calculateResults(responses);
 
-        mongoService.updateFields(userId, Map.of("baumann", resultJson.getSkinType()), User.class);
+        var map = Map.of("baumann", resultJson.getSkinType(), "baumannScores", resultJson.getScores());
+        mongoService.updateFields(userId, map, User.class);
+
         return ResponseEntity.ok(resultJson);
     }
 

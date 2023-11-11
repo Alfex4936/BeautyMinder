@@ -42,14 +42,10 @@ public class RecommendService {
             throw new IllegalArgumentException("The Set cannot be empty.");
         }
         int randomIndex = ThreadLocalRandom.current().nextInt(set.size());
-        int i = 0;
-        for (T element : set) {
-            if (i == randomIndex) {
-                return element;
-            }
-            i++;
-        }
-        throw new IllegalStateException("Something went wrong while picking a random element.");
+        return set.stream()
+                .skip(randomIndex)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Something went wrong while picking a random element."));
     }
 
     public List<Cosmetic> recommendProducts(String userId) {
@@ -91,9 +87,7 @@ public class RecommendService {
         // Shuffle the list to randomize the order
         Collections.shuffle(cosmeticIds);
 
-        return cosmeticIds.stream()
-                .limit(5)
-                .collect(Collectors.toSet()); // Use LinkedHashSet to preserve order
+        return new HashSet<>(cosmeticIds); // Use LinkedHashSet to preserve order
     }
 
     private Set<String> getCosmeticIdsByProbability(String baumannSkinType) {
@@ -101,7 +95,6 @@ public class RecommendService {
         List<Review> probablyBaumannReviews = reviewService.getReviewsForRecommendation(3, baumannSkinType);
 
         return probablyBaumannReviews.stream()
-                .limit(5)
                 .map(review -> review.getCosmetic().getId())
                 .collect(Collectors.toSet());
     }
@@ -144,7 +137,7 @@ public class RecommendService {
                 projectStage,
                 matchKeywordsStage,
                 Aggregation.sort(Sort.Direction.DESC, "matchingKeywordCount"), // Sort by the count of matching keywords
-                Aggregation.limit(5) // Limit to 10 similar products
+                Aggregation.limit(5) // Limit to 5 similar products
         );
 
         // Execute the aggregation

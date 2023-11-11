@@ -1,6 +1,7 @@
 package app.beautyminder.repository;
 
 import app.beautyminder.domain.RefreshToken;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -19,7 +20,9 @@ public interface RefreshTokenRepository extends MongoRepository<RefreshToken, St
 
     List<RefreshToken> findAllByUserId(String userId);
 
-    void deleteByUserId(String userId);
+    @Query(value = "{ 'user.$id': ?0 }", delete = true)
+        // delete ALL
+    void deleteByUserId(ObjectId userId);
 
     void deleteByRefreshToken(String refreshToken);
 }

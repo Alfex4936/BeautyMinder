@@ -1,5 +1,6 @@
 package app.beautyminder.domain;
 
+import app.beautyminder.util.AuthoritiesDeserializer;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -16,10 +17,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Document(collection = "users")
@@ -54,6 +52,7 @@ public class User implements UserDetails {
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime updatedAt;
 
+    @JsonDeserialize(using = AuthoritiesDeserializer.class)
     private Set<String> authorities = new HashSet<>();
 
     @Setter
@@ -68,6 +67,9 @@ public class User implements UserDetails {
     @Indexed
     @Setter
     private String baumann;
+
+    @Setter
+    private Map<String, Double> baumannScores;
 
     @Builder
     public User(String email, String password, String nickname) {

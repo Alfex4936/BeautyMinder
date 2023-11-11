@@ -44,7 +44,7 @@ public class RefreshTokenService {
     }
 
 
-    @Scheduled(cron = "0 0 2 * * WED") // Delete all expired tokens at wednesday 2am
+    @Scheduled(cron = "0 0 2 * * WED", zone = "Asia/Seoul") // Delete all expired tokens at wednesday 2am
     public void deleteAllExpiredTokensOften() {
         LocalDateTime now = LocalDateTime.now();
         this.deleteAllExpiredTokens(now);

@@ -1,6 +1,7 @@
 package app.beautyminder.repository;
 
 import app.beautyminder.domain.Todo;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -28,7 +29,9 @@ public interface TodoRepository extends MongoRepository<Todo, String> {
     @Query("{'user.id': ?0, 'tasks': {'$regex': ?1, '$options': 'i'}}")
     List<Todo> findByTaskKeywordAndUserId(String userId, String keyword);
 
-    void deleteByUserId(String userId);
+    @Query(value = "{ 'user.$id': ?0 }", delete = true)
+        // delete ALL
+    void deleteByUserId(ObjectId userId);
 
     boolean existsByDateAndUserId(LocalDate date, String userId);
 }

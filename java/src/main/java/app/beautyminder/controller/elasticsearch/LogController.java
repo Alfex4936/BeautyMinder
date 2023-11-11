@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/log")
 public class LogController {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final LogService logService;
 
     @Operation(
@@ -40,15 +40,13 @@ public class LogController {
     @GetMapping("/spring")
     public ResponseEntity<List<Object>> getSpringLog() {
         try {
-            List<String> logs = logService.getTodaysLogs();
-
-            // Convert the List of JSON strings to a List of Maps (or any object structure you want)
-            List<Object> jsonLogs = logs.stream()
+            var logs = logService.getTodaysLogs();
+            // Convert the List of JSON strings to a List of Maps
+            var jsonLogs = logs.stream()
                     .map(log -> {
                         try {
                             return objectMapper.readValue(log, Object.class);
                         } catch (IOException e) {
-                            // Log error and possibly return a placeholder or skip this entry
                             return "Error parsing log entry";
                         }
                     })

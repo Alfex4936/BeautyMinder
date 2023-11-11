@@ -180,6 +180,10 @@ public class UserController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
+
+//        return mongoService.updateFields(userId, updates, User.class)
+//                .map(user -> new ResponseEntity<User>(user, HttpStatus.OK))
+//                .orElseGet(() -> new ResponseEntity<String>("User not found", HttpStatus.BAD_REQUEST));
     }
 
     @Operation(

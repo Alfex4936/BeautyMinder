@@ -10,6 +10,8 @@ services:
         condition: service_healthy
       logstash:
         condition: service_healthy
+    env_file:
+      - spring.env
     ports:
       - "8080:8080"
     links:

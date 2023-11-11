@@ -8,10 +8,11 @@ import app.beautyminder.dto.ReviewUpdateDTO;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.repository.UserRepository;
-import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticService;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -32,7 +33,6 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final FileStorageService fileStorageService;
     private final CosmeticService cosmeticService;
-    private final UserService userService;
     private final UserRepository userRepository;
     private final CosmeticRepository cosmeticRepository;
     private final MongoTemplate mongoTemplate;
@@ -41,22 +41,24 @@ public class ReviewService {
         return reviewRepository.findById(id);
     }
 
+    public List<Review> findAllByUser(User user) {
+        return reviewRepository.findByUser(user);
+    }
+
     public void deleteReview(String id) {
-        Review review = getReviewById(id)
+        var review = getReviewById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
 
-        Cosmetic cosmetic = cosmeticService.findById(review.getCosmetic().getId())
+        var cosmetic = cosmeticService.findById(review.getCosmetic().getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cosmetic not found"));
 
         // Update cosmetic's review score and save it
-        cosmetic.updateAverageRating(-review.getRating(), false);
+        cosmetic.removeRating(review.getRating());
         cosmeticRepository.save(cosmetic);
 
         // Delete the review by id
         reviewRepository.deleteById(id);
-
     }
-
 
     public Review createReview(ReviewDTO reviewDTO, MultipartFile[] images) {
         // Check if the user has already left a review for the cosmetic
@@ -65,21 +67,31 @@ public class ReviewService {
         }
 
         // Find the user and cosmetic, throwing exceptions if not found
-        User user = userService.findById(reviewDTO.getUserId()); // This will throw an IllegalArgumentException if not found
-        Cosmetic cosmetic = cosmeticService.findById(reviewDTO.getCosmeticId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cosmetic not found"));
+        User user = userRepository.findById(reviewDTO.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
+
+        var cosmetic = cosmeticService.findById(reviewDTO.getCosmeticId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cosmetic not found"));
 
         // Create a new review from the DTO
-        Review review = Review.builder().content(reviewDTO.getContent()).rating(reviewDTO.getRating()).user(user).cosmetic(cosmetic).isFiltered(false).images(new ArrayList<>()) // Ensure the images list is initialized
+        var review = Review.builder()
+                .content(reviewDTO.getContent())
+                .rating(reviewDTO.getRating())
+                .user(user)
+                .cosmetic(cosmetic)
+                .isFiltered(false)
+                .images(new ArrayList<>()) // Ensure the images list is initialized
                 .build();
 
         // Update cosmetic's review score and save it
-        cosmetic.updateAverageRating(review.getRating(), true);
+        cosmetic.increaseTotalCount();
+        cosmetic.updateAverageRating(0, review.getRating());
         cosmeticRepository.save(cosmetic);
 
         // Store images and set image URLs in review
         if (images != null) {
-            for (MultipartFile image : images) {
-                String imageUrl = fileStorageService.storeFile(image);
+            for (var image : images) {
+                var imageUrl = fileStorageService.storeFile(image);
                 review.getImages().add(imageUrl);
             }
         }
@@ -88,12 +100,13 @@ public class ReviewService {
         return reviewRepository.save(review);
     }
 
+
     public Optional<Review> updateReview(String revId, ReviewUpdateDTO reviewUpdateDetails, MultipartFile[] images) {
-        // Find the existing review
-        Query query = new Query(Criteria.where("id").is(revId));
-        final Review review = mongoTemplate.findOne(query, Review.class);
+        var query = new Query(Criteria.where("id").is(revId));
+        var review = mongoTemplate.findOne(query, Review.class);
 
         if (review != null) {
+            int oldRating = review.getRating(); // Store the old rating
 
             // Handle deleted images
             if (reviewUpdateDetails.getImagesToDelete() != null) {
@@ -109,17 +122,21 @@ public class ReviewService {
             }
             if (reviewUpdateDetails.getRating() != null) {
                 review.setRating(reviewUpdateDetails.getRating());
+                // Update the cosmetic's average rating
+                var cosmetic = review.getCosmetic();
+                cosmetic.updateAverageRating(oldRating, review.getRating()); // Update with old and new ratings
+                cosmeticRepository.save(cosmetic);
             }
 
-            // Inside the updateReview method where you handle the image upload
+            // Handle image upload
             if (images != null) {
-                for (MultipartFile image : images) {
-                    String originalFilename = image.getOriginalFilename();
+                for (var image : images) {
+                    var originalFilename = image.getOriginalFilename();
                     if (originalFilename != null) {
                         // Remove the old image if it exists
                         review.getImages().removeIf(img -> img.contains(originalFilename));
                         // Store the new image and add its URL to the review
-                        String imageUrl = fileStorageService.storeFile(image);
+                        var imageUrl = fileStorageService.storeFile(image);
                         review.getImages().add(imageUrl);
                     }
                 }
@@ -133,7 +150,6 @@ public class ReviewService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found with id: " + revId);
         }
     }
-
 
     public List<Review> getAllReviewsByCosmetic(Cosmetic cosmetic) {
         return reviewRepository.findByCosmetic(cosmetic);
@@ -153,7 +169,8 @@ public class ReviewService {
                 .collect(Collectors.toList());
 
         // Now, find all reviews that have a minimum rating and whose user ID is in the list of user IDs.
-        return reviewRepository.findReviewsByRatingAndUserIds(minRating, userIds);
+        Pageable pageable = PageRequest.of(0, 10);
+        return reviewRepository.findReviewsByRatingAndUserIds(minRating, userIds, pageable);
     }
 
     public List<Review> getReviewsForRecommendation(Integer minRating, String userBaumann) {
@@ -180,6 +197,7 @@ public class ReviewService {
 
         // Create the query using the final criteria
         Query query = new Query(finalCriteria);
+        query.limit(10);
 
         // Execute the query to fetch the filtered reviews
         return mongoTemplate.find(query, Review.class);

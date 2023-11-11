@@ -11,6 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.security.Principal;
 import java.util.Optional;
 
 @Slf4j
@@ -42,34 +43,38 @@ public class CustomLoggerFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
-        MultiReadHttpServletRequest wrappedRequest = new MultiReadHttpServletRequest(request);
-        HttpServletResponseCapturingWrapper wrappedResponse = new HttpServletResponseCapturingWrapper(response);
+        var wrappedRequest = new MultiReadHttpServletRequest(request);
+        var wrappedResponse = new HttpServletResponseCapturingWrapper(response);
 
         try {
             // Generate or get existing correlation ID
-            String correlationId = Optional.ofNullable(request.getHeader(CORRELATION_ID_HEADER_NAME))
+            var correlationId = Optional.ofNullable(request.getHeader(CORRELATION_ID_HEADER_NAME))
                     .orElse(java.util.UUID.randomUUID().toString());
             MDC.put("correlationId", correlationId); // for logging
 
-            // If you want to ensure the correlation ID is sent back in the response for the client to correlate
+            // If, want to ensure the correlation ID is sent back in the response for the client to correlate
             response.addHeader(CORRELATION_ID_HEADER_NAME, correlationId);
 
-            String queryString = request.getQueryString() != null ? "?" + URLDecoder.decode(request.getQueryString(), StandardCharsets.UTF_8) : "";
-            String pathWithQueryString = request.getRequestURI() + queryString;
+            var queryString = Optional.ofNullable(request.getQueryString())
+                    .map(qs -> "?" + URLDecoder.decode(qs, StandardCharsets.UTF_8))
+                    .orElse("");
 
-            String username = request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : "anonymous";
-            String userIp = getRemoteIP(request);
+            var pathWithQueryString = request.getRequestURI() + queryString;
+
+            var username = Optional.ofNullable(request.getUserPrincipal())
+                    .map(Principal::getName)
+                    .orElse("anonymous");
+            var userIp = getRemoteIP(request);
 
             log.info("BEMINDER: Incoming request {} {} from IP {} for user {}", request.getMethod(), pathWithQueryString, userIp, username);
 
-            long startTime = System.currentTimeMillis();
+            var startTime = System.currentTimeMillis();
             filterChain.doFilter(wrappedRequest, wrappedResponse);
-            long duration = System.currentTimeMillis() - startTime;
+            var duration = System.currentTimeMillis() - startTime;
 
             if (wrappedResponse.getStatus() != HttpServletResponse.SC_OK) {
                 // Log the request body for non-200 responses
-                String requestBody = wrappedRequest.getBody();
+                var requestBody = wrappedRequest.getBody();
                 log.info("BEMINDER: Error with request body: {}", requestBody);
             }
 

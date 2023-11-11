@@ -4,6 +4,7 @@ import app.beautyminder.domain.CosmeticExpiry;
 import app.beautyminder.repository.CosmeticExpiryRepository;
 import app.beautyminder.service.MongoService;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -58,5 +59,9 @@ public class CosmeticExpiryService {
 
     public List<CosmeticExpiry> filterCosmeticExpiries(String userId, LocalDate startDate, LocalDate endDate) {
         return cosmeticExpiryRepository.findAllByUserIdAndExpiryDateBetween(userId, startDate, endDate);
+    }
+
+    public void deleteAllByUserId(ObjectId userId) {
+        cosmeticExpiryRepository.deleteAllByUserId(userId);
     }
 }

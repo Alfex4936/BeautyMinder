@@ -1,6 +1,7 @@
 package app.beautyminder.repository;
 
 import app.beautyminder.domain.User;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -31,5 +32,7 @@ public interface UserRepository extends MongoRepository<User, String> {
     List<User> findByAuthority(String authority);
 
     void deleteUserByEmail(String email);
+
+    void deleteById(@NotNull String userId);
 
 }

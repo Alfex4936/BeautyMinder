@@ -52,15 +52,30 @@ public class Cosmetic {
         this.createdAt = LocalDateTime.now();
     }
 
-    public void updateAverageRating(int newRating, boolean isNew) {
-        if (isNew) {
-            this.reviewCount++;
-        } else {
-            this.reviewCount--;
+    public void increaseTotalCount() {
+        this.reviewCount++;
+    }
+
+    public void updateAverageRating(int oldRating, int newRating) {
+        this.totalRating = this.totalRating - oldRating + newRating;
+        if (this.reviewCount == 0) {
+            this.reviewCount = 1; // To handle the case of the first review
         }
-        this.totalRating += newRating;
         this.averageRating = (float) this.totalRating / this.reviewCount;
         this.averageRating = Math.round(this.averageRating * 100.0) / 100.0f;  // Round to 2 decimal places
+    }
+
+    public void removeRating(int ratingToRemove) {
+        this.totalRating -= ratingToRemove;
+        this.reviewCount--;
+
+        if (this.reviewCount > 0) {
+            this.averageRating = (float) this.totalRating / this.reviewCount;
+            this.averageRating = Math.round(this.averageRating * 100.0) / 100.0f;  // Round to 2 decimal places
+        } else {
+            // Reset averageRating if there are no more reviews
+            this.averageRating = 0.0F;
+        }
     }
 
     @Override

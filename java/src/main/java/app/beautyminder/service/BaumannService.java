@@ -33,39 +33,36 @@ public class BaumannService {
      */
     public BaumannTypeDTO calculateResults(Map<String, Integer> responses) {
         // log.info("Responses: {}", responses);
+        var dScore = calculateCategoryScore(responses, "A", 11);
+        var sScore = calculateCategoryScore(responses, "B", 16);
+        var pScore = calculateCategoryScore(responses, "C", 14);
+        var wScore = calculateCategoryScore(responses, "D", 21);
 
-        // Calculate scores for each category.
-        double dScore = calculateCategoryScore(responses, "A", 11);
-        double sScore = calculateCategoryScore(responses, "B", 16);
-        double pScore = calculateCategoryScore(responses, "C", 14);
-        double wScore = calculateCategoryScore(responses, "D", 21);
+        var moistureScore = calculateMoistureScore(responses, new String[]{"A3", "A4", "A8", "A11"});
 
-        // calculate the moisture score based on the specific keys.
-        double moistureScore = calculateMoistureScore(responses, new String[]{"A3", "A4", "A8", "A11"});
+        var dType = dScore >= 22 ? "O" : "D";
+        var sType = sScore >= 32 ? "R" : "S";
+        var pType = pScore >= 28.5 ? "P" : "N";
+        var wType = wScore >= 42.5 ? "W" : "T";
 
-        // Determine skin types based on the middle point between minimum and maximum scores.
-        String dType = dScore >= 22 ? "O" : "D";
-        String sType = sScore >= 32 ? "R" : "S";
-        String pType = pScore >= 28.5 ? "P" : "N";
-        String wType = wScore >= 42.5 ? "W" : "T";
+        var skinType = dType + sType + pType + wType;
 
-        // Create structured result
-        String skinType = dType + sType + pType + wType;
+        var scores = Map.of(
+                "hydration", dScore,
+                "sensitivity", sScore,
+                "pigmentation", pScore,
+                "elasticity", wScore,
+                "moistureRetention", moistureScore
+        );
 
-        Map<String, Double> scores = new HashMap<>();
-        scores.put("hydration", dScore);
-        scores.put("sensitivity", sScore);
-        scores.put("pigmentation", pScore);
-        scores.put("elasticity", wScore);
-        scores.put("moistureRetention", moistureScore);
+        var metadata = Map.of(
+                "hydrationMax", 44,
+                "sensitivityMax", 64,
+                "pigmentationMax", 57,
+                "elasticityMax", 85,
+                "moistureRetentionMax", 100
+        );
 
-        // Add metadata (optional)
-        Map<String, Integer> metadata = new HashMap<>();
-        metadata.put("hydrationMax", 44);
-        metadata.put("sensitivityMax", 64);
-        metadata.put("pigmentationMax", 57);
-        metadata.put("elasticityMax", 85);
-        metadata.put("moistureRetentionMax", 100);
 
         return new BaumannTypeDTO(skinType, scores, metadata);
     }

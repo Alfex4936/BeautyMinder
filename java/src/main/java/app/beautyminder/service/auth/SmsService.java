@@ -27,47 +27,38 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class SmsService {
+    private final ObjectMapper objectMapper;
     @Value("${naver.cloud.access-key}")
     private String accessKey;
-
     @Value("${naver.cloud.secret-key}")
     private String secretKey;
-
     @Value("${naver.cloud.sms.openai-key}")
     private String serviceId;
-
     @Value("${naver.cloud.sms.sender-phone}")
     private String phone;
-
+    @Value("${server.address-text}")
+    private String server;
 
     public String makeSignature(Long time) throws NoSuchAlgorithmException, InvalidKeyException {
-        String space = " ";                    // one space
-        String newLine = "\n";                    // new line
-        String method = "POST";                    // method
-        String url = "/sms/v2/services/" + this.serviceId + "/messages";    // url (include query string)
-        String timestamp = time.toString();            // current timestamp (epoch)
-        String accessKey = this.accessKey;            // access key id (from portal or Sub Account)
-        String secretKey = this.secretKey;
+        var space = " ";
+        var newLine = "\n";
+        var method = "POST";
+        var url = "/sms/v2/services/" + this.serviceId + "/messages";
+        var timestamp = time.toString(); // current timestamp (epoch)
+        var accessKey = this.accessKey; // access key id (from portal or Sub Account)
 
-        String message = method +
-                space +
-                url +
-                newLine +
-                timestamp +
-                newLine +
-                accessKey;
+        var message = method + space + url + newLine + timestamp + newLine + accessKey;
 
-        SecretKeySpec signingKey = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        Mac mac = Mac.getInstance("HmacSHA256");
+        var signingKey = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        var mac = Mac.getInstance("HmacSHA256");
         mac.init(signingKey);
 
-        byte[] rawHmac = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
+        var rawHmac = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
 
         return Base64.encodeBase64String(rawHmac);
     }
@@ -75,19 +66,17 @@ public class SmsService {
     public SmsResponseDTO sendSms(PasswordResetResponse tUser) throws JsonProcessingException, RestClientException, URISyntaxException, InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
         Long time = System.currentTimeMillis();
 
-        HttpHeaders headers = new HttpHeaders();
+        var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("x-ncp-apigw-timestamp", time.toString());
         headers.set("x-ncp-iam-access-key", accessKey);
         headers.set("x-ncp-apigw-signature-v2", makeSignature(time));
 
+        var resetUrl = server + "/user/reset-password?token=" + tUser.getToken().getToken();
+        var content = tUser.getUser().getEmail() + ") to reset: " + resetUrl;
 
-        String resetUrl = "http://localhost:8080" + "/user/reset-password?token=" + tUser.getToken().getToken();
-        String content = tUser.getUser().getEmail() + ") to reset: " + resetUrl;
-
-
-        List<MessageDTO> messages = new ArrayList<>();
-        MessageDTO messageDto = MessageDTO.builder().to(tUser.getUser().getPhoneNumber()).content(content).build();
+        var messages = new ArrayList<MessageDTO>();
+        var messageDto = MessageDTO.builder().to(tUser.getUser().getPhoneNumber()).content(content).build();
         messages.add(messageDto);
 
         SmsRequestDTO request = SmsRequestDTO.builder()
@@ -99,7 +88,6 @@ public class SmsService {
                 .messages(messages)
                 .build();
 
-        ObjectMapper objectMapper = new ObjectMapper();
         String body = objectMapper.writeValueAsString(request);
         HttpEntity<String> httpBody = new HttpEntity<>(body, headers);
 

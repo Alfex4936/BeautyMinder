@@ -84,7 +84,7 @@ public class ReviewController {
 
     @Operation(summary = "Update an existing review", description = "기존 리뷰를 업데이트합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Review update details and images"), tags = {"Review Operations"}, responses = {@ApiResponse(responseCode = "200", description = "리뷰가 업데이트됨", content = @Content(schema = @Schema(implementation = Review.class))), @ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Review> updateReview(@PathVariable("id") String id, @RequestPart("review") @Valid ReviewUpdateDTO reviewUpdateDetails, @RequestPart(value = "images", required = false) MultipartFile[] images) {
+    public ResponseEntity<Review> updateReview(@PathVariable("id") String id, @RequestPart("review") ReviewUpdateDTO reviewUpdateDetails, @RequestPart(value = "images", required = false) MultipartFile[] images) {
         Optional<Review> updatedReview = reviewService.updateReview(id, reviewUpdateDetails, images);
         return updatedReview
                 .map(ResponseEntity::ok)
@@ -116,19 +116,15 @@ public class ReviewController {
     @Operation(summary = "Load an image", description = "이미지를 로드합니다.", tags = {"Image Operations"}, responses = {@ApiResponse(responseCode = "200", description = "이미지 로드 성공", content = @Content(schema = @Schema(implementation = Resource.class))), @ApiResponse(responseCode = "404", description = "이미지를 찾을 수 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
     @GetMapping(value = "/image")
     public ResponseEntity<Resource> loadImage(@RequestParam("filename") String filename, HttpServletRequest request) {
-
-        Resource file = fileStorageService.loadFile(filename);
+        var file = fileStorageService.loadFile(filename);
 
         // Try to determine file's content type
-        String contentType = null;
+        String contentType;
         try {
-            contentType = request.getServletContext().getMimeType(file.getFile().getAbsolutePath());
+            contentType = Optional.ofNullable(request.getServletContext().getMimeType(file.getFile().getAbsolutePath()))
+                    .orElse("application/octet-stream");
         } catch (IOException ex) {
             log.error(ex.getMessage());
-        }
-
-        // Fallback to the default content type if type could not be determined
-        if (contentType == null) {
             contentType = "application/octet-stream";
         }
 

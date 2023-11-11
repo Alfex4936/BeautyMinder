@@ -45,6 +45,9 @@ dependencies {
     // https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple
 //    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-jsr310
+//    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
+
 
     // AWS
     implementation 'org.opensearch.client:spring-data-opensearch-starter:1.2.0'

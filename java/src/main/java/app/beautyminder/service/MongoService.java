@@ -14,7 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -45,19 +48,19 @@ public class MongoService {
     }
 
     public <T> Optional<T> updateFields(String id, Map<String, Object> updates, Class<T> entityClass) {
-        Query query = new Query(Criteria.where("id").is(id));
-        StringBuilder stringBuilder = new StringBuilder();
+        var query = new Query(Criteria.where("id").is(id));
+        var stringBuilder = new StringBuilder();
 
-        Set<String> bannedFields = bannedFieldsPerClass.getOrDefault(entityClass, Collections.emptySet());
+        var bannedFields = bannedFieldsPerClass.getOrDefault(entityClass, Set.of());
 
         if (mongoTemplate.exists(query, entityClass)) {
-            Update update = new Update();
-            updates.forEach((key, value) -> {
-                if (!bannedFields.contains(key)) {
-                    stringBuilder.append(key).append(",");
-                    update.set(key, value);
-                }
-            });
+            var update = new Update();
+            updates.entrySet().stream()
+                    .filter(entry -> !bannedFields.contains(entry.getKey()))
+                    .forEach(entry -> {
+                        stringBuilder.append(entry.getKey()).append(",");
+                        update.set(entry.getKey(), entry.getValue());
+                    });
 
             mongoTemplate.updateFirst(query, update, entityClass);
             log.info("BEMINDER: {} has been updated: {}", entityClass.getSimpleName(), stringBuilder);

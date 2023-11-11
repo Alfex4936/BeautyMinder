@@ -46,7 +46,7 @@ class ReviewApiControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper; // Injected ObjectMapper
     @Autowired
     private WebApplicationContext context;
     @Autowired

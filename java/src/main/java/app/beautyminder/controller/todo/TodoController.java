@@ -11,7 +11,6 @@ import app.beautyminder.service.TodoService;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.util.ValidUserId;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,20 +39,22 @@ public class TodoController {
 
     @Operation(summary = "Create a new todo", description = "새로운 Todo 항목을 추가합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo details for creation"), tags = {"Todo Operations"})
     @PostMapping("/create")
-    public ResponseEntity<AddTodoResponse> createTodo(@RequestBody @Valid AddTodoRequest request) {
+    public ResponseEntity<AddTodoResponse> createTodo(@RequestBody AddTodoRequest request) {
         try {
-            User user = userService.findById(request.getUserId());
+            var user = userService.findById(request.getUserId());
 
             // Check if a Todo already exists for this user with the same date
             if (todoService.existsByDateAndUserId(request.getDate(), user.getId())) {
                 return ResponseEntity.badRequest().body(new AddTodoResponse("Todo already exists for this date", null));
             }
 
-            List<TodoTask> tasks = request.getTasks().stream().map(taskDto -> new TodoTask(UUID.randomUUID().toString(), taskDto.getDescription(), taskDto.getCategory(), false)).collect(Collectors.toList());
+            var tasks = request.getTasks().stream()
+                    .map(taskDto -> new TodoTask(UUID.randomUUID().toString(), taskDto.getDescription(), taskDto.getCategory(), false))
+                    .collect(Collectors.toList());
 
-            Todo todo = Todo.builder().date(request.getDate()).tasks(tasks).user(user).build();
+            var todo = new Todo(request.getDate(), tasks, user);
+            var savedTodo = todoService.createTodo(todo);
 
-            Todo savedTodo = todoService.createTodo(todo);
             return ResponseEntity.ok(new AddTodoResponse("Todo added successfully", savedTodo));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new AddTodoResponse(e.getMessage(), null));
@@ -112,7 +113,7 @@ public class TodoController {
 
     private Map<String, Object> createResponse(String message, Object data) {
         Map<String, Object> response = new HashMap<>();
-        response.put("msg", message);
+        response.put("message", message);
         response.put("todos", data);
         return response;
     }

@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -42,49 +42,44 @@ public class GPTService {
     @Scheduled(cron = "0 0 7 ? * MON", zone = "Asia/Seoul") // Every Monday at 7:00 am
     public void summarizeReviews() {
 //        System.out.println("====== " + systemRole);
-        List<Cosmetic> allCosmetics = cosmeticRepository.findAll();
+        var allCosmetics = cosmeticRepository.findAll();
 
-        for (Cosmetic cosmetic : allCosmetics) {
-            List<Review> positiveReviews = reviewRepository.findRandomReviewsByRatingAndCosmetic(3, 5, cosmetic.getId(), 10);
-            List<Review> negativeReviews = reviewRepository.findRandomReviewsByRatingAndCosmetic(1, 3, cosmetic.getId(), 10);
+        allCosmetics.forEach(cosmetic -> {
+            var positiveReviews = reviewRepository.findRandomReviewsByRatingAndCosmetic(3, 5, cosmetic.getId(), 10);
+            var negativeReviews = reviewRepository.findRandomReviewsByRatingAndCosmetic(1, 3, cosmetic.getId(), 10);
 
-            String positiveSummary = saveSummarizedReviews(positiveReviews, cosmetic);
-            String negativeSummary = saveSummarizedReviews(negativeReviews, cosmetic);
+            var positiveSummary = saveSummarizedReviews(positiveReviews, cosmetic);
+            var negativeSummary = saveSummarizedReviews(negativeReviews, cosmetic);
 
             // Check if GPTReview already exists for this cosmetic
-            Optional<GPTReview> existingReviewOpt = gptReviewRepository.findByCosmetic(cosmetic);
-
-            if (existingReviewOpt.isPresent()) {
-                // If it exists, update it
-                GPTReview existingReview = existingReviewOpt.get();
-                existingReview.setPositive(positiveSummary);
-                existingReview.setNegative(negativeSummary);
-                gptReviewRepository.save(existingReview);
-            } else {
-                // If it doesn't exist, create a new one
-                GPTReview gptReview = GPTReview.builder()
-                        .gptVersion(gptVersion)
-                        .positive(positiveSummary)
-                        .negative(negativeSummary)
-                        .cosmetic(cosmetic)
-                        .build();
-                gptReviewRepository.save(gptReview);
-            }
-        }
+            gptReviewRepository.findByCosmetic(cosmetic).ifPresentOrElse(
+                    existingReview -> {
+                        existingReview.setPositive(positiveSummary);
+                        existingReview.setNegative(negativeSummary);
+                        gptReviewRepository.save(existingReview);
+                    },
+                    () -> gptReviewRepository.save(GPTReview.builder()
+                            .gptVersion(gptVersion)
+                            .positive(positiveSummary)
+                            .negative(negativeSummary)
+                            .cosmetic(cosmetic)
+                            .build())
+            );
+        });
 
         log.info("GPTReview: Summarization done");
     }
 
     private String saveSummarizedReviews(List<Review> reviews, Cosmetic cosmetic) {
         logger.info("Summarizing reviews for {}...", cosmetic.getName());
-        StringBuilder allContents = new StringBuilder();
+        var allContents = new StringBuilder();
         allContents.append("제품명: ").append(cosmetic.getName()).append("\n");
 
-        int index = 1;
-        for (Review review : reviews) {
-            allContents.append("리뷰").append(index).append(". ").append(review.getContent()).append("\n");
-            index++;
-        }
+        var reviewContents = reviews.stream()
+                .map(review -> "리뷰" + reviews.indexOf(review) + 1 + ". " + review.getContent())
+                .collect(Collectors.joining("\n"));
+
+        allContents.append(reviewContents);
 
         List<MultiChatMessage> messages = Arrays.asList(
                 new MultiChatMessage("system", systemRole),
@@ -93,46 +88,10 @@ public class GPTService {
         return chatgptService.multiChat(messages); // Return the summarized content
     }
 
-//    @Scheduled(cron = "0 0 7 ? * MON") // Every Monday at 7:00 am
-//    public void summarizeReviews() {
-////        System.out.println("====== " + systemRole);
-//        List<Cosmetic> allCosmetics = cosmeticRepository.findAll();
-//
-//        for (Cosmetic cosmetic : allCosmetics) {
-//            List<Review> positiveReviews = reviewRepository.findRandomReviewsByRatingAndCosmetic(3, 5, cosmetic.getId(), 10);
-//            List<Review> negativeReviews = reviewRepository.findRandomReviewsByRatingAndCosmetic(1, 3, cosmetic.getId(), 10);
-//
-//            String positiveSummary = saveSummarizedReviews(positiveReviews, cosmetic);
-//            String negativeSummary = saveSummarizedReviews(negativeReviews, cosmetic);
-//
-//            // Check if GPTReview already exists for this cosmetic
-//            Optional<GPTReview> existingReviewOpt = gptReviewRepository.findByCosmetic(cosmetic);
-//
-//            if (existingReviewOpt.isPresent()) {
-//                // If it exists, update it
-//                GPTReview existingReview = existingReviewOpt.get();
-//                existingReview.setPositive(positiveSummary);
-//                existingReview.setNegative(negativeSummary);
-//                gptReviewRepository.save(existingReview);
-//            } else {
-//                // If it doesn't exist, create a new one
-//                GPTReview gptReview = GPTReview.builder()
-//                        .gptVersion(gptVersion)
-//                        .positive(positiveSummary)
-//                        .negative(negativeSummary)
-//                        .cosmetic(cosmetic)
-//                        .build();
-//                gptReviewRepository.save(gptReview);
-//            }
-//        }
-//
-//        log.info("GPTReview: Summarization done");
-//    }
-
     private String generateKeywords(String baumannType) {
         logger.info("Generating keywords for {}...", baumannType);
 
-        List<MultiChatMessage> messages = Arrays.asList(
+        List<MultiChatMessage> messages = List.of(
                 new MultiChatMessage("system", systemRoleKeyword),
                 new MultiChatMessage("user", "My Baumann type " + baumannType));
 

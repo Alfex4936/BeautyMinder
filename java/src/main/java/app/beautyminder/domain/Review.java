@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @Document(collection = "reviews")
@@ -44,7 +43,9 @@ public class Review {
     private LocalDateTime createdAt;
 
     @Setter
+    @Builder.Default
     private boolean isFiltered = false; // Field for offensive content flag
+
     // Field for NLP analysis results
     private NlpAnalysis nlpAnalysis;
 
@@ -109,7 +110,20 @@ public class Review {
     @Builder
     public static class NlpAnalysis {
         private double offensivenessProbability;
-        private Map<String, Double> similarities;
+
+        // Change Map to List of Similarity objects
+        @Builder.Default
+        private List<Similarity> similarities = new ArrayList<>();
+
+        @Getter
+        @Setter
+        @NoArgsConstructor(access = AccessLevel.PROTECTED)
+        @AllArgsConstructor
+        @Builder
+        public static class Similarity {
+            private String key;
+            private Double value;
+        }
     }
 
 }

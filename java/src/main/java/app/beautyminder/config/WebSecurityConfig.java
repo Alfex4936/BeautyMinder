@@ -9,12 +9,12 @@ import app.beautyminder.service.auth.RefreshTokenService;
 import app.beautyminder.service.auth.UserDetailService;
 import app.beautyminder.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -66,7 +66,7 @@ public class WebSecurityConfig {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService;
     private final UserDetailService userDetailsService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper customObjMapper;
 
     @Bean
     public StrictHttpFirewall httpFirewall() {
@@ -80,7 +80,6 @@ public class WebSecurityConfig {
     @Bean
     public WebSecurityCustomizer configure() {
         return (web) -> web.ignoring()
-
                 .requestMatchers(antMatcher(toH2Console().toString()))
                 .requestMatchers(antMatcher("/img/**"))
                 .requestMatchers(antMatcher("/css/**"))
@@ -166,25 +165,24 @@ public class WebSecurityConfig {
                         .successHandler(((request, response, authentication) -> {
                             log.info("Login successful for user: {}", authentication.getName());
 
-                            app.beautyminder.domain.User user = (app.beautyminder.domain.User) authentication.getPrincipal();
-                            String refreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
+                            var user = (app.beautyminder.domain.User) authentication.getPrincipal();
+                            var refreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
                             saveRefreshToken(user, refreshToken);
                             addRefreshTokenToCookie(request, response, refreshToken);
 
                             // Generate access token
-                            String accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
+                            var accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
                             log.info("ACCESS TOKEN: {}", accessToken);
 
                             response.setContentType("application/json");
                             response.setCharacterEncoding("utf-8");
                             LoginResponse login = new LoginResponse(accessToken, refreshToken, user);
 
-                            String result = objectMapper.registerModule(new JavaTimeModule()).writeValueAsString(login);
+                            var result = customObjMapper.writeValueAsString(login);
 
                             response.addHeader("Authorization", "Bearer " + accessToken);
                             response.getWriter().write(result);
                         }))
-
         );
 
 
@@ -197,7 +195,7 @@ public class WebSecurityConfig {
 
                     if (authentication != null && authentication.getPrincipal() instanceof app.beautyminder.domain.User user) {
                         try {
-                            refreshTokenRepository.deleteByUserId(user.getId());
+                            refreshTokenRepository.deleteByUserId(new ObjectId(user.getId()));
                             // Optionally, clear the cookie
                             CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
                         } catch (Exception e) {

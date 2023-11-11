@@ -4,6 +4,7 @@ import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -22,7 +23,7 @@ public interface ReviewRepository extends MongoRepository<Review, String> {
     List<Review> findRandomReviewsByRating(Integer minRating, Integer maxRating, Integer limit);
 
     @Query("{ 'rating' :  { $gte: ?0 }, 'user.$id' : { $in: ?1 } }")
-    List<Review> findReviewsByRatingAndUserIds(Integer minRating, List<ObjectId> userIds);
+    List<Review> findReviewsByRatingAndUserIds(Integer minRating, List<ObjectId> userIds, Pageable pageable);
 
     @Aggregation(pipeline = {
             "{ $match : { 'rating': {$gte: ?0, $lte: ?1}, 'cosmetic._id': ?2 } }",
@@ -31,4 +32,8 @@ public interface ReviewRepository extends MongoRepository<Review, String> {
     List<Review> findRandomReviewsByRatingAndCosmetic(Integer minRating, Integer maxRating, String cosmeticId, Integer limit);
 
     boolean existsByUserIdAndCosmeticId(String userId, String cosmeticId);
+
+    @Query(value = "{ 'user.$id': ?0 }", delete = true)
+        // delete ALL
+    void deleteByUserId(ObjectId userId);
 }
