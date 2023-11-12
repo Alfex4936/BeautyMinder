@@ -1,9 +1,13 @@
 package app.beautyminder.controller;
 
+import app.beautyminder.config.jwt.TokenProvider;
+import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.AddUserRequest;
+import app.beautyminder.service.auth.TokenService;
 import app.beautyminder.service.auth.UserService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +21,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,7 +43,6 @@ class TodoApiControllerTest {
     private static final String TEST_USER_PASSWORD = "test";
     private static final String CREATE_TEMPLATE = """
             {
-              "userId": "%s",
               "date": "%s",
               "tasks": [
                 {
@@ -83,9 +87,18 @@ class TodoApiControllerTest {
     private WebApplicationContext context;
     @Autowired
     private UserService userService;
+    @Autowired
+    private TokenProvider tokenProvider;
+
     private String userId;
     private String todoId;
     private List<String> taskIds;
+
+    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofMinutes(3);
+    private static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(1);
+
+    private String accessToken;
+    private String refreshToken;
 
     @BeforeEach
     public void mockMvcSetUp() {
@@ -98,7 +111,10 @@ class TodoApiControllerTest {
         addUserRequest.setEmail(TEST_USER_EMAIL);
         addUserRequest.setPassword(TEST_USER_PASSWORD);
 
-        userId = userService.saveUser(addUserRequest);
+        User user = userService.saveUser(addUserRequest);
+        userId = user.getId();
+        accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
+        refreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
     }
 
     @Test
@@ -107,10 +123,12 @@ class TodoApiControllerTest {
     public void testCreateTodo() throws Exception {
         // given
         String url = "/todo/create";
-        String todoJson = String.format(CREATE_TEMPLATE, userId, "2023-11-11");
+        String todoJson = String.format(CREATE_TEMPLATE, "2023-11-11");
 
         // when
         MvcResult mvcResult = mockMvc.perform(post(url)
+                        .header("Authorization", "Bearer " + accessToken)
+//                        .cookie(new Cookie("XRT", refreshToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(todoJson.getBytes(StandardCharsets.UTF_8)))
                 // then
@@ -141,9 +159,11 @@ class TodoApiControllerTest {
     @DisplayName("Test Todo Get")
     public void testGetTodo() throws Exception {
         // given
-        String url = "/todo/all?userId=" + userId;
+        String url = "/todo/all";
         // when
-        mockMvc.perform(get(url))
+        mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+
                 // then
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.message").value("Here are the todos"))
@@ -161,6 +181,7 @@ class TodoApiControllerTest {
 
         // when
         mockMvc.perform(put(url)
+                        .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody.getBytes(StandardCharsets.UTF_8)))
                 // then

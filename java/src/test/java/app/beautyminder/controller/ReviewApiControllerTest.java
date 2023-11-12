@@ -67,7 +67,7 @@ class ReviewApiControllerTest {
         addUserRequest.setEmail(TEST_USER_EMAIL);
         addUserRequest.setPassword(TEST_USER_PASSWORD);
 
-        userId = userService.saveUser(addUserRequest);
+        userId = userService.saveUser(addUserRequest).getId();
     }
 
     @Test
