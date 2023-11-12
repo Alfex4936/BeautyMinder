@@ -85,7 +85,7 @@ public class UserController {
             String userId = userService.saveUser(request);
             User user = userService.findById(userId);
             return ResponseEntity.ok(new SignUpResponse("A user is created", user));
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(new SignUpResponse(e.getMessage(), null));
         }
     }
@@ -174,6 +174,15 @@ public class UserController {
     // Can take any field in User class
     @PatchMapping("/update/{userId}")
     public ResponseEntity<?> updateProfile(@PathVariable String userId, @RequestBody Map<String, Object> updates) {
+        // 전화번호 미리 체크
+        if (updates.containsKey("phoneNumber")) {
+            String phoneNumber = (String) updates.get("phoneNumber");
+            boolean phoneNumberExists = userService.findUserByPhoneNumber(phoneNumber).isPresent();
+            if (phoneNumberExists) {
+                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Phone number already exists for another user.");
+            }
+        }
+        
         Optional<User> optionalUser = mongoService.updateFields(userId, updates, User.class);
         if (optionalUser.isPresent()) {
             return ResponseEntity.ok(optionalUser.get());
@@ -326,7 +335,7 @@ public class UserController {
             @RequestParam("image") MultipartFile image
     ) {
         // TODO: delete a image first when done with api works
-        String imageUrl = fileStorageService.storeFile(image);
+        String imageUrl = fileStorageService.storeFile(image, "profile/");
         mongoService.updateFields(userId, Map.of("profileImage", imageUrl), User.class);
 
         return imageUrl;

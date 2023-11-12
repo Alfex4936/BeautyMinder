@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.repository.Query;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface TodoRepository extends MongoRepository<Todo, String> {
 
@@ -34,4 +35,6 @@ public interface TodoRepository extends MongoRepository<Todo, String> {
     void deleteByUserId(ObjectId userId);
 
     boolean existsByDateAndUserId(LocalDate date, String userId);
+    @Query("{ '_id': ?0, 'user.$id': ?1 }")
+    Optional<Todo> findByTodoIdAndUserId(ObjectId todoId, ObjectId userId);
 }

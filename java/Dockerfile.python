@@ -1,0 +1,21 @@
+# Use the official OpenJDK 17 base image
+FROM python:3.11-slim
+
+# Set the working directory in the container
+WORKDIR /usr/src/app/python
+
+# Copy te whole python folder into the container at /usr/src/app
+COPY . .
+
+# Install any needed packages specified in requirements.txt
+RUN pip install
+# RUN pip install --no-cache-dir -U pymongo tensorflow fastapi pydantic motor torch sentence-transformers scikit-learn typing-extensions korcen
+
+# Make port 9000 available to the world outside this container
+EXPOSE 9000
+
+# Define environment variable
+ENV PORT=9000
+
+# Run the application
+ENTRYPOINT ["python", "server.py"]

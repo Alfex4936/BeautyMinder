@@ -6,15 +6,16 @@ import app.beautyminder.service.cosmetic.ReviewSearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
-// TODO: change all to ADMIN_ROLE
 @ControllerAdvice
 @RequiredArgsConstructor
 @RestController
 @Slf4j
+@PreAuthorize("hasRole('ROLE_ADMIN')")
 @RequestMapping("/es-index")
 public class EsIndexController {
 

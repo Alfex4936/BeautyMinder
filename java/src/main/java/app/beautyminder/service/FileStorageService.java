@@ -16,6 +16,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -35,16 +36,18 @@ public class FileStorageService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public String storeFile(MultipartFile file) {
+    public String storeFile(MultipartFile file, String folderPath) {
         validateImageFileType(file);
 
-        try {
-            // Store the original file
-            String fileName = file.getOriginalFilename();
+        var fileName = folderPath + file.getOriginalFilename();
+        try (InputStream fileInputStream = file.getInputStream()) {
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(file.getContentType());
             metadata.setContentLength(file.getSize());
-            amazonS3.putObject(new PutObjectRequest(bucket, fileName, file.getInputStream(), metadata));
+
+            amazonS3.putObject(new PutObjectRequest(bucket, fileName, fileInputStream, metadata));
+            URL fileUrl = amazonS3.getUrl(bucket, fileName);
+
 
             // Create and store the thumbnail
 //            BufferedImage thumbnail = createThumbnail(file);
@@ -59,7 +62,6 @@ public class FileStorageService {
 //            thumbnailMetadata.setContentLength(thumbnailBytes.length);
 //            amazonS3.putObject(new PutObjectRequest(bucket, thumbnailName, thumbnailInputStream, thumbnailMetadata));
 
-            URL fileUrl = amazonS3.getUrl(bucket, fileName);
             return fileUrl.toString();
         } catch (IOException e) {
             throw new FileStorageException("Could not store file. Please try again!", e);
@@ -68,8 +70,8 @@ public class FileStorageService {
 
     public Resource loadFile(String storedFileName) {
         try {
-            S3Object o = amazonS3.getObject(new GetObjectRequest(bucket, storedFileName));
-            try (S3ObjectInputStream objectInputStream = o.getObjectContent()) {
+            S3Object s3Object  = amazonS3.getObject(new GetObjectRequest(bucket, storedFileName));
+            try (S3ObjectInputStream objectInputStream = s3Object .getObjectContent()) {
                 byte[] bytes = IOUtils.toByteArray(objectInputStream);
                 return new ByteArrayResource(bytes);
             }
@@ -80,11 +82,6 @@ public class FileStorageService {
 
     public void deleteFile(String fileName) {
         amazonS3.deleteObject(bucket, fileName);
-    }
-
-    public String updateFile(String oldFileName, MultipartFile newFile) {
-        deleteFile(oldFileName);
-        return storeFile(newFile);
     }
 
     private void validateImageFileType(MultipartFile file) {

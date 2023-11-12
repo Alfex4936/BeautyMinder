@@ -8,6 +8,7 @@ import app.beautyminder.service.FileStorageService;
 import app.beautyminder.service.ReviewService;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -76,7 +77,7 @@ public class ReviewController {
             }
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Review> createReview(@RequestPart("review") @Valid ReviewDTO reviewDTO, @RequestPart("images") MultipartFile[] images) {
+    public ResponseEntity<Review> createReview(@RequestPart("review") @Valid ReviewDTO reviewDTO, @RequestPart("images") MultipartFile[] images) throws JsonProcessingException {
         // Delegate the check to the service layer
         Review createdReview = reviewService.createReview(reviewDTO, images);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdReview);

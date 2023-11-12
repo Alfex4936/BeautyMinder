@@ -76,7 +76,8 @@ public class ReviewSearchService {
         var request = new Request("POST", "/reviews/_analyze");
         String jsonEntity = """
                 {
-                  "text": "%s"
+                  "text": "%s",
+                  "field": "content"
                 }
                 """.formatted(text);
         request.setJsonEntity(jsonEntity);

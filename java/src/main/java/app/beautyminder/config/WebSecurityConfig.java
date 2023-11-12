@@ -34,6 +34,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -60,13 +61,13 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 public class WebSecurityConfig {
 
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
-    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
+    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(7);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService;
     private final UserDetailService userDetailsService;
-    private final ObjectMapper customObjMapper;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public StrictHttpFirewall httpFirewall() {
@@ -121,13 +122,14 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/api/**")).permitAll()
 
                 .requestMatchers(antMatcher("/expiry/**")).permitAll()
-                .requestMatchers(antMatcher("/es-index/**")).permitAll()
-                .requestMatchers(antMatcher("/gpt/**")).permitAll()
+//                .requestMatchers(antMatcher("/es-index/**")).permitAll()
+//                .requestMatchers(antMatcher("/todo/**")).permitAll()
+                .requestMatchers(antMatcher("/gpt/review/**")).permitAll()
                 .requestMatchers(antMatcher("/redis/**")).permitAll()
                 .requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll()
                 .requestMatchers(antMatcher("/cosmetic/click")).permitAll()
                 .requestMatchers(antMatcher("/search/**")).permitAll()
-                .requestMatchers(antMatcher("/data-view/**")).permitAll()
+//                .requestMatchers(antMatcher("/data-view/**")).permitAll()
                 .requestMatchers(antMatcher("/baumann/**")).permitAll()
 
                 .requestMatchers(antMatcher("/login")).permitAll()
@@ -178,7 +180,7 @@ public class WebSecurityConfig {
                             response.setCharacterEncoding("utf-8");
                             LoginResponse login = new LoginResponse(accessToken, refreshToken, user);
 
-                            var result = customObjMapper.writeValueAsString(login);
+                            var result = objectMapper.writeValueAsString(login);
 
                             response.addHeader("Authorization", "Bearer " + accessToken);
                             response.getWriter().write(result);
@@ -216,7 +218,7 @@ public class WebSecurityConfig {
                         new AntPathRequestMatcher("/api/**")));
 
         http.authenticationProvider(authenticationProvider());
-//        http.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -229,10 +231,10 @@ public class WebSecurityConfig {
         return registrationBean;
     }
 
-//    @Bean
-//    public TokenAuthenticationFilter tokenAuthenticationFilter() {
-//        return new TokenAuthenticationFilter(tokenProvider, refreshTokenService, refreshTokenRepository);
-//    }
+    @Bean
+    public TokenAuthenticationFilter tokenAuthenticationFilter() {
+        return new TokenAuthenticationFilter(tokenProvider, refreshTokenService, refreshTokenRepository);
+    }
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {

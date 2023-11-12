@@ -10,7 +10,6 @@ import java.util.List;
 @Setter
 @Getter
 public class AddTodoRequest {
-    private String userId;
     private LocalDate date;
     private List<TodoTask> tasks;
 }

@@ -15,7 +15,8 @@ public enum ErrorCode {
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "E7", "올바르지 않은 요청 JSON 형식입니다."),
     ELASTICSEARCH_ERROR(HttpStatus.BAD_REQUEST, "E8", "OpenSearch 에러가 발생했습니다."),
     INVALID_MULTIPART(HttpStatus.BAD_REQUEST, "E8", "Multipart 오류, response/request를 다시 확인하세요."),
-    MISSING_OR_UNREADABLE_BODY(HttpStatus.BAD_REQUEST, "E9", "Missing or unreadable request body.");
+    MISSING_OR_UNREADABLE_BODY(HttpStatus.BAD_REQUEST, "E9", "Missing or unreadable request body."),
+    UNAUTHORIZED_ERROR(HttpStatus.UNAUTHORIZED, "E10", "Problems with authentications.");
 
 
     private final String message;

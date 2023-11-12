@@ -23,10 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -50,7 +47,7 @@ public class UserService {
     private String defaultAdminProfilePic;
 
     // 일반 사용자 저장
-    public String saveUser(AddUserRequest dto) {
+    public String saveUser(AddUserRequest dto) throws ResponseStatusException {
         // 이메일 중복 체크
         checkDuplicatedUser(dto.getEmail(), dto.getPhoneNumber());
 
@@ -149,6 +146,10 @@ public class UserService {
     // 이메일이나 닉네임으로 조회
     public User findByEmailOrNickname(String email, String nickname) {
         return userRepository.findByEmailOrNickname(email, nickname).orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
+    }
+
+    public Optional<User> findUserByPhoneNumber(String phoneNumber) {
+        return userRepository.findByPhoneNumber(phoneNumber);
     }
 
     // 권한으로 사용자 목록 조회

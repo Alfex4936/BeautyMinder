@@ -3,6 +3,7 @@ package app.beautyminder.service.cosmetic;
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.repository.CosmeticRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -12,6 +13,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 public class CosmeticService {
+
+    @Value("${server.default.cosmetic}")
+    private String defaultCosmeticPic;
 
     private final CosmeticRepository cosmeticRepository;
 
@@ -55,6 +59,9 @@ public class CosmeticService {
     }
 
     public Cosmetic saveCosmetic(Cosmetic cosmetic) {
+        if (cosmetic.getImages().isEmpty()) {
+            cosmetic.addImage(defaultCosmeticPic);
+        }
         return cosmeticRepository.save(cosmetic);
     }
 

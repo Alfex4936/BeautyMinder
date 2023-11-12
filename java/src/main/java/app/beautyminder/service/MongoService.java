@@ -5,6 +5,7 @@ import app.beautyminder.domain.Todo;
 import app.beautyminder.domain.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -68,5 +69,15 @@ public class MongoService {
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, entityClass.getSimpleName() + " not found: " + id);
         }
+    }
+
+    public <T> boolean existsWithReference(Class<T> entityClass, String entityId, String referenceFieldName, String referenceId) {
+        Query query = new Query(Criteria.where("_id").is(new ObjectId(entityId))
+                .and(referenceFieldName + ".$id").is(new ObjectId(referenceId)));
+        query.fields().position("program", 1);
+        T application = mongoTemplate.findOne(query, entityClass);
+        log.error("Check: {}", application);
+
+        return mongoTemplate.exists(query, entityClass);
     }
 }

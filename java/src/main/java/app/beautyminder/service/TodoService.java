@@ -2,16 +2,21 @@ package app.beautyminder.service;
 
 import app.beautyminder.domain.Todo;
 import app.beautyminder.domain.TodoTask;
+import app.beautyminder.dto.todo.AddTodoResponse;
 import app.beautyminder.dto.todo.TaskUpdateDTO;
 import app.beautyminder.dto.todo.TodoUpdateDTO;
 import app.beautyminder.repository.TodoRepository;
 import com.mongodb.client.result.DeleteResult;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,6 +30,7 @@ public class TodoService {
     private final TodoRepository todoRepository;
     @Autowired
     private MongoTemplate mongoTemplate;
+    private final MongoService mongoService;
 
     public Todo createTodo(Todo todo) {
         return todoRepository.save(todo);
@@ -64,6 +70,17 @@ public class TodoService {
 
     public boolean existsByDateAndUserId(LocalDate date, String id) {
         return todoRepository.existsByDateAndUserId(date, id);
+    }
+
+    public boolean existsByTodoIdAndUserId(String todoId, String userId) {
+        return mongoService.existsWithReference(Todo.class, todoId, "user", userId);
+    }
+
+    public boolean checkUserAuthorizationForTodo(String todoId, String userId) {
+        if (!mongoService.existsWithReference(Todo.class, todoId, "user", userId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Seems like the user doesn't have that todo");
+        }
+        return true;
     }
 
     public Optional<Todo> updateTodoTasks(String todoId, TodoUpdateDTO todoUpdateDTO) {

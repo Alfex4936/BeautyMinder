@@ -1,5 +1,18 @@
 version: '3.8'
 services:
+#  python-fastapi:
+#    container_name: beauty-fastapi
+#    build:
+#      context: ./python
+#      dockerfile: Dockerfile.python
+#    depends_on:
+#      spring-boot:
+#        condition: service_started
+#    ports:
+#      - "9000:9000"
+#    links:
+#      - spring-boot
+
   spring-boot:
     container_name: beauty-spring-boot
     build:

@@ -78,6 +78,10 @@ public class Cosmetic {
         }
     }
 
+    public void addImage(String url) {
+        this.images.add(url);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -104,6 +105,16 @@ public class GlobalExceptionHandler {
 
         // Create an ErrorResponse object and return it with a BAD_REQUEST status.
         return createErrorResponseEntity(ErrorCode.MISSING_OR_UNREADABLE_BODY);
+    }
+
+    @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
+    protected ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(AuthenticationCredentialsNotFoundException e) {
+        // Log the detailed error message for server-side debugging.
+        String errorDetails = "Please check your authentication.";
+        log.error("{}: {}", errorDetails, e.getMessage());
+
+        // Create an ErrorResponse object and return it with a BAD_REQUEST status.
+        return createErrorResponseEntity(ErrorCode.UNAUTHORIZED_ERROR);
     }
 
     private ResponseEntity<ErrorResponse> createErrorResponseEntity(ErrorCode errorCode) {

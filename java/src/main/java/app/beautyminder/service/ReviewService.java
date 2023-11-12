@@ -3,21 +3,28 @@ package app.beautyminder.service;
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
+import app.beautyminder.dto.PyReviewAnalysis;
 import app.beautyminder.dto.ReviewDTO;
 import app.beautyminder.dto.ReviewUpdateDTO;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.repository.UserRepository;
 import app.beautyminder.service.cosmetic.CosmeticService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -26,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ReviewService {
@@ -36,6 +44,11 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final CosmeticRepository cosmeticRepository;
     private final MongoTemplate mongoTemplate;
+    private final ObjectMapper objectMapper;
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    @Value("${server.python.review}")
+    private String reviewProcessServer;
 
     public Optional<Review> findById(String id) {
         return reviewRepository.findById(id);
@@ -60,7 +73,7 @@ public class ReviewService {
         reviewRepository.deleteById(id);
     }
 
-    public Review createReview(ReviewDTO reviewDTO, MultipartFile[] images) {
+    public Review createReview(ReviewDTO reviewDTO, MultipartFile[] images) throws JsonProcessingException {
         // Check if the user has already left a review for the cosmetic
         if (userHasReviewedCosmetic(reviewDTO.getUserId(), reviewDTO.getCosmeticId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User has already reviewed this cosmetic.");
@@ -80,7 +93,7 @@ public class ReviewService {
                 .user(user)
                 .cosmetic(cosmetic)
                 .isFiltered(false)
-                .images(new ArrayList<>()) // Ensure the images list is initialized
+                .images(new ArrayList<>()) // Ensure the image list is initialized
                 .build();
 
         // Update cosmetic's review score and save it
@@ -91,13 +104,31 @@ public class ReviewService {
         // Store images and set image URLs in review
         if (images != null) {
             for (var image : images) {
-                var imageUrl = fileStorageService.storeFile(image);
+                var imageUrl = fileStorageService.storeFile(image, "review/");
                 review.getImages().add(imageUrl);
             }
         }
 
+        // Python NLP work
+        // TODO: call in background or process before saving
+//        String reviewJson = objectMapper.writeValueAsString(review);
+//        callProcessAPI(reviewJson);
+
         // Save the review
         return reviewRepository.save(review);
+    }
+
+    private void callProcessAPI(String reviewJson) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create the request entity
+        HttpEntity<String> request = new HttpEntity<>(reviewJson, headers);
+
+        // Send POST request
+        ResponseEntity<PyReviewAnalysis> response = restTemplate.postForEntity(reviewProcessServer, request, PyReviewAnalysis.class);
+
+        log.info("BEMINDER: python server: {}", response.getBody().toString());
     }
 
 
@@ -136,7 +167,7 @@ public class ReviewService {
                         // Remove the old image if it exists
                         review.getImages().removeIf(img -> img.contains(originalFilename));
                         // Store the new image and add its URL to the review
-                        var imageUrl = fileStorageService.storeFile(image);
+                        var imageUrl = fileStorageService.storeFile(image, "review/");
                         review.getImages().add(imageUrl);
                     }
                 }

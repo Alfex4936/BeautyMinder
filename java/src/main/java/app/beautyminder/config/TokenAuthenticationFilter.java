@@ -3,12 +3,9 @@ package app.beautyminder.config;
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
-import app.beautyminder.dto.user.LoginResponse;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.service.auth.RefreshTokenService;
 import app.beautyminder.util.CookieUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -19,14 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
@@ -37,15 +32,18 @@ import static app.beautyminder.config.WebSecurityConfig.*;
 @RequiredArgsConstructor
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private final static String HEADER_AUTHORIZATION = "Authorization";
+    private final static String NEW_HEADER_AUTHORIZATION = "New-Access-Token";
+    private final static String NEW_XRT_AUTHORIZATION = "New-Refresh-Token";
     private final static String TOKEN_PREFIX = "Bearer ";
     private static final Pattern UNPROTECTED_SWAGGER_API =
             Pattern.compile("^/(swagger-ui|v3/api-docs|proxy)(/.*)?$");
     private static final Pattern UNPROTECTED_API =
             Pattern.compile("^/(expiry|es-index|data-view|gpt|search|cosmetic/hit|cosmetic/click|redis|user/sms/send|baumann)(/.*)?$");
+    private static final Pattern TEST_PROTECTED_API =
+            Pattern.compile("^/(admin|gpt/review/summarize|es-index|data-view|todo)(/.*)?$");
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final ObjectMapper objectMapper;
     @Value("${unprotected.routes}")
     private String[] unprotectedRoutes;
 
@@ -54,11 +52,15 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             @NotNull HttpServletResponse response,
             @NotNull FilterChain filterChain) throws ServletException, IOException {
-        if (!isProtectedRoute(request.getRequestURI())) { // early return
-            log.debug("Accessing unprotected route! " + request.getRequestURI());
+        if (!isTestRoute(request.getRequestURI())) { // for now only checking admin route
             filterChain.doFilter(request, response);
             return;
         }
+//        if (!isProtectedRoute(request.getRequestURI())) { // early return
+//            log.debug("Accessing unprotected route! " + request.getRequestURI());
+//            filterChain.doFilter(request, response);
+//            return;
+//        }
 
         AtomicBoolean isAuth = new AtomicBoolean(true);
 
@@ -68,12 +70,12 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         if (tokenProvider.validToken(token)) {
             log.debug("Valid access token found, setting the authentication.");
             Authentication auth = tokenProvider.getAuthentication(token);
-            Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
-            log.debug("User Authorities: {}", authorities);
+//            Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
+//            log.debug("User Authorities: {}", authorities);
 
             SecurityContextHolder.getContext().setAuthentication(auth);
         } else {
-            log.debug("Invalid access token. Attempting refresh.");
+            log.debug("BEMINDER: Invalid access token. Attempting refresh.");
 
             // Attempt to use refresh token
             Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);
@@ -83,7 +85,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                     .flatMap(refreshTokenService::findUserByRefreshToken)
                     .ifPresentOrElse(
                             user -> {
-                                // here should I call /token/refresh ?
                                 log.info("Valid refresh token found, generating new access tokens.");
 
                                 // Generate new access token and refresh token
@@ -93,31 +94,20 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                 // Update the Security Context
                                 Authentication newAuth = tokenProvider.getAuthentication(newAccessToken);
                                 SecurityContextHolder.getContext().setAuthentication(newAuth);
-                                Collection<? extends GrantedAuthority> authorities = newAuth.getAuthorities();
-                                log.debug("Ref User Authorities: {}", authorities);
+//                                Collection<? extends GrantedAuthority> authorities = newAuth.getAuthorities();
+//                                log.debug("Ref User Authorities: {}", authorities);
 
+                                // TODO: Clients should detect new access token
                                 // Update the HTTP headers and cookies
-                                response.addHeader(HEADER_AUTHORIZATION, TOKEN_PREFIX + newAccessToken);
+                                response.addHeader(NEW_HEADER_AUTHORIZATION, newAccessToken);
+                                response.addHeader(NEW_XRT_AUTHORIZATION, newRefreshToken);
 
-                                int cookieMaxAge = (int) REFRESH_TOKEN_DURATION.toSeconds();
-                                CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
-                                CookieUtil.addCookie(response, REFRESH_TOKEN_COOKIE_NAME, newRefreshToken, cookieMaxAge);
+//                                int cookieMaxAge = (int) REFRESH_TOKEN_DURATION.toSeconds();
+//                                CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
+//                                CookieUtil.addCookie(response, REFRESH_TOKEN_COOKIE_NAME, newRefreshToken, cookieMaxAge);
 
                                 // Optionally, update the refresh token in the database
                                 saveRefreshToken(user, newRefreshToken);
-//                                    response.addHeader("Authorization", "Bearer " + newAccessToken);
-
-                                response.setContentType("application/json");
-                                response.setCharacterEncoding("utf-8");
-                                LoginResponse login = new LoginResponse(newAccessToken, newRefreshToken, user);
-
-                                try {
-                                    String result = objectMapper.registerModule(new JavaTimeModule()).writeValueAsString(login);
-//                                        objectMapper.writeValue(response.getWriter(), result);
-                                    response.getOutputStream().write(result.getBytes());
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
                             },
                             () -> {
                                 log.warn("Invalid refresh token. Clearing the security context.");
@@ -139,8 +129,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                                 // Write the JSON message to the response
 
                                 try {
-//                                        response.getWriter().write(jsonMessage);
-
                                     response.getOutputStream().write(jsonMessage.getBytes());
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
@@ -161,6 +149,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                 !UNPROTECTED_SWAGGER_API.matcher(uri).matches() &&
                         !UNPROTECTED_API.matcher(uri).matches() &&
                         Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
+    }
+
+    private boolean isTestRoute(String uri) {
+        return TEST_PROTECTED_API.matcher(uri).matches();
     }
 
     private String getAccessToken(HttpServletRequest request) {

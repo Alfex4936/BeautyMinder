@@ -7,6 +7,7 @@ import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,6 +18,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Date;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class TokenProvider {
@@ -58,20 +60,11 @@ public class TokenProvider {
 
     public Authentication getAuthentication(String token) {
         Claims claims = getClaims(token);
-//        Set<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+        User user = userRepository.findByEmail(claims.getSubject()).orElseThrow(() ->
+                new UsernameNotFoundException("User not found with email: " + claims.getSubject())
+        );
 
-        // Fetch the user from the database using the email (or id, or whatever identifies the user in your token)
-        User user = userRepository.findByEmail(claims.getSubject()).orElse(null);
-
-
-        // Handle the scenario when the user is not found
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found with email: " + claims.getSubject());
-        }
-
-        Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
-
-        return new UsernamePasswordAuthenticationToken(new org.springframework.security.core.userdetails.User(claims.getSubject(), "", authorities), token, authorities);
+        return new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
     }
 
     public String getUserId(String token) {
