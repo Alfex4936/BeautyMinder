@@ -5,16 +5,16 @@ import re
 
 import tensorflow as tf
 import torch
-from bson.objectid import ObjectId
 from fastapi import FastAPI
 from korcen import korcen
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict
 from sentence_transformers import SentenceTransformer, util
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # or any {'0', '1', '2'}
+tf.keras.utils.disable_interactive_logging()
 
 app = FastAPI()
 
@@ -28,6 +28,10 @@ tokenizer_path = "tokenizer_with_kogpt2.pickle"
 model = tf.keras.models.load_model(model_path)
 with open(tokenizer_path, "rb") as f:
     tokenizer = pickle.load(f)
+
+embedder = SentenceTransformer("./sroberta/")
+# embedder.save("sroberta/")
+vectorizer = CountVectorizer()
 
 # Baumann skin type descriptions
 BAUMANN_DESCRIPTION = {
@@ -103,37 +107,48 @@ def clean_text(text):
     return clean_text_pattern.sub(r"", text)
 
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+# def validate_object_id(v: Any) -> ObjectId:
+#     if isinstance(v, ObjectId):
+#         return v
+#     if ObjectId.is_valid(v):
+#         return ObjectId(v)
+#     raise ValueError("Invalid ObjectId")
 
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid objectid")
-        return ObjectId(v)
 
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+# PyObjectId = Annotated[
+#     Union[str, ObjectId],
+#     AfterValidator(validate_object_id),
+#     PlainSerializer(lambda x: str(x), return_type=str),
+#     WithJsonSchema({"type": "string"}, mode="serialization"),
+# ]
 
 
 class ReviewRequest(BaseModel):
-    id: PyObjectId = Field(alias="_id")
+    # id: PyObjectId = Field(alias="id")
     content: str
 
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {ObjectId: str}
+    model_config = ConfigDict(arbitrary_types_allowed=True, populate_by_name=True)
+    # arbitary_types_allowed = True
+
+    # @classmethod
+    # def __get_pydantic_json_schema__(
+    #     cls, core_schema: CoreSchema, handler: GetJsonSchemaHandler
+    # ) -> Dict[str, Any]:
+    #     json_schema = super().__get_pydantic_json_schema__(core_schema, handler)
+    #     json_schema = handler.resolve_ref_schema(json_schema)
+
+    #     # Customize the schema for the 'id' field
+    #     id_field = json_schema.get("properties", {}).get("_id", {})
+    #     id_field.update(type="string")
+    #     return json_schema
 
 
 def process_review(review):
+    # print(f"What is {review}")
     review_text = [review.content]  # array form for nlp work
-    embedder = SentenceTransformer("jhgan/ko-sroberta-multitask")
 
     # Keyword-based similarity
-    vectorizer = CountVectorizer()
+
     baumann_keywords_matrix = vectorizer.fit_transform(
         [" ".join(desc.split()) for desc in BAUMANN_DESCRIPTION.values()]
     )
@@ -168,7 +183,7 @@ def process_review(review):
 
     # Calculate offensiveness probability
     overall_offensiveness_probability = round(
-        (korcen.check(review_text[0]) + predict_text(review_text)) / 2, 2  # 0.00
+        (korcen.check(review_text[0]) + predict_text(review_text[0])) / 2, 2  # 0.00
     )
     is_filtered = bool(overall_offensiveness_probability > 0.8)
 
@@ -210,6 +225,11 @@ async def process_review_endpoint(review_request: ReviewRequest):
     #     raise HTTPException(status_code=500, detail="Failed to update the review")
 
     return nlp_result
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 from locust import HttpUser, task, between, events
 import random
 import numpy as np
-
+import logging
 
 keywords = [
     "메이크업",  # Makeup
@@ -83,7 +83,10 @@ class MyUser(HttpUser):
 
 def print_keyword_counts(environment, **kwargs):
     for keyword, count in MyUser.keyword_counts.items():
-        print(f'{keyword}: {count}')
+        logging.info(f'{keyword}: {count}')
+    with open('keyword_counts.txt', 'w') as file:
+        for keyword, count in MyUser.keyword_counts.items():
+            file.write(f'{keyword}: {count}\n')
 
 # Hook to print keyword counts when test stops
 events.test_stop.add_listener(print_keyword_counts)
@@ -91,4 +94,5 @@ events.test_stop.add_listener(print_keyword_counts)
 
 if __name__ == "__main__":
     import os
-    os.system("locust -f rankingTest.py --headless -u 100 -r 20 --run-time 3m --host http://localhost:8080")
+    os.system("locust -f rankingTest.py --headless -u 100 -r 20 --run-time 30m --host http://localhost:8080")
+

@@ -39,10 +39,17 @@ public class GPTReviewController {
     )
 
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    @PostMapping("/review/summarize")
+    @GetMapping("/review/summarize")
     public ResponseEntity<String> triggerSummarization() { // test call
         gptService.summarizeReviews();
         return ResponseEntity.ok("Reviews summarized successfully!");
+    }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/review/summarize/{cosmeticId}")
+    public ResponseEntity<String> triggerOneSummarization(@PathVariable String cosmeticId) { // test call
+        gptService.summaryCosmetic(cosmeticId);
+        return ResponseEntity.ok("Reviews summarized for " + cosmeticId + " by GPT-4 successfully!");
     }
 
     @Operation(

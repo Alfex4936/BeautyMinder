@@ -1,8 +1,11 @@
 package app.beautyminder.domain;
 
+import app.beautyminder.dto.NlpAnalysis;
+import app.beautyminder.dto.PyReviewAnalysis;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -42,11 +45,15 @@ public class Review {
     @CreatedDate
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
+
     @Setter
     @Builder.Default
     private boolean isFiltered = false; // Field for offensive content flag
 
     // Field for NLP analysis results
+    @Setter
     private NlpAnalysis nlpAnalysis;
 
     // Constructor using builder pattern for NlpAnalysis
@@ -103,27 +110,27 @@ public class Review {
     }
 
     // Inner class to hold NLP analysis results
-    @Getter
-    @Setter
-    @NoArgsConstructor(access = AccessLevel.PROTECTED)
-    @AllArgsConstructor
-    @Builder
-    public static class NlpAnalysis {
-        private double offensivenessProbability;
-
-        // Change Map to List of Similarity objects
-        @Builder.Default
-        private List<Similarity> similarities = new ArrayList<>();
-
-        @Getter
-        @Setter
-        @NoArgsConstructor(access = AccessLevel.PROTECTED)
-        @AllArgsConstructor
-        @Builder
-        public static class Similarity {
-            private String key;
-            private Double value;
-        }
-    }
+//    @Getter
+//    @Setter
+//    @NoArgsConstructor(access = AccessLevel.PROTECTED)
+//    @AllArgsConstructor
+//    @Builder
+//    public static class NlpAnalysis {
+//        private double offensivenessProbability;
+//
+//        // Change Map to List of Similarity objects
+//        @Builder.Default
+//        private List<Similarity> similarities = new ArrayList<>();
+//
+//        @Getter
+//        @Setter
+//        @NoArgsConstructor(access = AccessLevel.PROTECTED)
+//        @AllArgsConstructor
+//        @Builder
+//        public static class Similarity {
+//            private String key;
+//            private Double value;
+//        }
+//    }
 
 }

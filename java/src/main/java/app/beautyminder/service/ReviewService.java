@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +23,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -44,6 +44,7 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final CosmeticRepository cosmeticRepository;
     private final MongoTemplate mongoTemplate;
+    private final MongoService mongoService;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -69,13 +70,15 @@ public class ReviewService {
         cosmetic.removeRating(review.getRating());
         cosmeticRepository.save(cosmetic);
 
+        review.getImages().forEach(fileStorageService::deleteFile);
+
         // Delete the review by id
         reviewRepository.deleteById(id);
     }
 
     public Review createReview(ReviewDTO reviewDTO, MultipartFile[] images) throws JsonProcessingException {
         // Check if the user has already left a review for the cosmetic
-        if (userHasReviewedCosmetic(reviewDTO.getUserId(), reviewDTO.getCosmeticId())) {
+        if (HasUserReviewedCosmetic(reviewDTO.getUserId(), reviewDTO.getCosmeticId()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User has already reviewed this cosmetic.");
         }
 
@@ -111,24 +114,32 @@ public class ReviewService {
 
         // Python NLP work
         // TODO: call in background or process before saving
-//        String reviewJson = objectMapper.writeValueAsString(review);
-//        callProcessAPI(reviewJson);
+        var reviewJson = objectMapper.writeValueAsString(review);
+        try {
+            var nlpResultJson = callProcessAPI(reviewJson).getBody();
+            review.setFiltered(nlpResultJson.isFiltered());
+            review.setNlpAnalysis(nlpResultJson.nlpAnalysis());
+        } catch (RestClientException e) {
+            log.error("Failed to get NLP result for a review. skipping");
+        }
+
+
 
         // Save the review
         return reviewRepository.save(review);
     }
 
-    private void callProcessAPI(String reviewJson) {
-        HttpHeaders headers = new HttpHeaders();
+    private ResponseEntity<PyReviewAnalysis> callProcessAPI(String reviewJson) throws RestClientException {
+        var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         // Create the request entity
-        HttpEntity<String> request = new HttpEntity<>(reviewJson, headers);
+        var request = new HttpEntity<>(reviewJson, headers);
 
-        // Send POST request
-        ResponseEntity<PyReviewAnalysis> response = restTemplate.postForEntity(reviewProcessServer, request, PyReviewAnalysis.class);
+        // Send POST request and get JSON
+        return restTemplate.postForEntity(reviewProcessServer, request, PyReviewAnalysis.class);
 
-        log.info("BEMINDER: python server: {}", response.getBody().toString());
+//        log.info("BEMINDER: python server: {}", response.getBody().toString());
     }
 
 
@@ -234,7 +245,11 @@ public class ReviewService {
         return mongoTemplate.find(query, Review.class);
     }
 
-    public boolean userHasReviewedCosmetic(String userId, String cosmeticId) {
-        return reviewRepository.existsByUserIdAndCosmeticId(userId, cosmeticId);
+    public Optional<Review> HasUserReviewedCosmetic(String userId, String cosmeticId) {
+        return reviewRepository.findByUserIdAndCosmeticId(new ObjectId(userId), new ObjectId(cosmeticId));
+    }
+
+    public List<Review> findRandomReviewsByRatingAndCosmetic(Integer minRating, Integer maxRating, String cosmeticId, Integer limit) {
+        return reviewRepository.findRandomReviewsByRatingAndCosmetic(minRating, maxRating, new ObjectId(cosmeticId), limit);
     }
 }

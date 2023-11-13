@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ReviewRepository extends MongoRepository<Review, String> {
     List<Review> findByUser(User user);
@@ -26,12 +27,16 @@ public interface ReviewRepository extends MongoRepository<Review, String> {
     List<Review> findReviewsByRatingAndUserIds(Integer minRating, List<ObjectId> userIds, Pageable pageable);
 
     @Aggregation(pipeline = {
-            "{ $match : { 'rating': {$gte: ?0, $lte: ?1}, 'cosmetic._id': ?2 } }",
+            "{ $match : { 'rating': {$gte: ?0, $lte: ?1}, 'cosmetic.$id': ?2 } }",
+            "{ $addFields : { sortFields: { $ifNull: ['$updatedAt', '$createdAt'] } } }", // Sort by updatedAt if available, otherwise by createdAt
+            "{ $sort : { sortField: -1, _id: 1} }", // Limit the results to the specified size
+            "{ $limit : 15 }", // Limit the results to the specified size
             "{ $sample : { 'size' : ?3 } }"
     })
-    List<Review> findRandomReviewsByRatingAndCosmetic(Integer minRating, Integer maxRating, String cosmeticId, Integer limit);
+    List<Review> findRandomReviewsByRatingAndCosmetic(Integer minRating, Integer maxRating, ObjectId cosmeticId, Integer limit);
 
-    boolean existsByUserIdAndCosmeticId(String userId, String cosmeticId);
+    @Query(value = "{ 'user.$id': ?0, 'cosmetic.$id': ?1 }")
+    Optional<Review> findByUserIdAndCosmeticId(ObjectId userId, ObjectId cosmeticId);
 
     @Query(value = "{ 'user.$id': ?0 }", delete = true)
         // delete ALL

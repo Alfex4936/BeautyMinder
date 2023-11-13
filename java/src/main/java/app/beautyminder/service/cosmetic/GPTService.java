@@ -6,6 +6,7 @@ import app.beautyminder.domain.Review;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.GPTReviewRepository;
 import app.beautyminder.repository.ReviewRepository;
+import app.beautyminder.service.ReviewService;
 import io.github.flashvayne.chatgpt.dto.chat.MultiChatMessage;
 import io.github.flashvayne.chatgpt.service.ChatgptService;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +31,7 @@ public class GPTService {
     private static final Logger logger = LoggerFactory.getLogger(GPTService.class);
     private final ChatgptService chatgptService;
     private final CosmeticRepository cosmeticRepository;
-    private final ReviewRepository reviewRepository;
+    private final ReviewService reviewService;
     private final GPTReviewRepository gptReviewRepository;
     @Value("${chatgpt.system}")
     private String systemRole;
@@ -45,8 +48,8 @@ public class GPTService {
         var allCosmetics = cosmeticRepository.findAll();
 
         allCosmetics.forEach(cosmetic -> {
-            var positiveReviews = reviewRepository.findRandomReviewsByRatingAndCosmetic(3, 5, cosmetic.getId(), 10);
-            var negativeReviews = reviewRepository.findRandomReviewsByRatingAndCosmetic(1, 3, cosmetic.getId(), 10);
+            var positiveReviews = reviewService.findRandomReviewsByRatingAndCosmetic(3, 5, cosmetic.getId(), 10);
+            var negativeReviews = reviewService.findRandomReviewsByRatingAndCosmetic(1, 3, cosmetic.getId(), 10);
 
             var positiveSummary = saveSummarizedReviews(positiveReviews, cosmetic);
             var negativeSummary = saveSummarizedReviews(negativeReviews, cosmetic);
@@ -70,13 +73,38 @@ public class GPTService {
         log.info("GPTReview: Summarization done");
     }
 
+    public void summaryCosmetic(String cosmeticId) {
+        var cosmetic = cosmeticRepository.findById(cosmeticId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "A cosmetic is not found."));
+
+        var positiveReviews = reviewService.findRandomReviewsByRatingAndCosmetic(3, 5, cosmetic.getId(), 10);
+        var negativeReviews = reviewService.findRandomReviewsByRatingAndCosmetic(1, 3, cosmetic.getId(), 10);
+
+        var positiveSummary = saveSummarizedReviews(positiveReviews, cosmetic);
+        var negativeSummary = saveSummarizedReviews(negativeReviews, cosmetic);
+
+        // Check if GPTReview already exists for this cosmetic
+        gptReviewRepository.findByCosmetic(cosmetic).ifPresentOrElse(
+                existingReview -> {
+                    existingReview.setPositive(positiveSummary);
+                    existingReview.setNegative(negativeSummary);
+                    gptReviewRepository.save(existingReview);
+                },
+                () -> gptReviewRepository.save(GPTReview.builder()
+                        .gptVersion(gptVersion)
+                        .positive(positiveSummary)
+                        .negative(negativeSummary)
+                        .cosmetic(cosmetic)
+                        .build())
+        );
+    }
+
     private String saveSummarizedReviews(List<Review> reviews, Cosmetic cosmetic) {
         logger.info("Summarizing reviews for {}...", cosmetic.getName());
         var allContents = new StringBuilder();
         allContents.append("제품명: ").append(cosmetic.getName()).append("\n");
 
         var reviewContents = reviews.stream()
-                .map(review -> "리뷰" + reviews.indexOf(review) + 1 + ". " + review.getContent())
+                .map(review -> "리뷰" + reviews.indexOf(review) + 1 + ": " + review.getContent())
                 .collect(Collectors.joining("\n"));
 
         allContents.append(reviewContents);

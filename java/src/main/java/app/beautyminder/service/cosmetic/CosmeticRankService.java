@@ -7,6 +7,7 @@ import app.beautyminder.dto.Event;
 import app.beautyminder.dto.KeywordEvent;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.KeywordRankRepository;
+import app.beautyminder.service.MongoService;
 import app.beautyminder.util.EventQueue;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
@@ -42,6 +43,8 @@ public class CosmeticRankService {
     private final CosmeticRepository cosmeticRepository;
     private final KeywordRankRepository keywordRankRepository;
     private final EventQueue eventQueue;
+    private final MongoService mongoService;
+
     private final String KEYWORD_METRICS_KEY = "keywordMetrics";
     private final Map<String, RunningStats> keywordStatsMap = new HashMap<>();
     /*
@@ -63,8 +66,7 @@ public class CosmeticRankService {
     @PostConstruct
     @Scheduled(cron = "0 0 4 * * ?", zone = "Asia/Seoul") // everyday 4am
     public void resetCounts() {
-        Optional.ofNullable(redisTemplate.keys("cosmeticMetrics:*"))
-                .ifPresent(keys -> keys.forEach(redisTemplate::delete));
+        Optional.ofNullable(redisTemplate.keys("cosmeticMetrics:*")).ifPresent(keys -> keys.forEach(redisTemplate::delete));
 
         redisTemplate.delete(KEYWORD_METRICS_KEY);
         keywordStatsMap.clear();
@@ -100,7 +102,7 @@ public class CosmeticRankService {
             updateRedisMetrics(cosmeticId, data);
         }
 
-        log.info("BEMINDER: REDIS: Sending batches of click/hit rank");
+        log.info("BEMINDER: Sending Redis batches of click/hit data @ 10minutes");
     }
 
     // -------- Keyword collection
@@ -197,59 +199,50 @@ public class CosmeticRankService {
         Map<Object, Object> keywordCounts = redisTemplate.opsForHash().entries(KEYWORD_METRICS_KEY);
 
         // Sort keywords by counts in descending order
-        var sortedEntries = keywordCounts.entrySet().stream()
-                .sorted((e1, e2) -> {
-                    var stats1 = keywordStatsMap.get(e1.getKey());
-                    var stats2 = keywordStatsMap.get(e2.getKey());
+        var sortedEntries = keywordCounts.entrySet().stream().sorted((e1, e2) -> {
+            var stats1 = keywordStatsMap.get(e1.getKey());
+            var stats2 = keywordStatsMap.get(e2.getKey());
 
-                    if (stats1 == null || stats2 == null) {
-                        return stats1 == null ? 1 : -1;
-                    }
+            if (stats1 == null || stats2 == null) {
+                return stats1 == null ? 1 : -1;
+            }
 
-                    var count1 = stats1.getRecentCount();
-                    var count2 = stats2.getRecentCount();
+            var count1 = stats1.getRecentCount();
+            var count2 = stats2.getRecentCount();
 
-                    if (count1 == count2) {
-                        var sig1 = stats1.isSignificantDeviation(HIGH_SIG_LEVEL) ? 1 : 0;
-                        var sig2 = stats2.isSignificantDeviation(HIGH_SIG_LEVEL) ? 1 : 0;
-                        return Double.compare(sig2, sig1);
-                    }
+            if (count1 == count2) {
+                var sig1 = stats1.isSignificantDeviation(HIGH_SIG_LEVEL) ? 1 : 0;
+                var sig2 = stats2.isSignificantDeviation(HIGH_SIG_LEVEL) ? 1 : 0;
+                return Double.compare(sig2, sig1);
+            }
 
-                    return Long.compare(count2, count1);
-                })
-                .limit(10)
-                .toList();
+            return Long.compare(count2, count1);
+        }).limit(10).toList();
 
         // Log the top 10 keywords along with their counts
         sortedEntries.forEach(entry -> log.info("Keyword: {}, Count: {}", entry.getKey(), entry.getValue()));
 
         // Extract the top 10 keywords
-        var top10Keywords = sortedEntries.stream()
-                .map(entry -> (String) entry.getKey())
-                .toList();
-
-        if (top10Keywords.isEmpty()) {
-            log.info("Empty top 10 keywords");
-            return;
-        }
-
-        log.info("BEMINDER: Saving top 10 keywords: {}", top10Keywords);
+        var top10Keywords = sortedEntries.stream().map(entry -> (String) entry.getKey()).toList();
 
         var today = LocalDate.now();
+        var existingKeywordRank = keywordRankRepository.findByDate(today);
 
-        // Update existing or create new one
-        var keywordRank = keywordRankRepository.findByDate(today)
-                .map(existingKeywordRank -> {
-                    existingKeywordRank.setRankings(top10Keywords);
-                    return existingKeywordRank;
-                })
-                .orElseGet(() -> KeywordRank.builder()
-                        .date(today)
-                        .rankings(top10Keywords)
-                        .build());
+        if (top10Keywords.isEmpty()) {
+            log.info("Empty top 10 keywords. Updating updatedAt time only.");
+            existingKeywordRank.ifPresent(keywordRank ->
+                    mongoService.touch(KeywordRank.class, keywordRank.getId()));
+        } else {
+            log.info("BEMINDER: Saving top 10 keywords: {}", top10Keywords);
+            var keywordRank = existingKeywordRank
+                    .map(rank -> {
+                        rank.setRankings(top10Keywords);
+                        return rank;
+                    })
+                    .orElseGet(() -> KeywordRank.builder().date(today).rankings(top10Keywords).build());
 
-        // Save the KeywordRank instance to the database
-        keywordRankRepository.save(keywordRank);
+            keywordRankRepository.save(keywordRank);
+        }
     }
 
     // Methods to collect events in the intermediate data store
@@ -276,17 +269,13 @@ public class CosmeticRankService {
 
     // This will replace any character that is not a Korean letter or a number with an empty string
     public String sanitizeKeyword(String keyword) {
-        return Optional.ofNullable(keyword)
-                .map(k -> k.toLowerCase().trim())
-                .map(trimmed -> trimmed.replaceAll("[^\\p{IsHangul}\\p{IsDigit}\\p{IsAlphabetic}]+", "").trim())
-                .orElse("");
+        return Optional.ofNullable(keyword).map(k -> k.toLowerCase().trim()).map(trimmed -> trimmed.replaceAll("[^\\p{IsHangul}\\p{IsDigit}\\p{IsAlphabetic}]+", "").trim()).orElse("");
     }
 
     private void updateRedisMetrics(String cosmeticId, CosmeticMetricData data) {
         // Retrieve existing counts from Redis
         var key = buildRedisKey(cosmeticId);
-        var existingCounts = Optional.of(redisTemplate.opsForHash().entries(key))
-                .orElseGet(HashMap::new);
+        var existingCounts = Optional.of(redisTemplate.opsForHash().entries(key)).orElseGet(HashMap::new);
 
         var existingClickCount = getLongFromMap(existingCounts, ActionType.CLICK.getActionString());
         var existingHitCount = getLongFromMap(existingCounts, ActionType.HIT.getActionString());
@@ -298,19 +287,12 @@ public class CosmeticRankService {
         var newFavCount = existingFavCount + Optional.ofNullable(data.getFavCount()).orElse(0L);
 
         // Update Redis with new total counts
-        var updateMap = Map.of(
-                ActionType.CLICK.getActionString(), String.valueOf(newClickCount),
-                ActionType.HIT.getActionString(), String.valueOf(newHitCount),
-                ActionType.FAV.getActionString(), String.valueOf(newFavCount)
-        );
+        var updateMap = Map.of(ActionType.CLICK.getActionString(), String.valueOf(newClickCount), ActionType.HIT.getActionString(), String.valueOf(newHitCount), ActionType.FAV.getActionString(), String.valueOf(newFavCount));
         redisTemplate.opsForHash().putAll(key, updateMap);
     }
 
     private long getLongFromMap(Map<Object, Object> map, String key) {
-        return Optional.ofNullable(map.get(key))
-                .map(String::valueOf)
-                .map(Long::parseLong)
-                .orElse(0L);
+        return Optional.ofNullable(map.get(key)).map(String::valueOf).map(Long::parseLong).orElse(0L);
     }
 
     private String buildRedisKey(String cosmeticId) {
@@ -323,37 +305,26 @@ public class CosmeticRankService {
         var keys = Optional.ofNullable(redisTemplate.keys("cosmeticMetrics:*")).orElse(Collections.emptySet());
 
         // This map will hold the calculated scores for each cosmetic ID
-        var cosmeticScores = keys.stream()
-                .collect(Collectors.toMap(
-                        key -> key.split(":")[1],
-                        key -> {
-                            var metrics = redisTemplate.opsForHash().entries(key);
-                            var clicks = parseLong(metrics.getOrDefault(ActionType.CLICK.getActionString(), "0"));
-                            var hits = parseLong(metrics.getOrDefault(ActionType.HIT.getActionString(), "0"));
-                            var favs = parseLong(metrics.getOrDefault(ActionType.FAV.getActionString(), "0"));
-                            return clicks * CLICK_WEIGHT + hits * HIT_WEIGHT + favs * FAV_WEIGHT;
-                        }
-                ));
+        var cosmeticScores = keys.stream().collect(Collectors.toMap(key -> key.split(":")[1], key -> {
+            var metrics = redisTemplate.opsForHash().entries(key);
+            var clicks = parseLong(metrics.getOrDefault(ActionType.CLICK.getActionString(), "0"));
+            var hits = parseLong(metrics.getOrDefault(ActionType.HIT.getActionString(), "0"));
+            var favs = parseLong(metrics.getOrDefault(ActionType.FAV.getActionString(), "0"));
+            return clicks * CLICK_WEIGHT + hits * HIT_WEIGHT + favs * FAV_WEIGHT;
+        }));
 
         // Sort the entries in the map by score in descending order
         // Limit the number of results to 'size'
-        var sortedScores = cosmeticScores.entrySet().stream()
-                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
-                .limit(size)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
+        var sortedScores = cosmeticScores.entrySet().stream().sorted(Map.Entry.<String, Double>comparingByValue().reversed()).limit(size).map(Map.Entry::getKey).collect(Collectors.toList());
 
         // Fetch Cosmetic objects from the repository using the collected top cosmetic IDs
         var cosmetics = cosmeticRepository.findAllById(sortedScores);
 
         // Create a map of cosmetics keyed by their id for easy lookup
-        var cosmeticMap = cosmetics.stream()
-                .collect(Collectors.toMap(Cosmetic::getId, Function.identity()));
+        var cosmeticMap = cosmetics.stream().collect(Collectors.toMap(Cosmetic::getId, Function.identity()));
 
         // Build an ordered list of cosmetics based on the order of topCosmeticIds
-        return sortedScores.stream()
-                .map(cosmeticMap::get)
-                .collect(Collectors.toList());
+        return sortedScores.stream().map(cosmeticMap::get).collect(Collectors.toList());
 //        return cosmeticRepository.findAllById(topCosmeticIds); // findAllById doesn't guarantee the order
     }
 
@@ -361,21 +332,19 @@ public class CosmeticRankService {
     public List<CosmeticMetricData> getAllCosmeticCounts() {
         // might need to adjust the key retrieval depending on how keys are stored and how many there are.
         var keys = Optional.ofNullable(redisTemplate.keys("cosmeticMetrics:*")).orElse(Collections.emptySet());
-        return keys.stream()
-                .map(fullKey -> {
-                    var metrics = redisTemplate.opsForHash().entries(fullKey); // Extract the cosmetic ID from the key
-                    var data = new CosmeticMetricData();
-                    data.setCosmeticId(fullKey.replace("cosmeticMetrics:", ""));
+        return keys.stream().map(fullKey -> {
+            var metrics = redisTemplate.opsForHash().entries(fullKey); // Extract the cosmetic ID from the key
+            var data = new CosmeticMetricData();
+            data.setCosmeticId(fullKey.replace("cosmeticMetrics:", ""));
 
-                    // Set counts, ensuring we handle nulls gracefully by treating them as zeroes
-                    // Convert string values from Redis to Long
-                    data.setClickCount(parseLong(metrics.getOrDefault(ActionType.CLICK.getActionString(), "0")));
-                    data.setHitCount(parseLong(metrics.getOrDefault(ActionType.HIT.getActionString(), "0")));
-                    data.setFavCount(parseLong(metrics.getOrDefault(ActionType.FAV.getActionString(), "0")));
+            // Set counts, ensuring we handle nulls gracefully by treating them as zeroes
+            // Convert string values from Redis to Long
+            data.setClickCount(parseLong(metrics.getOrDefault(ActionType.CLICK.getActionString(), "0")));
+            data.setHitCount(parseLong(metrics.getOrDefault(ActionType.HIT.getActionString(), "0")));
+            data.setFavCount(parseLong(metrics.getOrDefault(ActionType.FAV.getActionString(), "0")));
 
-                    return data;
-                })
-                .collect(Collectors.toList());
+            return data;
+        }).collect(Collectors.toList());
     }
 
     private long parseLong(Object value) {
@@ -384,9 +353,7 @@ public class CosmeticRankService {
 
     @Getter
     public enum ActionType {
-        CLICK("clicks"),
-        HIT("hits"),
-        FAV("favs");
+        CLICK("clicks"), HIT("hits"), FAV("favs");
 
         private final String actionString;
 

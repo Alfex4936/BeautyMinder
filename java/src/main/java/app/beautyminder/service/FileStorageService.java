@@ -20,6 +20,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -39,7 +41,10 @@ public class FileStorageService {
     public String storeFile(MultipartFile file, String folderPath) {
         validateImageFileType(file);
 
-        var fileName = folderPath + file.getOriginalFilename();
+        var extension = Objects.requireNonNull(file.getOriginalFilename())
+                .substring(file.getOriginalFilename().lastIndexOf('.'));
+        var uniqueFileName = UUID.randomUUID() + extension;
+        var fileName = folderPath + uniqueFileName;
         try (InputStream fileInputStream = file.getInputStream()) {
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(file.getContentType());

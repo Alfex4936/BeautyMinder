@@ -1,6 +1,8 @@
 package app.beautyminder.controller.redis;
 
 import app.beautyminder.domain.Cosmetic;
+import app.beautyminder.dto.KeywordRankResponse;
+import app.beautyminder.dto.ProductRankResponse;
 import app.beautyminder.repository.KeywordRankRepository;
 import app.beautyminder.service.cosmetic.CosmeticRankService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,10 +43,11 @@ public class RedisController {
             }
     )
     @GetMapping("/top/cosmetics")
-    public ResponseEntity<List<Cosmetic>> getTopRankedCosmetics(
+    public ResponseEntity<ProductRankResponse> getTopRankedCosmetics(
             @RequestParam(defaultValue = "10") int size) {
         List<Cosmetic> topRankedCosmetics = cosmeticRankService.getTopRankedCosmetics(size);
-        return ResponseEntity.ok(topRankedCosmetics);
+
+        return new ResponseEntity<>(new ProductRankResponse(topRankedCosmetics, LocalDateTime.now(ZoneId.of("Asia/Seoul"))), HttpStatus.OK);
     }
 
     @Operation(
@@ -54,10 +59,12 @@ public class RedisController {
             }
     )
     @GetMapping("/top/keywords")
-    public ResponseEntity<List<String>> getTopRankedKeywords() {
-        return keywordRankRepository.findTopByOrderByCreatedAtDesc()
-                .map(rank -> ResponseEntity.ok(rank.getRankings()))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList()));
+    public ResponseEntity<KeywordRankResponse> getTopRankedKeywords() {
+        return keywordRankRepository.findTopByOrderByUpdatedAtDesc()
+                .map(rank -> new ResponseEntity<>(
+                        new KeywordRankResponse(rank.getRankings(), rank.getUpdatedAt()),
+                        HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @Operation(

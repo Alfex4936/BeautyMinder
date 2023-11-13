@@ -15,10 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.lang.reflect.Field;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -48,6 +46,15 @@ public class MongoService {
         bannedFieldsPerClass.put(CosmeticExpiry.class, Set.of("id", "createdAt"));
     }
 
+    private boolean isValidField(Class<?> entityClass, String fieldName) {
+        Set<String> fields = new HashSet<>();
+        Field[] allFields = entityClass.getDeclaredFields();
+        for (Field field : allFields) {
+            fields.add(field.getName());
+        }
+        return fields.contains(fieldName);
+    }
+
     public <T> Optional<T> updateFields(String id, Map<String, Object> updates, Class<T> entityClass) {
         var query = new Query(Criteria.where("id").is(id));
         var stringBuilder = new StringBuilder();
@@ -58,6 +65,7 @@ public class MongoService {
             var update = new Update();
             updates.entrySet().stream()
                     .filter(entry -> !bannedFields.contains(entry.getKey()))
+                    .filter(entry -> isValidField(entityClass, entry.getKey()))
                     .forEach(entry -> {
                         stringBuilder.append(entry.getKey()).append(",");
                         update.set(entry.getKey(), entry.getValue());
@@ -79,5 +87,13 @@ public class MongoService {
         log.error("Check: {}", application);
 
         return mongoTemplate.exists(query, entityClass);
+    }
+
+    public <T> boolean touch(Class<T> entitiyClass, String id) {
+        Query query = new Query(Criteria.where("id").is(id));
+        Update update = new Update().currentDate("updatedAt");
+        var updateResult = mongoTemplate.updateFirst(query, update, entitiyClass);
+
+        return updateResult.wasAcknowledged();
     }
 }

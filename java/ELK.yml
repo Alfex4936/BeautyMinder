@@ -5,13 +5,16 @@ services:
 #    build:
 #      context: ./python
 #      dockerfile: Dockerfile.python
-#    depends_on:
-#      spring-boot:
-#        condition: service_started
 #    ports:
 #      - "9000:9000"
 #    links:
-#      - spring-boot
+#      - redis
+#    healthcheck:
+#      test: [ "CMD-SHELL", "curl -f http://localhost:9000/health || exit 1" ]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 10s
 
   spring-boot:
     container_name: beauty-spring-boot
@@ -23,6 +26,8 @@ services:
         condition: service_healthy
       logstash:
         condition: service_healthy
+#      python-fastapi:
+#        condition: service_started
     env_file:
       - spring.env
     ports:
@@ -34,6 +39,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   redis:
     container_name: beauty-redis
@@ -48,7 +54,7 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping"]
+      test: [ "CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping" ]
       interval: 10s
       timeout: 5s
       retries: 5

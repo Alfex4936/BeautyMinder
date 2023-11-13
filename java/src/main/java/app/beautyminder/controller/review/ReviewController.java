@@ -47,10 +47,10 @@ public class ReviewController {
     // Retrieve all reviews of a specific cosmetic
     @Operation(summary = "Get all reviews of a cosmetic", description = "특정 화장품의 리뷰를 모두 가져옵니다.", tags = {"Review Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Review.class, type = "array"))), @ApiResponse(responseCode = "404", description = "리뷰 없음", content = @Content(schema = @Schema(implementation = String.class)))})
     @GetMapping("/{cosmeticId}")
-    public ResponseEntity<List<Review>> getReviewsForCosmetic(@PathVariable String cosmeticId) {
+    public ResponseEntity<?> getReviewsForCosmetic(@PathVariable String cosmeticId) {
         Cosmetic cosmetic = cosmeticService.getCosmeticById(cosmeticId);
         if (cosmetic == null) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Couldn't find such cosmetic.");
         }
         List<Review> reviews = reviewService.getAllReviewsByCosmetic(cosmetic);
         return ResponseEntity.ok(reviews);

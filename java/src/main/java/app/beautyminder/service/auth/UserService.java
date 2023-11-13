@@ -47,7 +47,7 @@ public class UserService {
     private String defaultAdminProfilePic;
 
     // 일반 사용자 저장
-    public String saveUser(AddUserRequest dto) throws ResponseStatusException {
+    public User saveUser(AddUserRequest dto) throws ResponseStatusException {
         // 이메일 중복 체크
         checkDuplicatedUser(dto.getEmail(), dto.getPhoneNumber());
 
@@ -73,7 +73,7 @@ public class UserService {
 
         // 기본 권한 설정 ("ROLE_USER")
         user.addAuthority("ROLE_USER");
-        return userRepository.save(user).getId();
+        return userRepository.save(user);
     }
 
     // 관리자 저장

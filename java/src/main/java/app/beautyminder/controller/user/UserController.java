@@ -82,7 +82,7 @@ public class UserController {
     @PostMapping("/signup")
     public ResponseEntity<SignUpResponse> signUp(@Valid @org.springframework.web.bind.annotation.RequestBody AddUserRequest request) {
         try {
-            String userId = userService.saveUser(request);
+            String userId = userService.saveUser(request).getId();
             User user = userService.findById(userId);
             return ResponseEntity.ok(new SignUpResponse("A user is created", user));
         } catch (Exception e) {

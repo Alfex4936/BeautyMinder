@@ -32,7 +32,7 @@ public class Cosmetic {
     private LocalDateTime createdAt;
     private LocalDate purchasedDate;
     private String category;
-    private float averageRating = 0.0F; // ex) 3.14
+    private Double averageRating = 0.0; // ex) 3.14
     private int reviewCount = 0;
     private int totalRating = 0;
 
@@ -61,8 +61,8 @@ public class Cosmetic {
         if (this.reviewCount == 0) {
             this.reviewCount = 1; // To handle the case of the first review
         }
-        this.averageRating = (float) this.totalRating / this.reviewCount;
-        this.averageRating = Math.round(this.averageRating * 100.0) / 100.0f;  // Round to 2 decimal places
+        this.averageRating = (double) (this.totalRating / this.reviewCount);
+        this.averageRating = (double) (Math.round(this.averageRating * 100.0) / 100.0f);  // Round to 2 decimal places
     }
 
     public void removeRating(int ratingToRemove) {
@@ -70,11 +70,11 @@ public class Cosmetic {
         this.reviewCount--;
 
         if (this.reviewCount > 0) {
-            this.averageRating = (float) this.totalRating / this.reviewCount;
-            this.averageRating = Math.round(this.averageRating * 100.0) / 100.0f;  // Round to 2 decimal places
+            this.averageRating = (double) (this.totalRating / this.reviewCount);
+            this.averageRating = (double) (Math.round(this.averageRating * 100.0) / 100.0f);  // Round to 2 decimal places
         } else {
             // Reset averageRating if there are no more reviews
-            this.averageRating = 0.0F;
+            this.averageRating = 0.0;
         }
     }
 
