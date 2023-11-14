@@ -1,0 +1,46 @@
+input {
+    tcp {
+        port => 5000
+        codec => json_lines {
+            target => "[document]"
+        }
+    }
+}
+
+filter {
+    if [document][level] == "ERROR" {
+        # This will keep ERROR logs and pass them through
+    }
+    else if [document][level] == "DEBUG" {
+        grok {
+            match => { "[document][message]" => "Secur(?:ing|ed) %{WORD:method} %{URIPATH:request}" }
+        }
+        if "_grokparsefailure" in [tags] {
+            drop { }
+        }
+        if [method] not in ["GET", "POST", "PUT", "PATCH", "DELETE"] {
+            drop { }
+        }
+    }
+    else {
+        drop { }  # This will drop all other logs
+    }
+
+    truncate {
+        length_bytes => 2048  # Truncate the stack_trace field to 2KB
+        fields => "stack_trace"
+    }
+}
+
+
+output {
+    stdout {}
+    opensearch {
+        hosts       => "https://es.amazonaws.com:443"
+        user        => "root"
+        password    => "pw"
+        index       => "logstash-logs-%{+YYYY.MM.dd}"
+        ecs_compatibility => disabled
+        ssl_certificate_verification => false
+  }
+}

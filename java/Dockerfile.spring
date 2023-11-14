@@ -1,0 +1,14 @@
+# Use the official OpenJDK 17 base image
+FROM openjdk:17-jdk-slim
+
+RUN rm -f beautyminder-1.0.jar
+RUN rm -f /usr/app/beautyminder-1.0.jar
+
+# Copy the JAR file into the image
+COPY beautyminder-1.0.jar /usr/app/beautyminder-1.0.jar
+
+# Set the working directory
+WORKDIR /usr/app
+
+# Command to run the application
+ENTRYPOINT ["java", "-Duser.timezone=Asia/Seoul", "-jar", "beautyminder-1.0.jar"]

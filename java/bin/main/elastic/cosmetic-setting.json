@@ -1,0 +1,80 @@
+{
+  "analysis": {
+    "filter": {
+      "synonym": {
+        "type": "synonym",
+        "synonyms": [
+          "근디 => 근데",
+          "조아요 => 좋아요",
+          "아파욬 => 아파요",
+          "ㅋㅋㅋ => 웃음",
+          "ㅠㅠ, ㅜㅜ => 슬픔",
+          "피붕, 피부 붕 => 피부 붕뎀",
+          "무겁다, 무거워 => 무거움",
+          "가렵다, 가려워 => 가려움",
+          "건조하다, 건조해 => 건조함",
+          "유분, 기름 => 유분기",
+          "뽀송뽀송, 뽀송 => 부드러움",
+          "촉촉하다, 촉촉해 => 촉촉함",
+          "향기, 향 => 향료",
+          "민감하다, 민감해 => 민감함",
+          "산뜻하다, 산뜻해 => 산뜻함",
+          "알러지, 알레르기 => 알러지 반응",
+          "화해, 화해성분 => 화학 성분",
+          "자연성분, 자연 => 자연적 성분",
+          "백탁, 백탁현상 => 백탁 현상"
+        ]
+      },
+      "korean_stop": {
+        "type": "stop",
+        "stopwords": ["이", "그", "저", "것"]
+      },
+      "lowercase": {
+        "type": "lowercase"
+      }
+    },
+    "tokenizer": {
+      "seunjeon_tokenizer": {
+        "type": "seunjeon_tokenizer",
+        "index_eojeol": false,
+        "decompound": true,
+        "pos_tagging": false,
+        "index_poses": [
+          "UNK",
+          "EP",
+          "I",
+          "M",
+          "N",
+          "SL",
+          "SH",
+          "SN",
+          "V",
+          "VCP",
+          "XP",
+          "XS",
+          "XR"
+        ]
+      }
+    },
+    "analyzer": {
+      "seunjeon": {
+        "type": "custom",
+        "tokenizer": "seunjeon_tokenizer"
+      },
+      "seunjeon_search": {
+        "tokenizer": "seunjeon_tokenizer",
+        "filter": [
+          "synonym",
+          "lowercase",
+          "korean_stop"
+        ]
+      },
+      "keyword": {
+        "tokenizer": "keyword",
+        "filter": [
+          "lowercase"
+        ]
+      }
+    }
+  }
+}

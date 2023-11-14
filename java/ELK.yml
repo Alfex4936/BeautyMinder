@@ -1,0 +1,89 @@
+version: '3.8'
+services:
+#  python-fastapi:
+#    container_name: beauty-fastapi
+#    build:
+#      context: ./python
+#      dockerfile: Dockerfile.python
+#    ports:
+#      - "9000:9000"
+#    env_file:
+#      - python.env
+#    links:
+#      - redis
+#    healthcheck:
+#      test: [ "CMD-SHELL", "curl -f http://localhost:9000/health || exit 1" ]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 10s
+
+  spring-boot:
+    container_name: beauty-spring-boot
+    build:
+      context: ./build/libs
+      dockerfile: Dockerfile.spring
+    depends_on:
+      redis:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
+#      python-fastapi:
+#        condition: service_started
+    env_file:
+      - spring.env
+    ports:
+      - "8080:8080"
+    links:
+      - redis
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    container_name: beauty-redis
+    image: redis:latest
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+    secrets:
+      - redis_password
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    links:
+      - logstash
+
+  logstash:
+    container_name: beauty-logstash
+    image: opensearchproject/logstash-oss-with-opensearch-output-plugin:8.9.0
+    ports:
+      - "5044:5044"
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    volumes:
+      - ./logstash/config:/usr/share/logstash/config
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9600 || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+secrets:
+  redis_password:
+    file: redis.env
+
+#networks:
+#  beauty-bridge:
+#    driver: bridge

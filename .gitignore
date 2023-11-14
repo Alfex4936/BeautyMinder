@@ -1,0 +1,4 @@
+java/.gradle
+java/build
+.github/workflows/.env
+java/python/sroberta/
