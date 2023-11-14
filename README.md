@@ -28,7 +28,7 @@ A cosmetic recommendation app, meticulously tuned to individual skin types as de
 | **CI/CD**             | GitHub Actions                                  |
 
 # System Architecture 🏗️
-![System Architecture](https://github.com/Alfex4936/beautyMinder/assets/2356749/5caf6d91-ab5e-419d-8520-455c91ca59c9)
+![System Architecture](https://github.com/beminder/BeautyMinder/assets/2356749/480f6ed5-080b-4d46-bad9-7379aca6ce46)
 
 ## Detailed Breakdown 🔍
 - **Redis**: Harnesses real-time metrics like product click counters, search hit counters, and favorite counters, utilizing pipeline/batch methods for data collection.
