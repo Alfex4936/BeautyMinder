@@ -11,6 +11,4 @@ public class ReviewDTO {
     private Integer rating;
     @Nullable
     private String cosmeticId;
-    @Nullable
-    private String userId;
 }

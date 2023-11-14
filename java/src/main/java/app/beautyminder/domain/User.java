@@ -52,6 +52,12 @@ public class User implements UserDetails {
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime updatedAt;
 
+    @Setter
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    private LocalDateTime lastLogin;
+
     @JsonDeserialize(using = AuthoritiesDeserializer.class)
     private Set<String> authorities = new HashSet<>();
 

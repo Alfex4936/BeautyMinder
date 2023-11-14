@@ -1,4 +1,4 @@
-package app.beautyminder.service;
+package app.beautyminder.service.review;
 
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
@@ -9,6 +9,7 @@ import app.beautyminder.dto.ReviewUpdateDTO;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.repository.UserRepository;
+import app.beautyminder.service.FileStorageService;
 import app.beautyminder.service.cosmetic.CosmeticService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -44,12 +46,8 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final CosmeticRepository cosmeticRepository;
     private final MongoTemplate mongoTemplate;
-    private final MongoService mongoService;
     private final ObjectMapper objectMapper;
-    private final RestTemplate restTemplate = new RestTemplate();
-
-    @Value("${server.python.review}")
-    private String reviewProcessServer;
+    private final NlpService nlpService;
 
     public Optional<Review> findById(String id) {
         return reviewRepository.findById(id);
@@ -59,9 +57,13 @@ public class ReviewService {
         return reviewRepository.findByUser(user);
     }
 
-    public void deleteReview(String id) {
+    public void deleteReview(User user, String id) {
         var review = getReviewById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
+
+        if (!Objects.equals(review.getUser().getId(), user.getId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found for the user");
+        }
 
         var cosmetic = cosmeticService.findById(review.getCosmetic().getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cosmetic not found"));
@@ -76,14 +78,14 @@ public class ReviewService {
         reviewRepository.deleteById(id);
     }
 
-    public Review createReview(ReviewDTO reviewDTO, MultipartFile[] images) throws JsonProcessingException {
+    public Review createReview(User user, ReviewDTO reviewDTO, MultipartFile[] images) throws JsonProcessingException {
         // Check if the user has already left a review for the cosmetic
-        if (HasUserReviewedCosmetic(reviewDTO.getUserId(), reviewDTO.getCosmeticId()).isPresent()) {
+        if (HasUserReviewedCosmetic(user.getId(), reviewDTO.getCosmeticId()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User has already reviewed this cosmetic.");
         }
 
         // Find the user and cosmetic, throwing exceptions if not found
-        User user = userRepository.findById(reviewDTO.getUserId())
+        userRepository.findById(user.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
 
         var cosmetic = cosmeticService.findById(reviewDTO.getCosmeticId())
@@ -112,42 +114,25 @@ public class ReviewService {
             }
         }
 
-        // Python NLP work
-        // TODO: call in background or process before saving
-        var reviewJson = objectMapper.writeValueAsString(review);
-        try {
-            var nlpResultJson = callProcessAPI(reviewJson).getBody();
-            review.setFiltered(nlpResultJson.isFiltered());
-            review.setNlpAnalysis(nlpResultJson.nlpAnalysis());
-        } catch (RestClientException e) {
-            log.error("Failed to get NLP result for a review. skipping");
-        }
-
-
-
         // Save the review
-        return reviewRepository.save(review);
+        Review savedReview = reviewRepository.save(review);
+
+        // Python NLP work
+        // Call NLP processing asynchronously
+        nlpService.processReviewAsync(savedReview);
+
+        return savedReview;
     }
 
-    private ResponseEntity<PyReviewAnalysis> callProcessAPI(String reviewJson) throws RestClientException {
-        var headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        // Create the request entity
-        var request = new HttpEntity<>(reviewJson, headers);
-
-        // Send POST request and get JSON
-        return restTemplate.postForEntity(reviewProcessServer, request, PyReviewAnalysis.class);
-
-//        log.info("BEMINDER: python server: {}", response.getBody().toString());
-    }
-
-
-    public Optional<Review> updateReview(String revId, ReviewUpdateDTO reviewUpdateDetails, MultipartFile[] images) {
+    public Optional<Review> updateReview(String revId, User user, ReviewUpdateDTO reviewUpdateDetails, MultipartFile[] images) throws JsonProcessingException {
         var query = new Query(Criteria.where("id").is(revId));
         var review = mongoTemplate.findOne(query, Review.class);
 
         if (review != null) {
+            if (!Objects.equals(review.getUser().getId(), user.getId())) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found for the user");
+            }
+
             int oldRating = review.getRating(); // Store the old rating
 
             // Handle deleted images
@@ -158,9 +143,16 @@ public class ReviewService {
                 });
             }
 
+            boolean contentChanged = reviewUpdateDetails.getContent() != null && !reviewUpdateDetails.getContent().equals(review.getContent());
+
             // Update the fields from ReviewDTO
             if (reviewUpdateDetails.getContent() != null) {
                 review.setContent(reviewUpdateDetails.getContent());
+            }
+            if (contentChanged) {
+                // Python NLP work
+                // Call NLP processing asynchronously
+                nlpService.processReviewAsync(review);
             }
             if (reviewUpdateDetails.getRating() != null) {
                 review.setRating(reviewUpdateDetails.getRating());

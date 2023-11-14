@@ -89,9 +89,9 @@ public class MongoService {
         return mongoTemplate.exists(query, entityClass);
     }
 
-    public <T> boolean touch(Class<T> entitiyClass, String id) {
+    public <T> boolean touch(Class<T> entitiyClass, String id, String field) {
         Query query = new Query(Criteria.where("id").is(id));
-        Update update = new Update().currentDate("updatedAt");
+        Update update = new Update().currentDate(field);
         var updateResult = mongoTemplate.updateFirst(query, update, entitiyClass);
 
         return updateResult.wasAcknowledged();

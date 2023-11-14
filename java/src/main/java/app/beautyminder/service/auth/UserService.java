@@ -9,7 +9,7 @@ import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.TodoRepository;
 import app.beautyminder.repository.UserRepository;
 import app.beautyminder.service.FileStorageService;
-import app.beautyminder.service.ReviewService;
+import app.beautyminder.service.review.ReviewService;
 import app.beautyminder.service.cosmetic.CosmeticExpiryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -209,7 +209,7 @@ public class UserService {
 
         // Delete all reviews made by the user and update cosmetics' scores
         for (var review : reviewService.findAllByUser(user)) {
-            reviewService.deleteReview(review.getId());
+            reviewService.deleteReview(user, review.getId());
         }
 
         // Delete all expiry items

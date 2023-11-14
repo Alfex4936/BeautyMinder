@@ -1,10 +1,13 @@
 package app.beautyminder.config;
 
 import app.beautyminder.config.jwt.TokenProvider;
+import app.beautyminder.domain.KeywordRank;
 import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.LoginResponse;
 import app.beautyminder.repository.RefreshTokenRepository;
+import app.beautyminder.repository.UserRepository;
+import app.beautyminder.service.MongoService;
 import app.beautyminder.service.auth.RefreshTokenService;
 import app.beautyminder.service.auth.UserDetailService;
 import app.beautyminder.util.CookieUtil;
@@ -67,6 +70,7 @@ public class WebSecurityConfig {
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService;
     private final UserDetailService userDetailsService;
+    private final MongoService mongoService;
     private final ObjectMapper objectMapper;
 
     @Bean
@@ -131,6 +135,7 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/search/**")).permitAll()
 //                .requestMatchers(antMatcher("/data-view/**")).permitAll()
                 .requestMatchers(antMatcher("/baumann/**")).permitAll()
+//                .requestMatchers(antMatcher("/review/**")).permitAll()
 
                 .requestMatchers(antMatcher("/login")).permitAll()
                 .requestMatchers(antMatcher("/login?error")).permitAll()
@@ -168,6 +173,8 @@ public class WebSecurityConfig {
                             log.info("Login successful for user: {}", authentication.getName());
 
                             var user = (app.beautyminder.domain.User) authentication.getPrincipal();
+                            mongoService.touch(User.class, user.getId(), "lastLogin");
+
                             var refreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
                             saveRefreshToken(user, refreshToken);
                             addRefreshTokenToCookie(request, response, refreshToken);

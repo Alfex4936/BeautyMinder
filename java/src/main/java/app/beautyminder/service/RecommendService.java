@@ -6,6 +6,7 @@ import app.beautyminder.domain.User;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticRankService;
+import app.beautyminder.service.review.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;

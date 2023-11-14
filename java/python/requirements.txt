@@ -5,3 +5,4 @@ fastapi
 korcen
 sentence-transformers
 uvicorn
+openai

@@ -2,12 +2,13 @@ package app.beautyminder.controller.review;
 
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
+import app.beautyminder.domain.User;
 import app.beautyminder.dto.ReviewDTO;
 import app.beautyminder.dto.ReviewUpdateDTO;
 import app.beautyminder.service.FileStorageService;
-import app.beautyminder.service.ReviewService;
-import app.beautyminder.service.auth.UserService;
+import app.beautyminder.service.review.ReviewService;
 import app.beautyminder.service.cosmetic.CosmeticService;
+import app.beautyminder.util.AuthenticatedUser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,6 +25,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,12 +39,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/review")
+@PreAuthorize("hasRole('ROLE_USER')")
 public class ReviewController {
 
     private final ReviewService reviewService;
     private final FileStorageService fileStorageService;
     private final CosmeticService cosmeticService;
-    private final UserService userService;
 
     // Retrieve all reviews of a specific cosmetic
     @Operation(summary = "Get all reviews of a cosmetic", description = "특정 화장품의 리뷰를 모두 가져옵니다.", tags = {"Review Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Review.class, type = "array"))), @ApiResponse(responseCode = "404", description = "리뷰 없음", content = @Content(schema = @Schema(implementation = String.class)))})
@@ -77,16 +79,16 @@ public class ReviewController {
             }
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Review> createReview(@RequestPart("review") @Valid ReviewDTO reviewDTO, @RequestPart("images") MultipartFile[] images) throws JsonProcessingException {
+    public ResponseEntity<Review> createReview(@RequestPart("review") @Valid ReviewDTO reviewDTO, @RequestPart("images") MultipartFile[] images, @AuthenticatedUser User user) throws JsonProcessingException {
         // Delegate the check to the service layer
-        Review createdReview = reviewService.createReview(reviewDTO, images);
+        Review createdReview = reviewService.createReview(user, reviewDTO, images);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdReview);
     }
 
     @Operation(summary = "Update an existing review", description = "기존 리뷰를 업데이트합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Review update details and images"), tags = {"Review Operations"}, responses = {@ApiResponse(responseCode = "200", description = "리뷰가 업데이트됨", content = @Content(schema = @Schema(implementation = Review.class))), @ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Review> updateReview(@PathVariable("id") String id, @RequestPart("review") ReviewUpdateDTO reviewUpdateDetails, @RequestPart(value = "images", required = false) MultipartFile[] images) {
-        Optional<Review> updatedReview = reviewService.updateReview(id, reviewUpdateDetails, images);
+    public ResponseEntity<Review> updateReview(@PathVariable("id") String id, @RequestPart("review") ReviewUpdateDTO reviewUpdateDetails, @RequestPart(value = "images", required = false) MultipartFile[] images, @AuthenticatedUser User user) throws JsonProcessingException {
+        Optional<Review> updatedReview = reviewService.updateReview(id, user, reviewUpdateDetails, images);
         return updatedReview
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found with id: " + id));
@@ -103,11 +105,10 @@ public class ReviewController {
             }
     )
     @DeleteMapping(value = "/{id}")
-    public ResponseEntity<?> deleteReview(@PathVariable("id") String id) {
+    public ResponseEntity<?> deleteReview(@PathVariable("id") String id, @AuthenticatedUser User user) {
         // TODO: Check if the authenticated user is allowed to delete this review
-
         // Perform the delete operation
-        reviewService.deleteReview(id);
+        reviewService.deleteReview(user, id);
 
         // Return a response entity indicating success
         return ResponseEntity.ok().body("Review deleted successfully");

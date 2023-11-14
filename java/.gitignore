@@ -5,6 +5,7 @@ redis/redis.conf
 logstash/pipeline/spring-boot-logs.conf
 redis.env
 spring.env
+python.env
 
 # Log file
 *.log

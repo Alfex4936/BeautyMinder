@@ -26,6 +26,9 @@ public class Cosmetic {
     @Setter
     private List<String> images = new ArrayList<>();
 
+    @Setter
+    private String thumbnailUrl; // one image
+
     private String glowpickUrl;
 
     private LocalDate expirationDate;

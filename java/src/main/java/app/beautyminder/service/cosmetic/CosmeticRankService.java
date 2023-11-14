@@ -231,7 +231,7 @@ public class CosmeticRankService {
         if (top10Keywords.isEmpty()) {
             log.info("Empty top 10 keywords. Updating updatedAt time only.");
             existingKeywordRank.ifPresent(keywordRank ->
-                    mongoService.touch(KeywordRank.class, keywordRank.getId()));
+                    mongoService.touch(KeywordRank.class, keywordRank.getId(), "updatedAt"));
         } else {
             log.info("BEMINDER: Saving top 10 keywords: {}", top10Keywords);
             var keywordRank = existingKeywordRank

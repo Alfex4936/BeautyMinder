@@ -52,6 +52,8 @@
           <option value="x-ncp-apigw-signature-v2" />
           <option value="x-ncp-iam-access-key" />
           <option value="x-ncp-apigw-timestamp" />
+          <option value="New-Refresh-Token" />
+          <option value="New-Access-Token" />
         </set>
       </option>
     </inspection_tool>
