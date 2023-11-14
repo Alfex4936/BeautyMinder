@@ -35,6 +35,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+// TODO(2023-11-14): What if gpt api was unavailable and has to update?
+// maybe scheduler work
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -78,7 +80,7 @@ public class ReviewService {
         reviewRepository.deleteById(id);
     }
 
-    public Review createReview(User user, ReviewDTO reviewDTO, MultipartFile[] images) throws JsonProcessingException {
+    public Review createReview(User user, ReviewDTO reviewDTO, MultipartFile[] images) {
         // Check if the user has already left a review for the cosmetic
         if (HasUserReviewedCosmetic(user.getId(), reviewDTO.getCosmeticId()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User has already reviewed this cosmetic.");
@@ -124,7 +126,7 @@ public class ReviewService {
         return savedReview;
     }
 
-    public Optional<Review> updateReview(String revId, User user, ReviewUpdateDTO reviewUpdateDetails, MultipartFile[] images) throws JsonProcessingException {
+    public Optional<Review> updateReview(String revId, User user, ReviewUpdateDTO reviewUpdateDetails, MultipartFile[] images) {
         var query = new Query(Criteria.where("id").is(revId));
         var review = mongoTemplate.findOne(query, Review.class);
 

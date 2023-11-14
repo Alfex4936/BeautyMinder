@@ -47,7 +47,7 @@ public class ReviewController {
     private final CosmeticService cosmeticService;
 
     // Retrieve all reviews of a specific cosmetic
-    @Operation(summary = "Get all reviews of a cosmetic", description = "특정 화장품의 리뷰를 모두 가져옵니다.", tags = {"Review Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Review.class, type = "array"))), @ApiResponse(responseCode = "404", description = "리뷰 없음", content = @Content(schema = @Schema(implementation = String.class)))})
+    @Operation(summary = "Get all reviews of a cosmetic", description = "특정 화장품의 리뷰를 모두 가져옵니다. [User 권한 필요]", tags = {"Review Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Review.class, type = "array"))), @ApiResponse(responseCode = "404", description = "리뷰 없음", content = @Content(schema = @Schema(implementation = String.class)))})
     @GetMapping("/{cosmeticId}")
     public ResponseEntity<?> getReviewsForCosmetic(@PathVariable String cosmeticId) {
         Cosmetic cosmetic = cosmeticService.getCosmeticById(cosmeticId);
@@ -60,7 +60,7 @@ public class ReviewController {
 
     @Operation(
             summary = "Add a new review",
-            description = "새 리뷰를 추가합니다.",
+            description = "새 리뷰를 추가합니다. [User 권한 필요]",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "Review details and Array of image files",
                     content = {
@@ -85,7 +85,7 @@ public class ReviewController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdReview);
     }
 
-    @Operation(summary = "Update an existing review", description = "기존 리뷰를 업데이트합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Review update details and images"), tags = {"Review Operations"}, responses = {@ApiResponse(responseCode = "200", description = "리뷰가 업데이트됨", content = @Content(schema = @Schema(implementation = Review.class))), @ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+    @Operation(summary = "Update an existing review", description = "기존 리뷰를 업데이트합니다. [User 권한 필요]", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Review update details and images"), tags = {"Review Operations"}, responses = {@ApiResponse(responseCode = "200", description = "리뷰가 업데이트됨", content = @Content(schema = @Schema(implementation = Review.class))), @ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Review> updateReview(@PathVariable("id") String id, @RequestPart("review") ReviewUpdateDTO reviewUpdateDetails, @RequestPart(value = "images", required = false) MultipartFile[] images, @AuthenticatedUser User user) throws JsonProcessingException {
         Optional<Review> updatedReview = reviewService.updateReview(id, user, reviewUpdateDetails, images);
@@ -96,7 +96,7 @@ public class ReviewController {
 
     @Operation(
             summary = "Delete an existing review",
-            description = "기존 리뷰를 삭제합니다.",
+            description = "기존 리뷰를 삭제합니다. [User 권한 필요]",
             tags = {"Review Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "리뷰가 삭제됨"),
@@ -115,7 +115,7 @@ public class ReviewController {
     }
 
 
-    @Operation(summary = "Load an image", description = "이미지를 로드합니다.", tags = {"Image Operations"}, responses = {@ApiResponse(responseCode = "200", description = "이미지 로드 성공", content = @Content(schema = @Schema(implementation = Resource.class))), @ApiResponse(responseCode = "404", description = "이미지를 찾을 수 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
+    @Operation(summary = "Load an image", description = "이미지를 로드합니다. [User 권한 필요]", tags = {"Image Operations"}, responses = {@ApiResponse(responseCode = "200", description = "이미지 로드 성공", content = @Content(schema = @Schema(implementation = Resource.class))), @ApiResponse(responseCode = "404", description = "이미지를 찾을 수 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
     @GetMapping(value = "/image")
     public ResponseEntity<Resource> loadImage(@RequestParam("filename") String filename, HttpServletRequest request) {
         var file = fileStorageService.loadFile(filename);

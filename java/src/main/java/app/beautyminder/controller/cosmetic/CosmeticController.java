@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,13 +45,14 @@ public class CosmeticController {
     // Add a new cosmetic
     @Operation(summary = "Create a cosmetic data", description = "화장품을 생성합니다.", tags = {"Cosmetic Operations"}, requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "화장품"), responses = {@ApiResponse(responseCode = "200", description = "화장품 추가 성공", content = @Content(schema = @Schema(implementation = Cosmetic.class))),})
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Cosmetic> createCosmetic(@Valid @RequestBody Cosmetic cosmetic) {
         Cosmetic newCosmetic = cosmeticService.saveCosmetic(cosmetic);
         return ResponseEntity.ok(newCosmetic);
     }
 
     // Update an existing cosmetic
-    @Operation(summary = "Update cosmetic entirely", description = "Cosmetic을 업데이트 합니다. (통째로)", tags = {"Cosmetic Operations"}, parameters = {@Parameter(name = "id", description = "화장품의 ID"),}, requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Cosmetic 모델"), responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Cosmetic.class))), @ApiResponse(responseCode = "404", description = "화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))})
+    @Operation(summary = "Update cosmetic entirely", description = "Cosmetic을 업데이트 합니다. (통째로) [ADMIN 권한 필요]", tags = {"Cosmetic Operations"}, parameters = {@Parameter(name = "id", description = "화장품의 ID"),}, requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Cosmetic 모델"), responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Cosmetic.class))), @ApiResponse(responseCode = "404", description = "화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))})
     @PutMapping("/{id}")
     public ResponseEntity<Cosmetic> updateCosmetic(@PathVariable String id, @RequestBody Cosmetic cosmeticDetails) {
         Cosmetic updatedCosmetic = cosmeticService.updateCosmetic(id, cosmeticDetails);
@@ -61,8 +63,9 @@ public class CosmeticController {
     }
 
     // Delete a cosmetic
-    @Operation(summary = "Delete a cosmetic entirely", description = "Cosmetic을 삭제 합니다.", tags = {"Cosmetic Operations"}, parameters = {@Parameter(name = "id", description = "화장품의 ID"),}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema())), @ApiResponse(responseCode = "404", description = "화장품을 찾을 수 없음", content = @Content(schema = @Schema()))})
+    @Operation(summary = "Delete a cosmetic entirely", description = "Cosmetic을 삭제 합니다. [ADMIN 권한 필요]", tags = {"Cosmetic Operations"}, parameters = {@Parameter(name = "id", description = "화장품의 ID"),}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema())), @ApiResponse(responseCode = "404", description = "화장품을 찾을 수 없음", content = @Content(schema = @Schema()))})
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Void> deleteCosmetic(@PathVariable String id) {
         boolean deleted = cosmeticService.deleteCosmetic(id);
         if (!deleted) {

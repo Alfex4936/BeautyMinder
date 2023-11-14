@@ -28,7 +28,7 @@ public class GPTReviewController {
 
     @Operation(
             summary = "Trigger Summarization",
-            description = "리뷰 요약을 트리거합니다.",
+            description = "리뷰 요약을 트리거합니다. [ADMIN 권한 필요]",
             tags = {"GPT Review Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "리뷰 요약 성공적으로 완료",

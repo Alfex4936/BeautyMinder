@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 @Document(collection = "users")
@@ -25,6 +26,8 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Getter
 public class User implements UserDetails {
+
+    public static final Integer MAX_HISTORY_SIZE = 10;
 
     @Id
     private String id;
@@ -65,10 +68,9 @@ public class User implements UserDetails {
     @Getter
     private Set<String> cosmeticIds = new HashSet<>(); // favourites
 
-    // TODO(2023-10-30): Implement search history retrieval
     @Setter
     @Getter
-    private Set<String> keywordHistory = new HashSet<>(); // search history
+    private Set<String> keywordHistory = new HashSet<>(); // search history with order
 
     @Indexed
     @Setter

@@ -1,6 +1,8 @@
 package app.beautyminder.controller;
 
+import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.Review;
+import app.beautyminder.domain.User;
 import app.beautyminder.dto.ReviewUpdateDTO;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.service.auth.UserService;
@@ -22,6 +24,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
@@ -42,7 +45,7 @@ class ReviewApiControllerTest {
 
     private static final String TEST_USER_EMAIL = "usertest@gmail.com";
     private static final String TEST_USER_PASSWORD = "test";
-    private static final String REVIEW_JSON_TEMPLATE = "{\"content\":\"%s\",\"rating\":%d,\"cosmeticId\":\"%s\",\"userId\":\"%s\"}";
+    private static final String REVIEW_JSON_TEMPLATE = "{\"content\":\"%s\",\"rating\":%d,\"cosmeticId\":\"%s\"}";
     @Autowired
     private MockMvc mockMvc;
     @Autowired
@@ -51,6 +54,15 @@ class ReviewApiControllerTest {
     private WebApplicationContext context;
     @Autowired
     private UserService userService;
+    @Autowired
+    private TokenProvider tokenProvider;
+
+    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofMinutes(3);
+    private static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(2);
+
+    private String accessToken;
+    private String refreshToken;
+
     private String userId;
     private String reviewId;
 
@@ -67,7 +79,10 @@ class ReviewApiControllerTest {
         addUserRequest.setEmail(TEST_USER_EMAIL);
         addUserRequest.setPassword(TEST_USER_PASSWORD);
 
-        userId = userService.saveUser(addUserRequest).getId();
+        User user = userService.saveUser(addUserRequest);
+        userId = user.getId();
+        accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
+        refreshToken = tokenProvider.generateToken(user, REFRESH_TOKEN_DURATION);
     }
 
     @Test
@@ -79,8 +94,7 @@ class ReviewApiControllerTest {
         String reviewJson = String.format(REVIEW_JSON_TEMPLATE,
                 "Spring Boot 테스트 파일...",
                 3,
-                "652cdc2d2bf53d0109d1e210",
-                userId);
+                "652cdc2d2bf53d0109d1e210");
 
         MockMultipartFile reviewFile = new MockMultipartFile("review",
                 "",
@@ -97,7 +111,9 @@ class ReviewApiControllerTest {
         // when
         MvcResult mvcResult = mockMvc.perform(multipart(url)
                         .file(reviewFile)
-                        .file(image1)).andDo(print())
+                        .file(image1)
+                        .header("Authorization", "Bearer " + accessToken))
+                    .andDo(print())
 
                 // then
                 .andExpect(status().isCreated())

@@ -32,14 +32,14 @@ public class TodoController {
     private final TodoService todoService;
     private final MongoService mongoService;
 
-    @Operation(summary = "Retrieve all todos", description = "모든 Todo 항목을 검색합니다.", tags = {"Todo Operations"})
+    @Operation(summary = "Retrieve all todos", description = "모든 Todo 항목을 검색합니다. [User 권한 필요]", tags = {"Todo Operations"})
     @GetMapping("/all")
     public Map<String, Object> getTodos(@AuthenticatedUser User user) {
         List<Todo> existingTodos = todoService.findTodosByUserId(user.getId());
         return createResponse("Here are the todos", existingTodos.isEmpty() ? Collections.emptyList() : existingTodos);
     }
 
-    @Operation(summary = "Create a new todo", description = "새로운 Todo 항목을 추가합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo details for creation"), tags = {"Todo Operations"})
+    @Operation(summary = "Create a new todo", description = "새로운 Todo 항목을 추가합니다. [User 권한 필요]", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo details for creation"), tags = {"Todo Operations"})
     @PostMapping("/create")
     public ResponseEntity<AddTodoResponse> createTodo(@RequestBody AddTodoRequest request, @AuthenticatedUser User user) {
         try {
@@ -61,7 +61,7 @@ public class TodoController {
         }
     }
 
-    @Operation(summary = "Update an existing todo by fields", description = "기존 Todo 항목을 업데이트합니다. (DB call 방식)", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo details for update"), tags = {"Todo Operations"})
+    @Operation(summary = "Update an existing todo by fields", description = "기존 Todo 항목을 업데이트합니다. (DB call 방식) [User 권한 필요]", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo details for update"), tags = {"Todo Operations"})
     @PutMapping("/update/fields/{todoId}")
     public ResponseEntity<AddTodoResponse> updateTodoByFields(@PathVariable String todoId, @RequestBody Map<String, Object> updates, @AuthenticatedUser User user) {
         todoService.checkUserAuthorizationForTodo(todoId, user.getId());
@@ -71,7 +71,7 @@ public class TodoController {
         return updatedTodo.map(todo -> ResponseEntity.ok(new AddTodoResponse("Updated Todo", todo))).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(new AddTodoResponse("Failed to update Todo", null)));
     }
 
-    @Operation(summary = "Update an existing todo", description = "기존 Todo 항목을 업데이트합니다. (JSON 방식)", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo update"), tags = {"Todo Operations"})
+    @Operation(summary = "Update an existing todo", description = "기존 Todo 항목을 업데이트합니다. (JSON 방식) [User 권한 필요]", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo update"), tags = {"Todo Operations"})
     @PutMapping("/update/{todoId}")
     public ResponseEntity<AddTodoResponse> updateTodoByTask(@PathVariable String todoId, @RequestBody TodoUpdateDTO todoUpdateDTO, @AuthenticatedUser User user) {
         todoService.checkUserAuthorizationForTodo(todoId, user.getId());
@@ -84,7 +84,7 @@ public class TodoController {
         }
     }
 
-    @Operation(summary = "Delete a todo", description = "Todo 항목을 삭제합니다.", tags = {"Todo Operations"})
+    @Operation(summary = "Delete a todo", description = "Todo 항목을 삭제합니다. [User 권한 필요]", tags = {"Todo Operations"})
     @DeleteMapping("/delete/{todoId}")
     public ResponseEntity<String> deleteTodo(@PathVariable String todoId, @AuthenticatedUser User user) {
         todoService.checkUserAuthorizationForTodo(todoId, user.getId());
@@ -101,7 +101,7 @@ public class TodoController {
         }
     }
 
-    @Operation(summary = "Delete a task", description = "Task를 삭제합니다. (use /delete/id)", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo update"), tags = {"Todo Operations"})
+    @Operation(summary = "Delete a task", description = "Task를 삭제합니다. (USE /delete/id) [User 권한 필요]", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo update"), tags = {"Todo Operations"})
     @DeleteMapping("/delete/{todoId}/task/{taskId}")
     public ResponseEntity<String> deleteTask(@PathVariable String todoId, @PathVariable String taskId, @AuthenticatedUser User user) {
         todoService.checkUserAuthorizationForTodo(todoId, user.getId());

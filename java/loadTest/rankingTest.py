@@ -84,7 +84,7 @@ class MyUser(HttpUser):
 def print_keyword_counts(environment, **kwargs):
     for keyword, count in MyUser.keyword_counts.items():
         logging.info(f'{keyword}: {count}')
-    with open('keyword_counts.txt', 'w') as file:
+    with open('keyword_counts.txt', 'w', encoding="utf-8") as file:
         for keyword, count in MyUser.keyword_counts.items():
             file.write(f'{keyword}: {count}\n')
 

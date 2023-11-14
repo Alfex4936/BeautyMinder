@@ -132,9 +132,9 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/redis/**")).permitAll()
                 .requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll()
                 .requestMatchers(antMatcher("/cosmetic/click")).permitAll()
-                .requestMatchers(antMatcher("/search/**")).permitAll()
+//                .requestMatchers(antMatcher("/search/**")).permitAll()
 //                .requestMatchers(antMatcher("/data-view/**")).permitAll()
-                .requestMatchers(antMatcher("/baumann/**")).permitAll()
+                .requestMatchers(antMatcher("/baumann/survey")).permitAll()
 //                .requestMatchers(antMatcher("/review/**")).permitAll()
 
                 .requestMatchers(antMatcher("/login")).permitAll()

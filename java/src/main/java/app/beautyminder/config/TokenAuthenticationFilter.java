@@ -38,9 +38,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private static final Pattern UNPROTECTED_SWAGGER_API =
             Pattern.compile("^/(swagger-ui|v3/api-docs|proxy)(/.*)?$");
     private static final Pattern UNPROTECTED_API =
-            Pattern.compile("^/(expiry|es-index|data-view|gpt|search|cosmetic/hit|cosmetic/click|redis|user/sms/send|baumann)(/.*)?$");
+            Pattern.compile("^/(expiry|cosmetic/hit|cosmetic/click)(/.*)?$");
     private static final Pattern TEST_PROTECTED_API =
-            Pattern.compile("^/(admin|gpt/review/summarize|es-index|data-view|todo|review)(/.*)?$");
+            Pattern.compile("^/(admin|gpt/review/summarize|es-index|data-view|todo|review|baumann/test|recommend|search|user)(/.*)?$");
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -52,15 +52,16 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             @NotNull HttpServletResponse response,
             @NotNull FilterChain filterChain) throws ServletException, IOException {
+        if (!isProtectedRoute(request.getRequestURI())) { // early return
+            log.debug("Accessing unprotected route! " + request.getRequestURI());
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (!isTestRoute(request.getRequestURI())) { // for now only checking admin route
             filterChain.doFilter(request, response);
             return;
         }
-//        if (!isProtectedRoute(request.getRequestURI())) { // early return
-//            log.debug("Accessing unprotected route! " + request.getRequestURI());
-//            filterChain.doFilter(request, response);
-//            return;
-//        }
 
         AtomicBoolean isAuth = new AtomicBoolean(true);
 

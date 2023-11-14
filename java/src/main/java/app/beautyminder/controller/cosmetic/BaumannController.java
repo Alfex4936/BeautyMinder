@@ -6,6 +6,7 @@ import app.beautyminder.dto.BaumannTypeDTO;
 import app.beautyminder.service.BaumannService;
 import app.beautyminder.service.LocalFileService;
 import app.beautyminder.service.MongoService;
+import app.beautyminder.util.AuthenticatedUser;
 import app.beautyminder.util.ValidUserId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +21,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -152,7 +154,7 @@ public class BaumannController {
 
     @Operation(
             summary = "Get Baumann Skin Type",
-            description = "바우만 피부 타입 얻기",
+            description = "바우만 피부 타입 얻기 [User 권한 필요]",
             tags = {"Baumann Operations"},
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     content = @Content(
@@ -169,8 +171,9 @@ public class BaumannController {
                     @ApiResponse(responseCode = "400", description = "설문지 답변 부족")
             }
     )
-    @PostMapping("/test/{userId}")
-    public ResponseEntity<BaumannTypeDTO> getBaumann(@PathVariable @ValidUserId String userId, @Valid @RequestBody BaumannSurveyAnswerDTO baumannSurveyAnswerDTO) {
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @PostMapping("/test")
+    public ResponseEntity<BaumannTypeDTO> getBaumann(@AuthenticatedUser User user, @Valid @RequestBody BaumannSurveyAnswerDTO baumannSurveyAnswerDTO) {
         var responses = baumannSurveyAnswerDTO.getResponses();
 
         // Validate if all keys are present
@@ -190,7 +193,7 @@ public class BaumannController {
         var resultJson = baumannService.calculateResults(responses);
 
         var map = Map.of("baumann", resultJson.getSkinType(), "baumannScores", resultJson.getScores());
-        mongoService.updateFields(userId, map, User.class);
+        mongoService.updateFields(user.getId(), map, User.class);
 
         return ResponseEntity.ok(resultJson);
     }
