@@ -9,21 +9,18 @@ import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.review.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.MatchOperation;
-import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
+import org.springframework.data.mongodb.core.aggregation.*;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -37,6 +34,8 @@ public class RecommendService {
     private final ReviewService reviewService;
     private final CosmeticRepository cosmeticRepository;
     private final MongoTemplate mongoTemplate;
+
+    private final Integer MAX_MATCHING_KEYWORDS = 2;
 
     private static <T> T getByRandomClass(Set<T> set) {
         if (set == null || set.isEmpty()) {
@@ -69,8 +68,8 @@ public class RecommendService {
         combinedCosmeticIds.removeAll(userFavs);
 
         if (!userFavs.isEmpty()) {
-            // Method 5: Cosmetics favored by users with similar Baumann skin types
-            combinedCosmeticIds.addAll(findSimilarProducts(getByRandomClass(userFavs), 2));
+            // Method 5: Cosmetics favored by users with similar Baumann skin types (MAX_MATCHING_KEYWORDS)
+            combinedCosmeticIds.addAll(findSimilarProducts(getByRandomClass(userFavs)));
         }
 
         // Retrieve cosmetics by the combined IDs
@@ -112,38 +111,44 @@ public class RecommendService {
     private Set<String> getTrendingCosmeticIds() {
         // Implementation of fetching IDs of trending cosmetics
         List<Cosmetic> cosmetics = cosmeticRankService.getTopRankedCosmetics(5);
+        return convertCosmeticsToStrings(cosmetics);
+    }
+
+    private Set<String> findSimilarProducts(String productId) {
+        Cosmetic originalCosmetic = cosmeticRepository.findById(productId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cosmetic not found"));
+
+        List<String> originalKeywords = originalCosmetic.getKeywords();
+
+        var query = new Query();
+        query.addCriteria(Criteria.where("keywords").in(originalKeywords)
+                .and("_id").ne(new ObjectId(originalCosmetic.getId())));
+        query.limit(10); // Limit
+
+        List<Cosmetic> potentialMatches = mongoTemplate.find(query, Cosmetic.class);
+        List<Cosmetic> similarProducts = potentialMatches.stream()
+                .filter(cosmetic -> countMatchingKeywords(cosmetic.getKeywords(), originalKeywords) >= MAX_MATCHING_KEYWORDS)
+                .sorted(Comparator.comparingInt(cosmetic -> countMatchingKeywords(cosmetic.getKeywords(), originalKeywords)))
+                .limit(5)
+                .toList();
+
+
+        return convertCosmeticsToStrings(similarProducts);
+    }
+
+    private Set<String> convertCosmeticsToStrings(List<Cosmetic> cosmetics) {
         return cosmetics.stream()
                 .map(Cosmetic::getId)
                 .collect(Collectors.toSet());
     }
 
-    private Set<String> findSimilarProducts(String productId, int minKeywordMatch) {
-        Cosmetic cosmetic = cosmeticRepository.findById(productId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cosmetic not found"));
-
-        // Match operation to exclude the product itself
-        MatchOperation matchStage = Aggregation.match(Criteria.where("_id").ne(productId));
-
-        // Projection operation to compute the size of the intersection of keywords
-        ProjectionOperation projectStage = Aggregation.project()
-                .andExclude("_id")
-                .andInclude("name", "brand", "images", "glowpick_url", "category", "status", "createdAt", "purchasedDate", "expirationDate") // Include other necessary fields
-                .andExpression("size(setIntersection(keywords, ?0))", cosmetic.getKeywords()).as("matchingKeywordCount");
-
-        // Match operation to filter documents with at least N matching keywords
-        MatchOperation matchKeywordsStage = Aggregation.match(Criteria.where("matchingKeywordCount").gte(minKeywordMatch));
-
-        // Build the aggregation pipeline
-        Aggregation aggregation = Aggregation.newAggregation(
-                matchStage,
-                projectStage,
-                matchKeywordsStage,
-                Aggregation.sort(Sort.Direction.DESC, "matchingKeywordCount"), // Sort by the count of matching keywords
-                Aggregation.limit(5) // Limit to 5 similar products
-        );
-
-        // Execute the aggregation
-        AggregationResults<Cosmetic> results = mongoTemplate.aggregate(aggregation, "cosmetics", Cosmetic.class);
-
-        return results.getMappedResults().stream().map(Cosmetic::getId).collect(Collectors.toSet());
+    private int countMatchingKeywords(List<String> keywords, List<String> originalKeywords) {
+        int count = 0;
+        for (String keyword : keywords) {
+            if (originalKeywords.contains(keyword)) {
+                count++;
+            }
+        }
+        return count;
     }
 }
