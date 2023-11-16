@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>바우만 소통방 | BeautyMinder</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+    <style>
+        .logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <div class="col-12 logo">
+        <img alt="BeautyMinder Logo" src="img/logo.png" style="max-width: 250px; max-height: 250px;"
+             th:src="@{/img/logo.png}"/>
+    </div>
+    <h2 class="mb-3">채팅방 목록</h2>
+    <div class="row">
+        <div th:each="room, iterStat : ${roomList}" class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${room.name}">Room name</h5>
+                    <!-- Replace colon with line break -->
+                    <p class="card-text" style="font-size: smaller; font-style: italic;">
+                        <span th:utext="${#strings.replace(room.description, ':', '<br>')}"></span>
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <a class="btn btn-primary" th:href="@{enter(roomId=${room.roomId})}">입장하기</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

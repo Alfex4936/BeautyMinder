@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>[[${room.name}]] 소통방 | BeautyMinder</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <style>
+        .chat-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: #e5b000;
+            color: white;
+            border-bottom: 1px solid #e3ab00;
+            font-weight: bold;
+        }
+
+        .chat-header .chat-room-name {
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .chat-header button {
+            margin-left: auto; /* Aligns the button to the right */
+            padding: 0; /* Reduces button padding */
+        }
+        .msgArea {
+            height: auto;
+            min-height: 476px;
+            max-height: 712px;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .chat-input {
+            padding: 15px;
+            display: flex;
+        }
+        .chat-input input[type='text'] {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .close-btn {
+            top: 12px !important;
+            right: 5px !important;
+        }
+
+        .modal-height {
+            max-height: 300px !important;
+        }
+
+        #nicknameModal a.close-modal {
+            top: 12px !important;
+            right: 5px !important;
+        }
+
+        .centered-message {
+            text-align: center;
+            color: grey;
+            margin: 10px 0;
+        }
+
+        .first-message {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Modal for Nickname -->
+<div class="modal modal-height" id="nicknameModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enter Nickname</h5>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="nickname" placeholder="닉네임은?">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="setNickname()">입장하기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <span class="chat-room-name">[[${room.name}]] 채팅방</span>
+        <button type="button" class="btn btn-link text-white" onclick="quit()">
+            <i class="fas fa-sign-out-alt"></i> <!-- X icon -->
+        </button>
+    </div>
+    <div class="msgArea"></div>
+    <div class="chat-input">
+        <input type="text" id="messageInput" class="form-control" placeholder="보낼 메세지를 입력하세요.">
+        <button type="button" class="btn btn-primary" onclick="sendMsg()">
+            <i class="fas fa-paper-plane"></i> <!-- Send icon -->
+        </button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
+
+<script th:inline="javascript">
+    let stompClient = null;
+    let nickname = ''; // Global variable to store the nickname
+    let isFirstMessage = true; // Flag to track the first message
+
+    window.onload = function() {
+        $('#nicknameModal').modal(); // Show the modal on page load
+
+        // Event listener for the message input
+        document.getElementById('messageInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent the default action (new line)
+                sendMsg(); // Send the message
+            }
+        });
+
+        // Global event listener for keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') { //  && event.ctrlKey
+                // Show confirmation dialog when Escape key is pressed
+                const confirmExit = confirm("정말로 채팅방을 나가시겠습니까?");
+                if (confirmExit) {
+                    quit();
+                }
+            }
+        });
+    };
+
+
+    function connect() {
+        const socket = new SockJS('/ws/chat');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+            enterRoom();
+
+            stompClient.subscribe('/topic/room/' + [[${room.roomId}]], function (chat) {
+                showMessage(JSON.parse(chat.body));
+            });
+
+        });
+    }
+
+    function enterRoom() {
+        const roomId = [[${room.roomId}]]; // This line should correctly get the roomId
+        const enterMsg = {"type": "ENTER", "roomId": roomId, "sender": nickname, "message": "Hello"};
+        stompClient.send("/app/chat.enter/" + roomId, {}, JSON.stringify(enterMsg));
+        updateParticipantCount();
+        document.querySelector('.form-control').focus();
+    }
+
+    function sendMsg() {
+        let inputField = document.querySelector('.form-control');
+        let content = inputField.value;
+
+        if (content.trim() === "") {
+            return; // Don't send empty messages
+        }
+
+        const talkMsg = {"type": "TALK", "sender": nickname, "message": content};
+        const roomId = [[${room.roomId}]];
+
+        stompClient.send("/app/chat.send/" + roomId, {}, JSON.stringify(talkMsg));
+
+        // Clear the input field and refocus it
+        inputField.value = "";
+        inputField.focus(); // Refocus the input field for new input
+    }
+
+    function quit() {
+        const roomId = [[${room.roomId}]]; // This line should correctly get the roomId
+        const quitMsg = {"type": "QUIT", "roomId": roomId, "sender": nickname, "message": "Bye "};
+        stompClient.send("/app/chat.quit/" + roomId, {}, JSON.stringify(quitMsg));
+        stompClient.disconnect();
+        updateParticipantCount();
+        location.href = "/chat/list";
+    }
+
+    function showMessage(chat) {
+        console.log("Received chat message:", chat);
+
+        let msgArea = document.querySelector('.msgArea');
+        let newMsg = document.createElement('div');
+
+        // Apply different styling for enter/exit messages
+        if (chat.type === 'ENTER' || chat.type === 'QUIT') {
+            newMsg.classList.add('centered-message');
+            newMsg.innerText = chat.message; // Set the text for enter/exit messages
+        } else {
+            // Detect and replace URLs in the chat message
+            newMsg.innerHTML = chat.message.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="link">$1</a>'); // Use innerHTML to parse the anchor tags
+        }
+
+        msgArea.appendChild(newMsg);
+
+        // Scroll to the bottom of the chat area
+        msgArea.scrollTop = msgArea.scrollHeight;
+    }
+
+    function addNotice() {
+        let msgArea = document.querySelector('.msgArea');
+        let newMsg = document.createElement('div');
+        newMsg.classList.add('first-message');
+        newMsg.classList.add('centered-message');
+
+        isFirstMessage = false; // Reset the flag after the first message
+
+        newMsg.innerText = "! 욕설을 자제하세요 !";
+        msgArea.append(newMsg);
+    }
+
+    function setNickname() {
+        let nicknameInput = document.getElementById('nickname');
+        let nicknameContent = nicknameInput.value.trim();
+
+        // Check if the nickname is within the length limit
+        if (nicknameContent.length === 0 || nicknameContent.length > 12) {
+            alert("닉네임은 1자 이상 12자 이하로 해주세요.");
+            nicknameInput.focus(); // Refocus on the nickname input for correction
+            return;
+        }
+
+        nickname = nicknameContent;
+
+        $.modal.close();
+        addNotice();
+        connect(); // Connect to WebSocket after setting the nickname
+    }
+
+    function updateParticipantCount() {
+        let participantCountElement = document.querySelector('.chat-room-name');
+        const users = [[${room.userCounts}]];
+
+        // if (users > 0) {
+        //     participantCountElement.innerText += `(${users}명 입장 중)`;
+        // } else {
+        //     const roomName = [[${room.name}]];
+        //     participantCountElement.innerText = `${roomName} 채팅방`;
+        // }
+    }
+
+    window.addEventListener('beforeunload', function (e) {
+        quit();
+    });
+
+    // connect();
+</script>
+
+</html>
