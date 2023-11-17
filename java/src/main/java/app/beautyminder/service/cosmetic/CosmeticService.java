@@ -4,6 +4,9 @@ import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.repository.CosmeticRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,6 +19,7 @@ public class CosmeticService {
 
     @Value("${server.default.cosmetic}")
     private String defaultCosmeticPic;
+    private final MongoTemplate mongoTemplate;
 
     private final CosmeticRepository cosmeticRepository;
 
@@ -78,6 +82,24 @@ public class CosmeticService {
             return true;
         }
         return false;
+    }
+
+    public Cosmetic getRandomCosmetic() {
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.sample(1)
+        );
+
+        AggregationResults<Cosmetic> results = mongoTemplate.aggregate(
+                aggregation, Cosmetic.class, Cosmetic.class
+        );
+
+        List<Cosmetic> randomCosmetics = results.getMappedResults();
+
+        if (!randomCosmetics.isEmpty()) {
+            return randomCosmetics.get(0);
+        } else {
+            return null; // or handle the case where no cosmetics are available
+        }
     }
 
 }

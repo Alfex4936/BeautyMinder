@@ -79,7 +79,7 @@ public class ReviewController {
             }
     )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Review> createReview(@RequestPart("review") @Valid ReviewDTO reviewDTO, @RequestPart("images") MultipartFile[] images, @AuthenticatedUser User user) throws JsonProcessingException {
+    public ResponseEntity<Review> createReview(@RequestPart("review") @Valid ReviewDTO reviewDTO, @RequestPart("images") MultipartFile[] images, @Parameter(hidden = true) @AuthenticatedUser User user) throws JsonProcessingException {
         // Delegate the check to the service layer
         Review createdReview = reviewService.createReview(user, reviewDTO, images);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdReview);
@@ -87,7 +87,7 @@ public class ReviewController {
 
     @Operation(summary = "Update an existing review", description = "기존 리뷰를 업데이트합니다. [User 권한 필요]", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Review update details and images"), tags = {"Review Operations"}, responses = {@ApiResponse(responseCode = "200", description = "리뷰가 업데이트됨", content = @Content(schema = @Schema(implementation = Review.class))), @ApiResponse(responseCode = "404", description = "리뷰를 찾을 수 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))})
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Review> updateReview(@PathVariable("id") String id, @RequestPart("review") ReviewUpdateDTO reviewUpdateDetails, @RequestPart(value = "images", required = false) MultipartFile[] images, @AuthenticatedUser User user) throws JsonProcessingException {
+    public ResponseEntity<Review> updateReview(@PathVariable("id") String id, @RequestPart("review") ReviewUpdateDTO reviewUpdateDetails, @RequestPart(value = "images", required = false) MultipartFile[] images, @Parameter(hidden = true) @AuthenticatedUser User user) throws JsonProcessingException {
         Optional<Review> updatedReview = reviewService.updateReview(id, user, reviewUpdateDetails, images);
         return updatedReview
                 .map(ResponseEntity::ok)
@@ -105,7 +105,7 @@ public class ReviewController {
             }
     )
     @DeleteMapping(value = "/{id}")
-    public ResponseEntity<?> deleteReview(@PathVariable("id") String id, @AuthenticatedUser User user) {
+    public ResponseEntity<?> deleteReview(@PathVariable("id") String id, @Parameter(hidden = true) @AuthenticatedUser User user) {
         // TODO: Check if the authenticated user is allowed to delete this review
         // Perform the delete operation
         reviewService.deleteReview(user, id);

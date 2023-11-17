@@ -63,8 +63,8 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-    public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
-    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(7);
+    public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(21);
+    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(14);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -125,16 +125,17 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/")).permitAll()
                 .requestMatchers(antMatcher("/api/**")).permitAll()
 
-                .requestMatchers(antMatcher("/expiry/**")).permitAll()
+//                .requestMatchers(antMatcher("/expiry/**")).permitAll()
 //                .requestMatchers(antMatcher("/es-index/**")).permitAll()
 //                .requestMatchers(antMatcher("/todo/**")).permitAll()
                 .requestMatchers(antMatcher("/gpt/review/**")).permitAll()
                 .requestMatchers(antMatcher("/redis/**")).permitAll()
                 .requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll()
-                .requestMatchers(antMatcher("/cosmetic/click")).permitAll()
+                .requestMatchers(antMatcher("/cosmetic/click/**")).permitAll()
 //                .requestMatchers(antMatcher("/search/**")).permitAll()
 //                .requestMatchers(antMatcher("/data-view/**")).permitAll()
                 .requestMatchers(antMatcher("/baumann/survey")).permitAll()
+                .requestMatchers(antMatcher("/search/test")).permitAll()
 //                .requestMatchers(antMatcher("/review/**")).permitAll()
 
                 .requestMatchers(antMatcher("/login")).permitAll()

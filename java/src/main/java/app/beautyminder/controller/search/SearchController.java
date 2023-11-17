@@ -11,6 +11,7 @@ import app.beautyminder.service.cosmetic.ReviewSearchService;
 import app.beautyminder.util.AuthenticatedUser;
 import com.mongodb.BasicDBObject;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -38,7 +39,7 @@ import static app.beautyminder.domain.User.MAX_HISTORY_SIZE;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/search") // /search/
-@PreAuthorize("hasRole('ROLE_USER')")
+
 public class SearchController {
 
     private final CosmeticSearchService cosmeticSearchService;
@@ -48,7 +49,8 @@ public class SearchController {
 
     @Operation(summary = "Search Cosmetics by Name", description = "이름으로 화장품을 검색합니다. [USER 권한 필요]", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/cosmetic")
-    public ResponseEntity<List<Cosmetic>> searchByName(@RequestParam String name, @AuthenticatedUser User user) {
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<List<Cosmetic>> searchByName(@RequestParam String name, @Parameter(hidden = true) @AuthenticatedUser User user) {
         String trimmedName = (name != null) ? name.trim() : "";
         List<Cosmetic> results = cosmeticSearchService.searchByName(trimmedName);
 
@@ -63,7 +65,8 @@ public class SearchController {
 
     @Operation(summary = "Search Reviews by Content", description = "콘텐츠로 리뷰를 검색합니다. [USER 권한 필요]", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Review.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/review")
-    public ResponseEntity<List<Review>> searchByContent(@RequestParam String content, @AuthenticatedUser User user) {
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<List<Review>> searchByContent(@RequestParam String content, @Parameter(hidden = true) @AuthenticatedUser User user) {
         String trimmedName = (content != null) ? content.trim() : "";
         List<Review> results = reviewSearchService.searchByContent(trimmedName);
         if (!results.isEmpty()) {
@@ -77,7 +80,8 @@ public class SearchController {
 
     @Operation(summary = "Search Cosmetics by Category", description = "카테고리로 화장품을 검색합니다. [USER 권한 필요]", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/category")
-    public ResponseEntity<List<Cosmetic>> searchByCategory(@RequestParam String category, @AuthenticatedUser User user) {
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<List<Cosmetic>> searchByCategory(@RequestParam String category, @Parameter(hidden = true) @AuthenticatedUser User user) {
         String trimmedName = (category != null) ? category.trim() : "";
         List<Cosmetic> results = cosmeticSearchService.searchByCategory(trimmedName);
         if (!results.isEmpty()) {
@@ -91,7 +95,8 @@ public class SearchController {
 
     @Operation(summary = "Search Cosmetics by Keyword", description = "키워드로 화장품을 검색합니다. [USER 권한 필요]", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/keyword")
-    public ResponseEntity<List<Cosmetic>> searchByKeyword(@RequestParam String keyword, @AuthenticatedUser User user) {
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<List<Cosmetic>> searchByKeyword(@RequestParam String keyword, @Parameter(hidden = true) @AuthenticatedUser User user) {
         String trimmedName = (keyword != null) ? keyword.trim() : "";
         List<Cosmetic> results = cosmeticSearchService.searchByKeyword(trimmedName);
         if (!results.isEmpty()) {
@@ -105,7 +110,8 @@ public class SearchController {
 
     @Operation(summary = "Search Cosmetics by anything", description = "모든 데이터(화장품 이름,카테고리,키워드 + 리뷰 텍스트)를 검색합니다. [USER 권한 필요]", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class, type = "array")))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping
-    public ResponseEntity<?> searchAnything(@RequestParam String anything, @AuthenticatedUser User user) {
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<?> searchAnything(@RequestParam String anything, @Parameter(hidden = true) @AuthenticatedUser User user) {
         String trimmedName = (anything != null) ? anything.trim() : "";
 
         List<Cosmetic> keywordResult = cosmeticSearchService.searchByKeyword(trimmedName);
@@ -130,7 +136,7 @@ public class SearchController {
 
     @Operation(summary = "Trigger ranking save", description = "랭킹을 강제로 저장합니다. [ADMIN 권한 필요]", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class, type = "array")))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/test")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+//    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> searchRank(@RequestParam String anything) {
         cosmeticRankService.collectSearchEvent(anything.trim());
         return ResponseEntity.ok("ok");
@@ -138,6 +144,10 @@ public class SearchController {
 
     @Async
     public void updateUserSearchHistory(User user, String searchQuery) {
+        if (!searchQuery.isEmpty()) {
+            return;
+        }
+
         LinkedList<String> keywordHistory = new LinkedList<>(user.getKeywordHistory());
 
         // Remove the search query if it already exists to avoid duplication

@@ -5,6 +5,7 @@ import app.beautyminder.domain.User;
 import app.beautyminder.service.RecommendService;
 import app.beautyminder.util.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,7 +34,7 @@ public class RecommendController {
             }
     )
     @GetMapping()
-    public ResponseEntity<?> getRecommendation(@AuthenticatedUser User user) {
+    public ResponseEntity<?> getRecommendation(@Parameter(hidden = true) @AuthenticatedUser User user) {
         return ResponseEntity.ok(recommendService.recommendProducts(user.getId()));
     }
 }

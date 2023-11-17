@@ -99,8 +99,16 @@ public class TodoService {
                             .ifPresent(tasksToAdd -> tasksToAdd.forEach(add ->
                                     todo.getTasks().add(new TodoTask(UUID.randomUUID().toString(), add.getDescription(), add.getCategory(), false))));
 
-                    mongoTemplate.save(todo);
-                    return todo;
+                    if (todo.getTasks().isEmpty()) {
+                        // If there are no tasks left, remove the Todo
+                        mongoTemplate.remove(todo);
+                        throw new ResponseStatusException(HttpStatus.OK, "Todo updated but has no tasks, got deleted");
+                        // Return null or an appropriate response to indicate the Todo was removed
+                    } else {
+                        // Save the updated Todo
+                        mongoTemplate.save(todo);
+                        return todo;
+                    }
                 });
     }
 

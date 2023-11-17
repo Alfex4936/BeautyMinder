@@ -71,6 +71,11 @@
             color: red;
             font-weight: bold;
         }
+
+        .notice-message {
+            color: #e58d00;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -101,7 +106,7 @@
     </div>
     <div class="msgArea"></div>
     <div class="chat-input">
-        <input type="text" id="messageInput" class="form-control" placeholder="보낼 메세지를 입력하세요.">
+        <input type="text" maxlength="120" id="messageInput" class="form-control" placeholder="보낼 메세지를 입력하세요.">
         <button type="button" class="btn btn-primary" onclick="sendMsg()">
             <i class="fas fa-paper-plane"></i> <!-- Send icon -->
         </button>
@@ -118,6 +123,7 @@
     let stompClient = null;
     let nickname = ''; // Global variable to store the nickname
     let isFirstMessage = true; // Flag to track the first message
+    let basic = `[[${room.name}]] 채팅방`;
 
     window.onload = function() {
         $('#nicknameModal').modal(); // Show the modal on page load
@@ -146,23 +152,29 @@
     function connect() {
         const socket = new SockJS('/ws/chat');
         stompClient = Stomp.over(socket);
+        stompClient.heartbeat.incoming = 10000; // 10 seconds
+        stompClient.heartbeat.outgoing = 10000; // 10 seconds
+
 
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
-            enterRoom();
 
             stompClient.subscribe('/topic/room/' + [[${room.roomId}]], function (chat) {
                 showMessage(JSON.parse(chat.body));
             });
 
+            stompClient.subscribe('/topic/room/name/' + [[${room.roomId}]], function (title) {
+                updateParticipantCount(JSON.parse(title.body));
+            });
+
+            enterRoom(); // Call enterRoom here, inside the connect callback
         });
     }
 
     function enterRoom() {
-        const roomId = [[${room.roomId}]]; // This line should correctly get the roomId
+        const roomId = [[${room.roomId}]];
         const enterMsg = {"type": "ENTER", "roomId": roomId, "sender": nickname, "message": "Hello"};
         stompClient.send("/app/chat.enter/" + roomId, {}, JSON.stringify(enterMsg));
-        updateParticipantCount();
         document.querySelector('.form-control').focus();
     }
 
@@ -188,30 +200,47 @@
         const roomId = [[${room.roomId}]]; // This line should correctly get the roomId
         const quitMsg = {"type": "QUIT", "roomId": roomId, "sender": nickname, "message": "Bye "};
         stompClient.send("/app/chat.quit/" + roomId, {}, JSON.stringify(quitMsg));
-        stompClient.disconnect();
-        updateParticipantCount();
+        stompClient.disconnect(headers={"TEST": "HEY"});
         location.href = "/chat/list";
+    }
+
+    function createMessageElement(chat) {
+        let newMsg = document.createElement('div');
+
+        if (['ENTER', 'QUIT', 'NOTICE'].includes(chat.type)) {
+            newMsg.classList.add('centered-message');
+            if (chat.type === 'NOTICE') {
+                newMsg.classList.add('notice-message');
+            }
+            newMsg.innerText = chat.message;
+        } else {
+            newMsg.innerHTML = replaceURLsWithLinks(chat.message);
+        }
+
+        return newMsg;
+    }
+
+    function replaceURLsWithLinks(text) {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.replace(urlRegex, '<a href="$1" target="_blank" class="link">$1</a>');
+    }
+
+    function scrollToBottom(element) {
+        element.scrollTop = element.scrollHeight;
     }
 
     function showMessage(chat) {
         console.log("Received chat message:", chat);
 
-        let msgArea = document.querySelector('.msgArea');
-        let newMsg = document.createElement('div');
+        try {
+            let msgArea = document.querySelector('.msgArea');
+            let newMsg = createMessageElement(chat);
 
-        // Apply different styling for enter/exit messages
-        if (chat.type === 'ENTER' || chat.type === 'QUIT') {
-            newMsg.classList.add('centered-message');
-            newMsg.innerText = chat.message; // Set the text for enter/exit messages
-        } else {
-            // Detect and replace URLs in the chat message
-            newMsg.innerHTML = chat.message.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="link">$1</a>'); // Use innerHTML to parse the anchor tags
+            msgArea.appendChild(newMsg);
+            scrollToBottom(msgArea);
+        } catch (error) {
+            console.error('Error displaying chat message:', error);
         }
-
-        msgArea.appendChild(newMsg);
-
-        // Scroll to the bottom of the chat area
-        msgArea.scrollTop = msgArea.scrollHeight;
     }
 
     function addNotice() {
@@ -244,9 +273,9 @@
         connect(); // Connect to WebSocket after setting the nickname
     }
 
-    function updateParticipantCount() {
+    function updateParticipantCount(titleBody) {
         let participantCountElement = document.querySelector('.chat-room-name');
-        const users = [[${room.userCounts}]];
+        participantCountElement.innerText = basic + ` (${titleBody.title}명 대화 중)`;
 
         // if (users > 0) {
         //     participantCountElement.innerText += `(${users}명 입장 중)`;

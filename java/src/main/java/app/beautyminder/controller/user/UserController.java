@@ -107,7 +107,7 @@ public class UserController {
     @Operation(summary = "User Deletion", description = "사용자 삭제 by userId [USER 권한 필요]", tags = {"User Operations"})
     @DeleteMapping("/delete")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<?> deleteUser(@AuthenticatedUser User user) {
+    public ResponseEntity<?> deleteUser(@Parameter(hidden = true) @AuthenticatedUser User user) {
         userService.deleteUserAndRelatedData(user.getId());
         return ResponseEntity.ok("a user is deleted successfully");
     }
@@ -115,7 +115,7 @@ public class UserController {
 
     @Operation(summary = "Get user profile", description = "사용자 프로필 가져오기 [USER 권한 필요]", tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "유저 데이터 성공적으로 불러옴", content = @Content(schema = @Schema(implementation = User.class))), @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = User.class)))})
     @GetMapping("/me")
-    public ResponseEntity<User> getProfile(@AuthenticatedUser User user) {
+    public ResponseEntity<User> getProfile(@Parameter(hidden = true) @AuthenticatedUser User user) {
         try {
             return ResponseEntity.ok(user);
         } catch (IllegalArgumentException e) {
@@ -123,12 +123,17 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Update user profile", description = "사용자 프로필 업데이트 [USER 권한 필요]", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(implementation = Map.class)), description = "Profile updates"), tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "유저 업데이트 완료", content = @Content(schema = @Schema(implementation = User.class))), @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = User.class)))})
+    @Operation(summary = "Update user profile", description = "사용자 프로필 업데이트 [USER 권한 필요]", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(implementation = Map.class), examples = @ExampleObject(name = "typicalResponses", value = """
+            {
+                "baumann": "DSNT",
+                "nickname": "Que"
+            }
+            """, summary = "지원 필드: nickname, profileImage, phoneNumber\n프사는 http 링크, phoneNumber은 중복을 체크함. (01012345678 형식, - 없음)")), description = "Profile updates"), tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "유저 업데이트 완료", content = @Content(schema = @Schema(implementation = User.class))), @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = User.class)))})
 
     // org.springframework.web.bind.annotation.
     // Can take any field in User class
     @PatchMapping("/update")
-    public ResponseEntity<?> updateProfile(@AuthenticatedUser User user, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<?> updateProfile(@Parameter(hidden = true) @AuthenticatedUser User user, @RequestBody Map<String, Object> updates) {
         // 전화번호 미리 체크
         if (updates.containsKey("phoneNumber")) {
             String phoneNumber = (String) updates.get("phoneNumber");
@@ -152,7 +157,7 @@ public class UserController {
 
     @Operation(summary = "Add to User Favorite", description = "사용자의 즐겨찾기에 화장품을 추가합니다. [USER 권한 필요]", tags = {"User Profile Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품의 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = User.class))), @ApiResponse(responseCode = "404", description = "사용자 또는 화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))})
     @PostMapping("/favorites/{cosmeticId}")
-    public ResponseEntity<User> addToUserFavorite(@AuthenticatedUser User user, @PathVariable String cosmeticId) {
+    public ResponseEntity<User> addToUserFavorite(@Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable String cosmeticId) {
         try {
             User updatedUser = userService.addCosmeticById(user.getId(), cosmeticId);
 
@@ -167,7 +172,7 @@ public class UserController {
 
     @Operation(summary = "Delete a favourite of User", description = "사용자의 즐겨찾기에 화장품을 삭제합니다. [USER 권한 필요]", tags = {"User Profile Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품의 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = User.class))), @ApiResponse(responseCode = "404", description = "사용자 또는 화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))})
     @DeleteMapping("/favorites/{cosmeticId}")
-    public ResponseEntity<User> removeFromUserFavorite(@AuthenticatedUser User user, @PathVariable String cosmeticId) {
+    public ResponseEntity<User> removeFromUserFavorite(@Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable String cosmeticId) {
         try {
             User updatedUser = userService.removeCosmeticById(user.getId(), cosmeticId);
 
@@ -177,11 +182,9 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Get favorites of User", description = "사용자의 즐겨찾기를 전부 불러옵니다. [USER 권한 필요]", tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))),
-
-    })
+    @Operation(summary = "Get favorites of User", description = "사용자의 즐겨찾기를 전부 불러옵니다. [USER 권한 필요]", tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class))))})
     @GetMapping("/favorites")
-    public ResponseEntity<List<Cosmetic>> getFavorites(@AuthenticatedUser User user) {
+    public ResponseEntity<List<Cosmetic>> getFavorites(@Parameter(hidden = true) @AuthenticatedUser User user) {
         try {
             // Fetch the actual Cosmetic objects by their IDs
             List<Cosmetic> cosmetics = cosmeticRepository.findAllById(user.getCosmeticIds());
@@ -196,7 +199,7 @@ public class UserController {
 
     })
     @GetMapping("/reviews")
-    public ResponseEntity<List<Review>> getUserReviews(@AuthenticatedUser User user) {
+    public ResponseEntity<List<Review>> getUserReviews(@Parameter(hidden = true) @AuthenticatedUser User user) {
         try {
             // Fetch all the reviews made by the user
             List<Review> reviews = reviewRepository.findByUser(user);
@@ -207,9 +210,9 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Upload Profile Image", description = "유저 프로필 사진 업로드하기 [USER 권한 필요]", tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Image uploaded successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = String.class), examples = @ExampleObject(name = "Image URL", value = "\"http://example.com/image.jpg\"", summary = "URL of the uploaded image"))), @ApiResponse(responseCode = "400", description = "Invalid user ID or image data"), @ApiResponse(responseCode = "500", description = "Internal server error")})
+    @Operation(summary = "Upload Profile Image", description = "유저 프로필 사진 업로드하기 (자동으로 프사가 바뀜) [USER 권한 필요]", tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Image uploaded successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = String.class), examples = @ExampleObject(name = "Image URL", value = "\"http://example.com/image.jpg\"", summary = "URL of the uploaded image"))), @ApiResponse(responseCode = "400", description = "Invalid user ID or image data"), @ApiResponse(responseCode = "500", description = "Internal server error")})
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public String uploadProfileImage(@AuthenticatedUser User user,
+    public String uploadProfileImage(@Parameter(hidden = true) @AuthenticatedUser User user,
 
                                      @Parameter(description = "Profile image file to upload", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, examples = @ExampleObject(name = "file", summary = "A 'binary' file"))) @RequestParam("image") MultipartFile image) {
         String imageUrl = fileStorageService.storeFile(image, "profile/");
@@ -220,7 +223,7 @@ public class UserController {
 
     @Operation(summary = "Get user's search history", description = "유저 검색 기록 얻기 [USER 권한 필요]", tags = {"User Operations"})
     @GetMapping(value = "/search-history")
-    public ResponseEntity<?> getKeywordHistory(@AuthenticatedUser User user) {
+    public ResponseEntity<?> getKeywordHistory(@Parameter(hidden = true) @AuthenticatedUser User user) {
         return ResponseEntity.status(HttpStatus.OK).body(user.getKeywordHistory());
     }
 

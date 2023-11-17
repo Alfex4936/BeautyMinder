@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -73,6 +74,11 @@ public class CosmeticRankService {
 
         log.info("BEMINDER: REDIS: Reset all cosmetic metrics.");
     }
+
+//    @PostConstruct
+//    public void initRank() {
+//        keywordRankRepository.save(KeywordRank.builder().date(LocalDate.now(ZoneId.of("Asia/Seoul"))).build());
+//    }
 
     // Cosmetic Metrics collection (click/search hit)
     // Scheduled Batch Processing
@@ -225,23 +231,29 @@ public class CosmeticRankService {
         // Extract the top 10 keywords
         var top10Keywords = sortedEntries.stream().map(entry -> (String) entry.getKey()).toList();
 
-        var today = LocalDate.now();
+        var today = LocalDate.now(ZoneId.of("Asia/Seoul"));
         var existingKeywordRank = keywordRankRepository.findByDate(today);
 
-        if (top10Keywords.isEmpty()) {
-            log.info("Empty top 10 keywords. Updating updatedAt time only.");
-            existingKeywordRank.ifPresent(keywordRank ->
-                    mongoService.touch(KeywordRank.class, keywordRank.getId(), "updatedAt"));
-        } else {
-            log.info("BEMINDER: Saving top 10 keywords: {}", top10Keywords);
-            var keywordRank = existingKeywordRank
-                    .map(rank -> {
-                        rank.setRankings(top10Keywords);
-                        return rank;
-                    })
-                    .orElseGet(() -> KeywordRank.builder().date(today).rankings(top10Keywords).build());
+        // Check if there's an entry for today
+        if (existingKeywordRank.isEmpty()) {
+            log.info("No existing KeywordRank for today. Creating a new one.");
 
-            keywordRankRepository.save(keywordRank);
+            // Try to get the most recent updated KeywordRank before today, if it exists
+            var mostRecentKeywordRank = keywordRankRepository.findTopByOrderByUpdatedAtDesc();
+
+            // Use the rankings from the most recent KeywordRank, or an empty list if none exists
+            var initialRankings = mostRecentKeywordRank.map(KeywordRank::getRankings).orElse(Collections.emptyList());
+
+            // Save a new KeywordRank for today
+            keywordRankRepository.save(KeywordRank.builder().date(today).rankings(initialRankings).build());
+        } else {
+            // Update existing entry for today
+            log.info("Updating existing KeywordRank for today with top 10 keywords: {}", top10Keywords);
+            existingKeywordRank.ifPresent(rank -> {
+                rank.setRankings(top10Keywords);
+                mongoService.touch(KeywordRank.class, rank.getId(), "updatedAt");
+                keywordRankRepository.save(rank);
+            });
         }
     }
 

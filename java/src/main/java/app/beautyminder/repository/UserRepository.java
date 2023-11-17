@@ -2,6 +2,7 @@ package app.beautyminder.repository;
 
 import app.beautyminder.domain.User;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -22,6 +23,12 @@ public interface UserRepository extends MongoRepository<User, String> {
     List<User> findByCreatedAtAfter(LocalDateTime date);
 
     List<User> findByBaumann(String baumannSkinType);
+
+    @Aggregation(pipeline = {
+            "{ $match: { 'baumannSkinType': ?0 } }",
+            "{ $sample: { size: 10 } }"
+    })
+    List<User> findRandomByBaumann(String baumannSkinType);
 
     @Query("{'$or': [{'email': ?0}, {'nickname': ?1}]}")
     Optional<User> findByEmailOrNickname(String email, String nickname);

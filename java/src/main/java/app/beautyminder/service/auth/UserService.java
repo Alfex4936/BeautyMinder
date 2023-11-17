@@ -213,7 +213,7 @@ public class UserService {
         }
 
         // Delete all expiry items
-        expiryService.deleteAllByUserId(new ObjectId(userId));
+        expiryService.deleteAllByUserId(userId);
 
         // Delete the User
         userRepository.deleteById(userId);

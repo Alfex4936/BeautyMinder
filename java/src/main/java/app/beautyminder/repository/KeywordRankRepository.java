@@ -12,4 +12,7 @@ public interface KeywordRankRepository extends MongoRepository<KeywordRank, Stri
     Optional<KeywordRank> findTopByOrderByUpdatedAtDesc();
 
     Optional<KeywordRank> findByDate(LocalDate now);
+
+    // Find the most recent KeywordRank before a given date
+    Optional<KeywordRank> findTopByDateBeforeOrderByDateDesc(LocalDate date);
 }

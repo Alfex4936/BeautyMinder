@@ -20,7 +20,7 @@
                 <p class="text-white-50 mt-2 mb-5">서비스 사용을 위한 회원 가입</p>
 
                 <div class="mb-2">
-                    <form method="POST" th:action="@{/user}">
+                    <form method="POST" th:action="@{db}">
                         <!-- 토큰을 추가하여 CSRF 공격 방지 -->
                         <input th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" type="hidden"/>
                         <div class="mb-3">

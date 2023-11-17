@@ -1,8 +1,11 @@
 package app.beautyminder.controller.chat;
 
+import app.beautyminder.domain.User;
 import app.beautyminder.dto.chat.ChatRoom;
 import app.beautyminder.service.chat.ChatService;
+import app.beautyminder.util.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,6 +38,7 @@ public class ChatController {
         return "chat/chatRoom";
     }
 
+//    @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping("/enter")
     public String enterRoom(Model model, @RequestParam String roomId) {
         ChatRoom room = chatService.findRoomById(roomId);
@@ -42,10 +46,4 @@ public class ChatController {
         return "chat/chatRoom";
     }
 
-    @GetMapping("/enter2")
-    public String enterRoom2(Model model, @RequestParam String roomId) {
-        ChatRoom room = chatService.findRoomById(roomId);
-        model.addAttribute("room", room);
-        return "chat/chatRoom2";
-    }
 }

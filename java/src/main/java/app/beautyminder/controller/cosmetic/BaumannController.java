@@ -11,6 +11,7 @@ import app.beautyminder.util.ValidUserId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -173,7 +174,7 @@ public class BaumannController {
     )
     @PreAuthorize("hasRole('ROLE_USER')")
     @PostMapping("/test")
-    public ResponseEntity<BaumannTypeDTO> getBaumann(@AuthenticatedUser User user, @Valid @RequestBody BaumannSurveyAnswerDTO baumannSurveyAnswerDTO) {
+    public ResponseEntity<BaumannTypeDTO> getBaumann(@Parameter(hidden = true) @AuthenticatedUser User user, @Valid @RequestBody BaumannSurveyAnswerDTO baumannSurveyAnswerDTO) {
         var responses = baumannSurveyAnswerDTO.getResponses();
 
         // Validate if all keys are present

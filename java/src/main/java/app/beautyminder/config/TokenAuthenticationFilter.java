@@ -31,16 +31,16 @@ import static app.beautyminder.config.WebSecurityConfig.*;
 @Slf4j
 @RequiredArgsConstructor
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
-    private final static String HEADER_AUTHORIZATION = "Authorization";
-    private final static String NEW_HEADER_AUTHORIZATION = "New-Access-Token";
-    private final static String NEW_XRT_AUTHORIZATION = "New-Refresh-Token";
-    private final static String TOKEN_PREFIX = "Bearer ";
+    public final static String HEADER_AUTHORIZATION = "Authorization";
+    public final static String NEW_HEADER_AUTHORIZATION = "New-Access-Token";
+    public final static String NEW_XRT_AUTHORIZATION = "New-Refresh-Token";
+    public final static String TOKEN_PREFIX = "Bearer ";
     private static final Pattern UNPROTECTED_SWAGGER_API =
-            Pattern.compile("^/(swagger-ui|v3/api-docs|proxy)(/.*)?$");
+            Pattern.compile("^/(swagger-ui|v3/api-docs|proxy|search/test)(/.*)?$");
     private static final Pattern UNPROTECTED_API =
-            Pattern.compile("^/(expiry|cosmetic/hit|cosmetic/click|chat|ws)(/.*)?$");
+            Pattern.compile("^/(test|cosmetic/hit|cosmetic/click|chat|ws)(/.*)?$");
     private static final Pattern TEST_PROTECTED_API =
-            Pattern.compile("^/(admin|gpt/review/summarize|es-index|data-view|todo|review|baumann/test|recommend|search|user|redis/eval|redis/batch)(/.*)?$");
+            Pattern.compile("^/(expiry|admin|gpt/review/summarize|es-index|data-view|todo|review|baumann/test|recommend|search|user|redis/eval|redis/batch)(/.*)?$");
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;

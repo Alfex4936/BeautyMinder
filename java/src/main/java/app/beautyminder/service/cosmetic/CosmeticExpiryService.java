@@ -1,6 +1,9 @@
 package app.beautyminder.service.cosmetic;
 
+import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.CosmeticExpiry;
+import app.beautyminder.domain.User;
+import app.beautyminder.dto.expiry.AddExpiryProduct;
 import app.beautyminder.repository.CosmeticExpiryRepository;
 import app.beautyminder.service.MongoService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +26,34 @@ public class CosmeticExpiryService {
     private final CosmeticExpiryRepository cosmeticExpiryRepository;
     private final MongoService mongoService;
 
-    public CosmeticExpiry createCosmeticExpiry(CosmeticExpiry cosmeticExpiry) {
+    public CosmeticExpiry createCosmeticExpiry(String userId, AddExpiryProduct cosmeticExpiryDTO) {
+        CosmeticExpiry.CosmeticExpiryBuilder builder = CosmeticExpiry.builder();
+
+        // Set values from DTO to builder, checking for null
+        if (cosmeticExpiryDTO.getBrandName() != null) {
+            builder.brandName(cosmeticExpiryDTO.getBrandName());
+        }
+        if (cosmeticExpiryDTO.getImageUrl() != null) {
+            builder.imageUrl(cosmeticExpiryDTO.getImageUrl());
+        }
+        if (cosmeticExpiryDTO.getCosmeticId() != null) {
+            builder.cosmeticId(cosmeticExpiryDTO.getCosmeticId());
+        }
+
+        // MUST
+        builder.expiryDate(cosmeticExpiryDTO.getExpiryDate());
+        builder.productName(cosmeticExpiryDTO.getProductName());
+        builder.isExpiryRecognized(cosmeticExpiryDTO.isExpiryRecognized());
+        builder.isOpened(cosmeticExpiryDTO.isOpened());
+        builder.openedDate(cosmeticExpiryDTO.getOpenedDate());
+
+        // Set the user ID from the User object
+        builder.userId(userId);
+
+        // Build the CosmeticExpiry object
+        CosmeticExpiry cosmeticExpiry = builder.build();
+
+        // Save to repository
         return cosmeticExpiryRepository.save(cosmeticExpiry);
     }
 
@@ -61,7 +91,11 @@ public class CosmeticExpiryService {
         return cosmeticExpiryRepository.findAllByUserIdAndExpiryDateBetween(userId, startDate, endDate);
     }
 
-    public void deleteAllByUserId(ObjectId userId) {
+    public void deleteAllByUserId(String userId) {
         cosmeticExpiryRepository.deleteAllByUserId(userId);
+    }
+
+    public Optional<CosmeticExpiry> findByUserIdAndId(String userId, String expiryId) {
+        return cosmeticExpiryRepository.findByUserIdAndId(userId, expiryId);
     }
 }

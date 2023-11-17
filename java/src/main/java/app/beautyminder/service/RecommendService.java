@@ -72,6 +72,7 @@ public class RecommendService {
             combinedCosmeticIds.addAll(findSimilarProducts(getByRandomClass(userFavs)));
         }
 
+
         // Retrieve cosmetics by the combined IDs
         return cosmeticRepository.findAllById(combinedCosmeticIds);
     }
@@ -114,26 +115,37 @@ public class RecommendService {
         return convertCosmeticsToStrings(cosmetics);
     }
 
+
     private Set<String> findSimilarProducts(String productId) {
         Cosmetic originalCosmetic = cosmeticRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cosmetic not found"));
 
         List<String> originalKeywords = originalCosmetic.getKeywords();
 
-        var query = new Query();
-        query.addCriteria(Criteria.where("keywords").in(originalKeywords)
-                .and("_id").ne(new ObjectId(originalCosmetic.getId())));
-        query.limit(10); // Limit
+        // Define the match criteria
+        Criteria criteria = Criteria.where("keywords").in(originalKeywords)
+                .and("_id").ne(new ObjectId(originalCosmetic.getId()));
 
-        List<Cosmetic> potentialMatches = mongoTemplate.find(query, Cosmetic.class);
+        // Define the aggregation pipeline
+        MatchOperation matchOperation = Aggregation.match(criteria);
+        SampleOperation sampleOperation = Aggregation.sample(10);
+
+        Aggregation aggregation = Aggregation.newAggregation(matchOperation, sampleOperation);
+
+        // Execute the aggregation
+        AggregationResults<Cosmetic> results = mongoTemplate.aggregate(aggregation, Cosmetic.class, Cosmetic.class);
+        List<Cosmetic> potentialMatches = results.getMappedResults();
+
+        // Filter and sort the potential matches
         List<Cosmetic> similarProducts = potentialMatches.stream()
                 .filter(cosmetic -> countMatchingKeywords(cosmetic.getKeywords(), originalKeywords) >= MAX_MATCHING_KEYWORDS)
                 .sorted(Comparator.comparingInt(cosmetic -> countMatchingKeywords(cosmetic.getKeywords(), originalKeywords)))
-                .limit(5)
+                .limit(7)
                 .toList();
 
-
-        return convertCosmeticsToStrings(similarProducts);
+        return similarProducts.stream()
+                .map(Cosmetic::getId)
+                .collect(Collectors.toSet());
     }
 
     private Set<String> convertCosmeticsToStrings(List<Cosmetic> cosmetics) {

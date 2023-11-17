@@ -1,6 +1,7 @@
 package app.beautyminder.repository;
 
 import app.beautyminder.domain.CosmeticExpiry;
+import app.beautyminder.domain.User;
 import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,5 +25,5 @@ public interface CosmeticExpiryRepository extends MongoRepository<CosmeticExpiry
 
     @Query(value = "{ 'userId': ?0 }", delete = true)
         // delete ALL
-    void deleteAllByUserId(ObjectId userId);
+    void deleteAllByUserId(String userId);
 }

@@ -23,10 +23,10 @@ public class ChatService {
     private void initPermanentRooms() {
         // List of Baumann skin types or any other predefined room names
         var baumannTypes = List.of(
-                "OSNT", "OSNW", "OSPT", "OSPW",
-                "ORNT", "ORNW", "ORPT", "ORPW",
-                "DSNT", "DSNW", "DSPT", "DSPW",
-                "DRNT", "DRNW", "DRPT", "DRPW");
+                "OSNT (번들민감)", "OSNW (주름민감)", "OSPT (색소민감)", "OSPW (복합고민)",
+                "ORNT (튼튼번들)", "ORNW (튼튼주름)", "ORPT (튼튼색소)", "ORPW (관리필요)",
+                "DSNT (건민감)", "DSNW (건조주름)", "DSPT (건색민감)", "DSPW (건조복합)",
+                "DRNT (튼튼건조)", "DRNW (튼튼건조주름)", "DRPT (건조튼튼색소)", "DRPW (건조관리)");
 
         var descriptions = List.of(
                 "(Oily, Sensitive, Non-pigmented, Tight): \"번들번들하지만 민감해요. 탄력 있는 피부지만 주름은 걱정 없는 타입!\"",
@@ -83,6 +83,14 @@ public class ChatService {
         if (room != null) {
             room.getMessages().add(message);
         }
+    }
+
+    public Integer getRoomUserCount(String roomId) {
+        ChatRoom room = chatRooms.get(roomId);
+        if (room != null) {
+            return room.getUserCounts();
+        }
+        return null;
     }
 
     public void userEnteredRoom(String roomId) {

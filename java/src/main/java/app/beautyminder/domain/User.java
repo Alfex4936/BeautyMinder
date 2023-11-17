@@ -168,5 +168,7 @@ public class User implements UserDetails {
         return true;
     }
 
-
+    public Set<Map.Entry<String, Double>> getBaumannScoreEntries() {
+        return this.baumannScores != null ? this.baumannScores.entrySet() : Collections.emptySet();
+    }
 }
