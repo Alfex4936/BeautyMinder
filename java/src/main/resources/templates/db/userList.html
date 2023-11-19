@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>BeautyMinder Users</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+    <style>
+        .logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <div class="col-12 logo">
+        <img alt="BeautyMinder Logo" src="img/logo.png" style="max-width: 250px; max-height: 250px;"
+             th:src="@{/img/logo.png}"/>
+    </div>
+    <h2 class="mb-3">유저 목록</h2>
+    <div class="row">
+        <div th:each="user, iterStat : ${userList}" class="col-md-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${user.email}">User email</h5>
+                    <p>ID: <span th:text="${user.id}"></span></p>
+                    <p>Nickname: <span th:text="${user.nickname} ?: 'N/A'"></span></p>
+                    <p>Phone: <span th:text="${user.phoneNumber} ?: 'N/A'"></span></p>
+                    <div>
+                        <img th:src="${user.profileImage}" style="max-width: 100px; max-height: 100px;" alt="Profile Image" />
+                    </div>
+                    <div>
+                        Favourites:
+                        <ul>
+                            <li th:each="cosmeticId : ${user.cosmeticIds}" th:text="${cosmeticId}"></li>
+                        </ul>
+                    </div>
+                    <div>
+                        Search History:
+                        <ul>
+                            <li th:each="keyword : ${user.keywordHistory}" th:text="${keyword}"></li>
+                        </ul>
+                    </div>
+                    <div>
+                        Baumann Type: <span th:text="${user.baumann}"></span>
+                        <div>
+                            Baumann Scores:
+                            <ul>
+                                <li th:each="score : ${user.baumannScoreEntries}" th:text="${score.key + ': ' + score.value}"></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

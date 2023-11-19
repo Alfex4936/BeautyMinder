@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -69,12 +70,13 @@ public class RedisController {
 
     @Operation(
             summary = "Forcefully run redis batch for top 10 ranking",
-            description = "강제로 Redis 배치 보내기",
+            description = "강제로 Redis 배치 보내기 [ADMIN 권한 필요]",
             tags = {"Redis Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = String.class)))
             }
     )
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/batch")
     public ResponseEntity<?> runBatchRedis() {
         cosmeticRankService.processKeywordEvents();
@@ -83,12 +85,13 @@ public class RedisController {
 
     @Operation(
             summary = "Forcefully save top 10 keywords",
-            description = "강제로 실시간 랭킹 저장하기",
+            description = "강제로 실시간 랭킹 저장하기 [ADMIN 권한 필요]",
             tags = {"Redis Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = String.class)))
             }
     )
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/eval")
     public ResponseEntity<?> runKeywordRank() {
         cosmeticRankService.saveTop10Keywords();

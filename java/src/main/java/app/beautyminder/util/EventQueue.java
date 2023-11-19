@@ -52,5 +52,4 @@ public class EventQueue {
         }
         return events;
     }
-
 }

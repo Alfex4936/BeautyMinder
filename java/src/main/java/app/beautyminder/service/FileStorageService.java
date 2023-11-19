@@ -15,6 +15,8 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -28,12 +30,7 @@ import java.util.UUID;
 public class FileStorageService {
 
     // have to consider using a library that can read and verify the image's binary data.
-    private static final List<String> ALLOWED_FILE_TYPES = Arrays.asList(
-            "image/jpeg",
-            "image/png",
-            "image/jpg",
-            "image/gif"
-    );
+    private static final List<String> ALLOWED_FILE_TYPES = Arrays.asList("image/jpeg", "image/png", "image/jpg", "image/gif");
     private final AmazonS3 amazonS3;
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -41,8 +38,7 @@ public class FileStorageService {
     public String storeFile(MultipartFile file, String folderPath) {
         validateImageFileType(file);
 
-        var extension = Objects.requireNonNull(file.getOriginalFilename())
-                .substring(file.getOriginalFilename().lastIndexOf('.'));
+        var extension = Objects.requireNonNull(file.getOriginalFilename()).substring(file.getOriginalFilename().lastIndexOf('.'));
         var uniqueFileName = UUID.randomUUID() + extension;
         var fileName = folderPath + uniqueFileName;
         try (InputStream fileInputStream = file.getInputStream()) {
@@ -52,31 +48,32 @@ public class FileStorageService {
 
             amazonS3.putObject(new PutObjectRequest(bucket, fileName, fileInputStream, metadata));
             URL fileUrl = amazonS3.getUrl(bucket, fileName);
-
-
-            // Create and store the thumbnail
-//            BufferedImage thumbnail = createThumbnail(file);
-//            ByteArrayOutputStream thumbnailOutputStream = new ByteArrayOutputStream();
-//            ImageIO.write(thumbnail, getExtension(fileName), thumbnailOutputStream);
-//            byte[] thumbnailBytes = thumbnailOutputStream.toByteArray();
-//            InputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailBytes);
-//
-//            String thumbnailName = "thumbnail_" + fileName;
-//            ObjectMetadata thumbnailMetadata = new ObjectMetadata();
-//            thumbnailMetadata.setContentType(file.getContentType());
-//            thumbnailMetadata.setContentLength(thumbnailBytes.length);
-//            amazonS3.putObject(new PutObjectRequest(bucket, thumbnailName, thumbnailInputStream, thumbnailMetadata));
-
             return fileUrl.toString();
         } catch (IOException e) {
             throw new FileStorageException("Could not store file. Please try again!", e);
         }
     }
 
+    private void uploadThumbnail(MultipartFile file, String fileName) throws IOException {
+        // Create and store the thumbnail
+        BufferedImage thumbnail = createThumbnail(file);
+        ByteArrayOutputStream thumbnailOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(thumbnail, getExtension(fileName), thumbnailOutputStream);
+        byte[] thumbnailBytes = thumbnailOutputStream.toByteArray();
+        InputStream thumbnailInputStream = new ByteArrayInputStream(thumbnailBytes);
+
+        String thumbnailName = "150x150_" + fileName;
+        ObjectMetadata thumbnailMetadata = new ObjectMetadata();
+        thumbnailMetadata.setContentType(file.getContentType());
+        thumbnailMetadata.setContentLength(thumbnailBytes.length);
+        amazonS3.putObject(new PutObjectRequest(bucket, thumbnailName, thumbnailInputStream, thumbnailMetadata));
+
+    }
+
     public Resource loadFile(String storedFileName) {
         try {
-            S3Object s3Object  = amazonS3.getObject(new GetObjectRequest(bucket, storedFileName));
-            try (S3ObjectInputStream objectInputStream = s3Object .getObjectContent()) {
+            S3Object s3Object = amazonS3.getObject(new GetObjectRequest(bucket, storedFileName));
+            try (S3ObjectInputStream objectInputStream = s3Object.getObjectContent()) {
                 byte[] bytes = IOUtils.toByteArray(objectInputStream);
                 return new ByteArrayResource(bytes);
             }

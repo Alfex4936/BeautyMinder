@@ -49,7 +49,6 @@ public class RankApiControllerTest {
     public void testSingleUpdate() {
         RunningStats stats = new RunningStats();
         stats.updateRecentCount(300);
-        log.info("{}", stats);
         assertEquals(300, stats.getRecentCount());
         assertEquals(1, stats.getTotalCount());
         assertEquals(300.0, stats.getMean(), 0.001);

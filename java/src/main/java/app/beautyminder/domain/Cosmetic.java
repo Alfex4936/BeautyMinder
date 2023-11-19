@@ -29,7 +29,7 @@ public class Cosmetic {
     @Setter
     private String thumbnailUrl; // one image
 
-    private String glowpickUrl;
+    private String glowpick_url;
 
     private LocalDate expirationDate;
     private LocalDateTime createdAt;

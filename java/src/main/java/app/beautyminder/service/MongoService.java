@@ -67,8 +67,15 @@ public class MongoService {
                     .filter(entry -> !bannedFields.contains(entry.getKey()))
                     .filter(entry -> isValidField(entityClass, entry.getKey()))
                     .forEach(entry -> {
-                        stringBuilder.append(entry.getKey()).append(",");
-                        update.set(entry.getKey(), entry.getValue());
+                        if (entry.getKey().equals("profileImage") && !(entry.getValue() instanceof String && ((String) entry.getValue()).startsWith("http"))) {
+                            // skip this entry
+                            // do nothing
+                        } else if (entry.getKey().equals("phoneNumber") && !isValidKoreanPhoneNumber((String) entry.getValue())) {
+                            // skip this entry if it's not a valid Korean phone number
+                        } else {
+                            stringBuilder.append(entry.getKey()).append(",");
+                            update.set(entry.getKey(), entry.getValue());
+                        }
                     });
 
             mongoTemplate.updateFirst(query, update, entityClass);
@@ -84,7 +91,7 @@ public class MongoService {
                 .and(referenceFieldName + ".$id").is(new ObjectId(referenceId)));
         query.fields().position("program", 1);
         T application = mongoTemplate.findOne(query, entityClass);
-        log.error("Check: {}", application);
+        log.error("existsWithReference: {}", application);
 
         return mongoTemplate.exists(query, entityClass);
     }
@@ -95,5 +102,9 @@ public class MongoService {
         var updateResult = mongoTemplate.updateFirst(query, update, entitiyClass);
 
         return updateResult.wasAcknowledged();
+    }
+
+    public boolean isValidKoreanPhoneNumber(String phoneNumber) {
+        return phoneNumber != null && phoneNumber.matches("^010\\d{8}$");
     }
 }

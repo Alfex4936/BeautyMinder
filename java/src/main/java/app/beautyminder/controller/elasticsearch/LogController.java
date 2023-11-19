@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,7 +40,7 @@ public class LogController {
             }
     )
     @GetMapping("/spring")
-    public ResponseEntity<List<Object>> getSpringLog() {
+    public ResponseEntity<List<Object>> getSpringLogJSON() {
         try {
             var logs = logService.getTodaysLogs();
             // Convert the List of JSON strings to a List of Maps
@@ -60,12 +62,13 @@ public class LogController {
 
     @Operation(
             summary = "Delete Spring Boot logs",
-            description = "Spring Boot 서버 로그 삭제 (from Elasticsearch, UTC time)",
+            description = "Spring Boot 서버 로그 삭제 (from Elasticsearch, UTC time) [ADMIN 권한 필요]",
             tags = {"Log Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Object.class, type = "array")))
             }
     )
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/spring/delete")
     public ResponseEntity<String> dropLogDocuments() {
         String todayDate = LocalDate.now(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("YYYY.MM.dd"));

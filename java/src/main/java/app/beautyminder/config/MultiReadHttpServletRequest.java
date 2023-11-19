@@ -12,6 +12,7 @@ public class MultiReadHttpServletRequest extends ContentCachingRequestWrapper {
     }
 
     public String getBody() {
+//        this.getParameterMap()
         byte[] content = this.getContentAsByteArray();
         return new String(content, StandardCharsets.UTF_8);
     }

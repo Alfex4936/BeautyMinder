@@ -20,6 +20,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.SampleOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.*;
@@ -35,6 +39,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+// maybe scheduler work
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -46,7 +51,6 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final CosmeticRepository cosmeticRepository;
     private final MongoTemplate mongoTemplate;
-    private final ObjectMapper objectMapper;
     private final NlpService nlpService;
 
     public Optional<Review> findById(String id) {
@@ -78,7 +82,7 @@ public class ReviewService {
         reviewRepository.deleteById(id);
     }
 
-    public Review createReview(User user, ReviewDTO reviewDTO, MultipartFile[] images) throws JsonProcessingException {
+    public Review createReview(User user, ReviewDTO reviewDTO, MultipartFile[] images) {
         // Check if the user has already left a review for the cosmetic
         if (HasUserReviewedCosmetic(user.getId(), reviewDTO.getCosmeticId()).isPresent()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User has already reviewed this cosmetic.");
@@ -124,7 +128,7 @@ public class ReviewService {
         return savedReview;
     }
 
-    public Optional<Review> updateReview(String revId, User user, ReviewUpdateDTO reviewUpdateDetails, MultipartFile[] images) throws JsonProcessingException {
+    public Optional<Review> updateReview(String revId, User user, ReviewUpdateDTO reviewUpdateDetails, MultipartFile[] images) {
         var query = new Query(Criteria.where("id").is(revId));
         var review = mongoTemplate.findOne(query, Review.class);
 
@@ -195,7 +199,7 @@ public class ReviewService {
 
     public List<Review> getReviewsOfBaumann(Integer minRating, String userBaumann) {
         // First, find all users with the specified Baumann skin type.
-        List<User> usersWithBaumann = userRepository.findByBaumann(userBaumann);
+        List<User> usersWithBaumann = userRepository.findRandomByBaumann(userBaumann);
 
         // Extract the IDs from the users and convert them to ObjectId instances.
         List<ObjectId> userIds = usersWithBaumann.stream()
@@ -229,12 +233,15 @@ public class ReviewService {
         // Create the final criteria using 'or' operator to combine all two-type matches
         Criteria finalCriteria = ratingCriteria.andOperator(new Criteria().orOperator(combinedBaumannCriteria.toArray(new Criteria[0])));
 
-        // Create the query using the final criteria
-        Query query = new Query(finalCriteria);
-        query.limit(10);
+        // Define the aggregation pipeline
+        MatchOperation matchOperation = Aggregation.match(finalCriteria);
+        SampleOperation sampleOperation = Aggregation.sample(20);
 
-        // Execute the query to fetch the filtered reviews
-        return mongoTemplate.find(query, Review.class);
+        Aggregation aggregation = Aggregation.newAggregation(matchOperation, sampleOperation);
+
+        // Execute the aggregation to fetch the random filtered reviews
+        AggregationResults<Review> results = mongoTemplate.aggregate(aggregation, Review.class, Review.class);
+        return results.getMappedResults();
     }
 
     public Optional<Review> HasUserReviewedCosmetic(String userId, String cosmeticId) {

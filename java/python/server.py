@@ -35,6 +35,7 @@ client = OpenAI(
 
 SYSTEM_ROLE = os.environ.get("SYSTEM_ROLE")
 
+logger = logging.getLogger(__name__)
 
 def predict_text(text):
     encoded_sentence = tokenizer.encode_plus(
@@ -113,7 +114,7 @@ def process_review(review):
     )
     is_filtered = bool(overall_offensiveness_probability >= 0.8)
 
-    logging.info(f"FASTAPI: dealing with {review_text[:12]}")
+    logger.info(f"FASTAPI: dealing with {review_text[:12]}")
     # Filter similarities above threshold K and create a dictionary with the results
     response = client.chat.completions.create(
         response_format={"type": "json_object"},
@@ -122,6 +123,22 @@ def process_review(review):
             {
                 "role": "system",
                 "content": SYSTEM_ROLE,
+            },
+            {
+                "role": "user",
+                "content": "에센스 토너 필요해서 글로우픽 보고 사봤는데, 좋네여오… 특히 핸드 토너로 사용하고 핸드크림 바르면 완전 흡수력도 짱짱 보습도 짱짱..",
+            },
+            {
+                "role": "assistant",
+                "content": '{"nlpAnalysis":{"O":0.4,"D":0.4,"R":0.4,"S":0.4,"P":0.4,"N":0.4,"T":0.4,"W":0.4}}',  # less tokens I hope
+            },
+            {
+                "role": "user",
+                "content": "너무 안좋은데요?",
+            },
+            {
+                "role": "assistant",
+                "content": '{"nlpAnalysis":{"O":0.0,"D":0.0,"R":0.0,"S":0.0,"P":0.0,"N":0.0,"T":0.0,"W":0.0}}',  # less tokens I hope
             },
             {
                 "role": "user",
@@ -134,7 +151,7 @@ def process_review(review):
         frequency_penalty=0,
         presence_penalty=0,
     )
-    logging.info(f"FASTAPI: done with {review_text[:12]}")
+    logger.info(f"FASTAPI: done with {review_text[:12]}")
 
     nlpanalysis = json.loads(response.choices[0].message.content)
 

@@ -2,7 +2,6 @@ package app.beautyminder.aop;
 
 import app.beautyminder.domain.User;
 import app.beautyminder.util.AuthenticatedUser;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -42,19 +41,19 @@ public class AuthenticatedUserAspect {
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         Object[] args = joinPoint.getArgs();
 
-        IntStream.range(0, parameterAnnotations.length)
-                .forEach(i -> Arrays.stream(parameterAnnotations[i])
-                        .filter(AuthenticatedUser.class::isInstance)
-                        .findFirst()
-                        .ifPresent(annotation -> {
-                            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-                            if (authentication == null || !authentication.isAuthenticated()) {
-                                throw new IllegalStateException("No authenticated user found");
-                            }
-                            if (authentication.getPrincipal() instanceof User user) {
-                                args[i] = user;
-                            }
-                        }));
+        for (int i = 0; i < parameterAnnotations.length; i++) {
+            if (Arrays.stream(parameterAnnotations[i]).anyMatch(annotation -> annotation.annotationType() == AuthenticatedUser.class)) {
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                if (authentication == null || !authentication.isAuthenticated()) {
+                    throw new IllegalStateException("No authenticated user found");
+                }
+                if (authentication.getPrincipal() instanceof User user) {
+                    args[i] = user;
+                }
+                // Once handled, no need to check other annotations of this parameter
+                break;
+            }
+        }
 
         return joinPoint.proceed(args);
     }

@@ -31,16 +31,16 @@ import static app.beautyminder.config.WebSecurityConfig.*;
 @Slf4j
 @RequiredArgsConstructor
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
-    private final static String HEADER_AUTHORIZATION = "Authorization";
-    private final static String NEW_HEADER_AUTHORIZATION = "New-Access-Token";
-    private final static String NEW_XRT_AUTHORIZATION = "New-Refresh-Token";
-    private final static String TOKEN_PREFIX = "Bearer ";
+    public final static String HEADER_AUTHORIZATION = "Authorization";
+    public final static String NEW_HEADER_AUTHORIZATION = "New-Access-Token";
+    public final static String NEW_XRT_AUTHORIZATION = "New-Refresh-Token";
+    public final static String TOKEN_PREFIX = "Bearer ";
     private static final Pattern UNPROTECTED_SWAGGER_API =
-            Pattern.compile("^/(swagger-ui|v3/api-docs|proxy)(/.*)?$");
+            Pattern.compile("^/(vision|swagger-ui|v3/api-docs|proxy|search/test)(/.*)?$");
     private static final Pattern UNPROTECTED_API =
-            Pattern.compile("^/(expiry|es-index|data-view|gpt|search|cosmetic/hit|cosmetic/click|redis|user/sms/send|baumann)(/.*)?$");
+            Pattern.compile("^/(test|cosmetic/hit|cosmetic/click|chat|ws)(/.*)?$");
     private static final Pattern TEST_PROTECTED_API =
-            Pattern.compile("^/(admin|gpt/review/summarize|es-index|data-view|todo|review)(/.*)?$");
+            Pattern.compile("^/(actuator|expiry|admin|gpt/review/summarize|es-index|data-view|todo|review|baumann/test|baumann/history|recommend|search|user|redis/eval|redis/batch)(/.*)?$");
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -52,15 +52,16 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             @NotNull HttpServletResponse response,
             @NotNull FilterChain filterChain) throws ServletException, IOException {
+        if (!isProtectedRoute(request.getRequestURI())) { // early return
+            log.debug("Accessing unprotected route! " + request.getRequestURI());
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (!isTestRoute(request.getRequestURI())) { // for now only checking admin route
             filterChain.doFilter(request, response);
             return;
         }
-//        if (!isProtectedRoute(request.getRequestURI())) { // early return
-//            log.debug("Accessing unprotected route! " + request.getRequestURI());
-//            filterChain.doFilter(request, response);
-//            return;
-//        }
 
         AtomicBoolean isAuth = new AtomicBoolean(true);
 
