@@ -13,19 +13,20 @@ public class MyErrorController implements ErrorController {
     @RequestMapping("/error")
     public String handleError(HttpServletRequest request, Model model) {
         Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+        Object errorMessage = request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
 
         if (status != null) {
             int statusCode = Integer.parseInt(status.toString());
 
             switch(statusCode) {
                 case 404:
-                    model.addAttribute("error", "Page not found");
+                    model.addAttribute("error", "Page not found: " + errorMessage);
                     break;
                 case 500:
-                    model.addAttribute("error", "Internal server error");
+                    model.addAttribute("error", "Internal server error " + errorMessage);
                     break;
                 default:
-                    model.addAttribute("error", "Unexpected error");
+                    model.addAttribute("error", "Unexpected error " + errorMessage);
             }
         }
 

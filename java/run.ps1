@@ -5,6 +5,7 @@ $ErrorActionPreference = "SilentlyContinue"
 ./gradlew clean bootJar build -x test
 
 copy Dockerfile.spring build/libs/
+copy google-beautyminder.json build/libs/
 copy Dockerfile.python python/
 
 # This runs 'docker-compose -f ELK.yml up -d' command

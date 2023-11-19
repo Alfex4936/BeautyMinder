@@ -6,6 +6,7 @@ logstash/pipeline/spring-boot-logs.conf
 redis.env
 spring.env
 python.env
+google-beautyminder.json
 
 # Log file
 *.log

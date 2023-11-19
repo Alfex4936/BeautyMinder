@@ -36,11 +36,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     public final static String NEW_XRT_AUTHORIZATION = "New-Refresh-Token";
     public final static String TOKEN_PREFIX = "Bearer ";
     private static final Pattern UNPROTECTED_SWAGGER_API =
-            Pattern.compile("^/(swagger-ui|v3/api-docs|proxy|search/test)(/.*)?$");
+            Pattern.compile("^/(vision|swagger-ui|v3/api-docs|proxy|search/test)(/.*)?$");
     private static final Pattern UNPROTECTED_API =
             Pattern.compile("^/(test|cosmetic/hit|cosmetic/click|chat|ws)(/.*)?$");
     private static final Pattern TEST_PROTECTED_API =
-            Pattern.compile("^/(expiry|admin|gpt/review/summarize|es-index|data-view|todo|review|baumann/test|baumann/history|recommend|search|user|redis/eval|redis/batch)(/.*)?$");
+            Pattern.compile("^/(actuator|expiry|admin|gpt/review/summarize|es-index|data-view|todo|review|baumann/test|baumann/history|recommend|search|user|redis/eval|redis/batch)(/.*)?$");
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;

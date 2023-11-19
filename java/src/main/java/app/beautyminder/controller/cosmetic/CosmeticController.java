@@ -10,6 +10,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +33,16 @@ public class CosmeticController {
     public ResponseEntity<List<Cosmetic>> getAllCosmetics() {
         List<Cosmetic> cosmetics = cosmeticService.getAllCosmetics();
         return ResponseEntity.ok(cosmetics);
+    }
+
+    @Operation(summary = "Get All Cosmetics in Page", description = "모든 화장품을 가져옵니다. 페이지 형식", tags = {"Cosmetic Operations"}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Cosmetic.class, type = "array"))), @ApiResponse(responseCode = "404", description = "화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))})
+    @GetMapping("/page")
+    public ResponseEntity<Page<Cosmetic>> getAllCosmeticsByPage(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(cosmeticService.getAllCosmeticsInPage(pageable));
     }
 
     @Operation(summary = "Get Cosmetic by ID", description = "ID로 화장품을 가져옵니다.", tags = {"Cosmetic Operations"}, parameters = {@Parameter(name = "id", description = "화장품의 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Cosmetic.class))), @ApiResponse(responseCode = "404", description = "화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))})

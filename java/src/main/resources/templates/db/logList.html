@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>BeautyMinder Server logger</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
+    <style>
+        .logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .log-info {
+            color: #27ff27;
+        }
+
+        .log-debug {
+            color: #3699ff;
+        }
+
+        .log-error {
+            color: #ff3535;
+        }
+
+        .log-other {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <div class="col-12 logo">
+        <img alt="BeautyMinder Logo" src="img/logo.png" style="max-width: 250px; max-height: 250px;"
+             th:src="@{/img/logo.png}"/>
+    </div>
+    <h2 class="mb-3">Log Entries</h2>
+    <div class="row">
+        <div th:each="log : ${logs}" class="col-md-12 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Timestamp: <span th:text="${log['document']['@timestamp']}"></span></h5>
+                    <p>Level:
+                        <b><span th:text="${log.document.level}"
+                              th:classappend="${log.document.level == 'INFO'} ? 'log-info' :
+                                              (${log.document.level == 'DEBUG'} ? 'log-debug' :
+                                              (${log.document.level == 'ERROR'} ? 'log-error' : 'log-other'))">
+                        </span></b>
+                    </p>
+                    <p>Message: <span th:utext="${log.document.message}"></span></p>
+                    <p>Logger: <span th:utext="${log.document.logger_name}"></span></p>
+                    <p th:if="${log.document.containsKey('stack_trace')}">Error: <span th:text="${log.document.stack_trace}"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

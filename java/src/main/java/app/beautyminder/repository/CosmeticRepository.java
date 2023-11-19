@@ -1,6 +1,10 @@
 package app.beautyminder.repository;
 
 import app.beautyminder.domain.Cosmetic;
+import app.beautyminder.domain.CosmeticExpiry;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -17,4 +21,6 @@ public interface CosmeticRepository extends MongoRepository<Cosmetic, String> {
     List<Cosmetic> findByPurchasedDate(LocalDate purchasedDate);
 
     List<Cosmetic> findByExpirationDate(LocalDate expirationDate);
+
+    @NotNull Page<Cosmetic> findAll(@NotNull Pageable pageable);
 }

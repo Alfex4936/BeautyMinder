@@ -203,8 +203,10 @@ public class UserService {
         refreshTokenRepository.deleteByUserId(new ObjectId(userId));
 
         // Delete user profile picture from S3
-        if (!user.getProfileImage().isEmpty()) {
-            fileStorageService.deleteFile(user.getProfileImage());
+        String userProfileImage = user.getProfileImage();
+        if (!userProfileImage.isEmpty() &&
+                !List.of(defaultUserProfilePic, defaultAdminProfilePic).contains(userProfileImage)) {
+            fileStorageService.deleteFile(userProfileImage);
         }
 
         // Delete all reviews made by the user and update cosmetics' scores

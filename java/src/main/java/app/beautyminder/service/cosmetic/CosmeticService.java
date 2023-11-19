@@ -4,6 +4,8 @@ import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.repository.CosmeticRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -29,6 +31,10 @@ public class CosmeticService {
 
     public List<Cosmetic> getAllCosmetics() {
         return cosmeticRepository.findAll();
+    }
+
+    public Page<Cosmetic> getAllCosmeticsInPage(Pageable pageable) {
+        return cosmeticRepository.findAll(pageable);
     }
 
     public Cosmetic createCosmetic(Cosmetic cosmetic) {
