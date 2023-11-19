@@ -28,7 +28,7 @@ It manifests as a cosmetic recommendation app, meticulously tuned to individual 
 | **CI/CD**             | GitHub Actions                                  |
 
 # System Architecture 🏗️
-![System Architecture](https://github.com/Alfex4936/beautyMinder/assets/2356749/5caf6d91-ab5e-419d-8520-455c91ca59c9)
+![SA](https://github.com/beminder/BeautyMinder/assets/2356749/988934b4-b99e-4883-b11a-a86abc5205d6)
 
 ## Detailed Breakdown 🔍
 - **Redis**: Harnesses real-time metrics like product click counters, search hit counters, and favorite counters, utilizing pipeline/batch methods for data collection.
