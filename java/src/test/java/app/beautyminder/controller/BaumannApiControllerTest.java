@@ -1,5 +1,7 @@
 package app.beautyminder.controller;
 
+import app.beautyminder.config.jwt.TokenProvider;
+import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.repository.UserRepository;
 import app.beautyminder.service.LocalFileService;
@@ -18,6 +20,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.Duration;
+
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -35,7 +41,8 @@ class BaumannApiControllerTest {
 
     private static final String TEST_USER_EMAIL = "usertest@gmail.com";
     private static final String TEST_USER_PASSWORD = "test";
-
+    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofMinutes(3);
+    private static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(1);
     @Autowired
     private MockMvc mockMvc;
     @Autowired
@@ -48,7 +55,10 @@ class BaumannApiControllerTest {
     private UserService userService;
     @Autowired
     private LocalFileService localFileService;
+    @Autowired
+    private TokenProvider tokenProvider;
     private String userId;
+    private String accessToken;
 
     @BeforeEach
     public void mockMvcSetUp() {
@@ -61,7 +71,9 @@ class BaumannApiControllerTest {
         addUserRequest.setEmail(TEST_USER_EMAIL);
         addUserRequest.setPassword(TEST_USER_PASSWORD);
 
-        userId = userService.saveUser(addUserRequest).getId();
+        User user = userService.saveUser(addUserRequest);
+        userId = user.getId();
+        accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
     }
 
     @Test
@@ -89,13 +101,16 @@ class BaumannApiControllerTest {
     @DisplayName("Test Baumann Update")
     public void testDoBaumann() throws Exception {
         // given
-        String url = "/baumann/test/" + userId;
+        String url = "/baumann/test";
 
         JsonNode jsonObject = localFileService.readJsonFile("classpath:baumannMySurvey.json");
         String requestBody = objectMapper.writeValueAsString(jsonObject);
 
         // when
-        mockMvc.perform(post(url).contentType(MediaType.APPLICATION_JSON_VALUE).content(requestBody))
+        mockMvc.perform(post(url)
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE).content(requestBody))
+
                 // then
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.skinType").value("OSNT"))
@@ -103,6 +118,23 @@ class BaumannApiControllerTest {
 
         assertEquals("Baumann type must be", userRepository.findById(userId).get().getBaumann(), "OSNT");
 
+    }
+
+    @Test
+    @Order(3)
+    @DisplayName("Test Baumann History")
+    public void testGetHistory() throws Exception {
+        // given
+        String url = "/baumann/history";
+
+        // when
+        mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+
+                // then
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$[*].userId", everyItem(is(userId))))
+                .andExpect(jsonPath("$[*].baumannType", everyItem(is("OSNT"))));
     }
 
     @AfterEach

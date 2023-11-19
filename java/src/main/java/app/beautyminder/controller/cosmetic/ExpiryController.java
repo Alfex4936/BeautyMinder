@@ -110,7 +110,7 @@ public class ExpiryController {
                     )
             }
     )
-    @GetMapping("/expiry/{expiryId}")
+    @GetMapping("/{expiryId}")
     public ResponseEntity<CosmeticExpiry> getCosmeticExpiry(
             @Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable String expiryId) {
         return ResponseEntity.ok(cosmeticExpiryService.getCosmeticExpiry(user.getId(), expiryId));
@@ -136,7 +136,7 @@ public class ExpiryController {
                     )
             }
     )
-    @PutMapping("/expiry/{expiryId}")
+    @PutMapping("/{expiryId}")
     public ResponseEntity<CosmeticExpiry> updateCosmeticExpiry(
             @Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable String expiryId, @RequestBody Map<String, Object> updates) {
         return cosmeticExpiryService.findByUserIdAndId(user.getId(), expiryId)
@@ -164,10 +164,10 @@ public class ExpiryController {
                     )
             }
     )
-    @DeleteMapping("/expiry/{expiryId}")
-    public ResponseEntity<Void> deleteCosmeticExpiry(@Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable String expiryId) {
+    @DeleteMapping("/{expiryId}")
+    public ResponseEntity<String> deleteCosmeticExpiry(@Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable String expiryId) {
         cosmeticExpiryService.deleteCosmeticExpiry(user.getId(), expiryId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.OK).body("Deleted " + expiryId);
     }
 
     @Operation(
@@ -194,8 +194,8 @@ public class ExpiryController {
     @GetMapping("/filter")
     public ResponseEntity<List<CosmeticExpiry>> filterCosmeticExpiries(
             @Parameter(hidden = true) @AuthenticatedUser User user,
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate) {
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
         return ResponseEntity.ok(cosmeticExpiryService.filterCosmeticExpiries(user.getId(), startDate, endDate));
     }
 

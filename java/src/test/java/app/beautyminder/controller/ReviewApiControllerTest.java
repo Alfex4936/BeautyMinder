@@ -46,6 +46,8 @@ class ReviewApiControllerTest {
     private static final String TEST_USER_EMAIL = "usertest@gmail.com";
     private static final String TEST_USER_PASSWORD = "test";
     private static final String REVIEW_JSON_TEMPLATE = "{\"content\":\"%s\",\"rating\":%d,\"cosmeticId\":\"%s\"}";
+    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofMinutes(3);
+    private static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(2);
     @Autowired
     private MockMvc mockMvc;
     @Autowired
@@ -56,10 +58,6 @@ class ReviewApiControllerTest {
     private UserService userService;
     @Autowired
     private TokenProvider tokenProvider;
-
-    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofMinutes(3);
-    private static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(2);
-
     private String accessToken;
     private String refreshToken;
 
@@ -94,7 +92,7 @@ class ReviewApiControllerTest {
         String reviewJson = String.format(REVIEW_JSON_TEMPLATE,
                 "Spring Boot 테스트 파일...",
                 3,
-                "652cdc2d2bf53d0109d1e210");
+                "65576e4c8247c8f1003781bc"); // 테스트용 제품
 
         MockMultipartFile reviewFile = new MockMultipartFile("review",
                 "",
@@ -113,7 +111,7 @@ class ReviewApiControllerTest {
                         .file(reviewFile)
                         .file(image1)
                         .header("Authorization", "Bearer " + accessToken))
-                    .andDo(print())
+                .andDo(print())
 
                 // then
                 .andExpect(status().isCreated())
@@ -154,13 +152,15 @@ class ReviewApiControllerTest {
         // when
         mockMvc.perform(multipart(HttpMethod.PUT, url)
                         .file(updateFile)
-                        .file(image1)).andDo(print())
+                        .file(image1)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andDo(print())
 
                 // then
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.rating").value(1))
                 .andExpect(jsonPath("$.content").value("Spring Boot 업데이트"))
-                .andExpect(jsonPath("$.images[*]", hasItem(containsString("ajou2.png"))));
+                .andExpect(jsonPath("$.images[*]", hasItem(containsString(".png")))); // uuid name
     }
 
     @Test
@@ -171,7 +171,8 @@ class ReviewApiControllerTest {
         String url = "/review/" + reviewId;
 
         // when
-        mockMvc.perform(delete(url))
+        mockMvc.perform(delete(url)
+                        .header("Authorization", "Bearer " + accessToken))
 
                 // then
                 .andExpect(status().is2xxSuccessful())

@@ -28,26 +28,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessBaseException.class)
     protected ResponseEntity<ErrorResponse> handle(BusinessBaseException e) {
         log.error("BusinessException", e);
-        return createErrorResponseEntity(e.getErrorCode());
+        return createErrorResponseEntity(e.getErrorCode(), e.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     protected ResponseEntity<ErrorResponse> handle(AccessDeniedException e) {
         log.error("AccessBaseException", e);
-        return createErrorResponseEntity(ErrorCode.ACCESS_DENIED_ERROR);
+        return createErrorResponseEntity(ErrorCode.ACCESS_DENIED_ERROR, e.getMessage());
     }
 
     // TODO stacktrace is too long
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<ErrorResponse> handle(Exception e) {
         log.error("Exception", e);
-        return createErrorResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR);
+        return createErrorResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     @ExceptionHandler({IOException.class})
     protected ResponseEntity<ErrorResponse> handleIOException(Exception e) {
         log.error("IOException", e);
-        return createErrorResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR);
+        return createErrorResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
         String errorDetails = String.format("Request method '%s' not supported for the endpoint. Supported methods are %s.", e.getMethod(), Arrays.toString(e.getSupportedMethods()));
 
         log.error("Method not supported: {}", errorDetails);
-        return createErrorResponseEntity(ErrorCode.METHOD_NOT_ALLOWED);
+        return createErrorResponseEntity(ErrorCode.METHOD_NOT_ALLOWED, e.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -70,7 +70,7 @@ public class GlobalExceptionHandler {
         }
 
         log.error("Validation failed: {}", errorDetails);
-        return createErrorResponseEntity(ErrorCode.VALIDATION_ERROR);
+        return createErrorResponseEntity(ErrorCode.VALIDATION_ERROR, e.getMessage());
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
@@ -78,7 +78,7 @@ public class GlobalExceptionHandler {
         String errorDetails = String.format("Required request parameter '%s' of type %s is not present", e.getParameterName(), e.getParameterType());
 
         log.error("Missing request parameter: {}", errorDetails);
-        return createErrorResponseEntity(ErrorCode.MISSING_REQUEST_PARAMETER);
+        return createErrorResponseEntity(ErrorCode.MISSING_REQUEST_PARAMETER, e.getMessage());
     }
 
     @ExceptionHandler(MultipartException.class)
@@ -86,7 +86,7 @@ public class GlobalExceptionHandler {
         String errorDetails = String.format("Wrong Multipart format: '%s'", e.getMessage());
 
         log.error("Cannot digest multipart data: {}", errorDetails);
-        return createErrorResponseEntity(ErrorCode.INVALID_MULTIPART);
+        return createErrorResponseEntity(ErrorCode.INVALID_MULTIPART, e.getMessage());
     }
 
     @ExceptionHandler(OpenSearchStatusException.class)
@@ -94,7 +94,7 @@ public class GlobalExceptionHandler {
         String errorDetails = e.getMessage();
 
         log.error("OpenSearchStatusException: {}", errorDetails);
-        return createErrorResponseEntity(ErrorCode.ELASTICSEARCH_ERROR);
+        return createErrorResponseEntity(ErrorCode.ELASTICSEARCH_ERROR, e.getMessage());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -104,20 +104,23 @@ public class GlobalExceptionHandler {
         log.error("{}: {}", errorDetails, e.getMessage());
 
         // Create an ErrorResponse object and return it with a BAD_REQUEST status.
-        return createErrorResponseEntity(ErrorCode.MISSING_OR_UNREADABLE_BODY);
+        return createErrorResponseEntity(ErrorCode.MISSING_OR_UNREADABLE_BODY, e.getMessage());
     }
 
     @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
     protected ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(AuthenticationCredentialsNotFoundException e) {
         // Log the detailed error message for server-side debugging.
-        String errorDetails = "Please check your authentication.";
-        log.error("{}: {}", errorDetails, e.getMessage());
+        log.error("Authentication failed: {}", e.getMessage());
+
 
         // Create an ErrorResponse object and return it with a BAD_REQUEST status.
-        return createErrorResponseEntity(ErrorCode.UNAUTHORIZED_ERROR);
+        return createErrorResponseEntity(ErrorCode.UNAUTHORIZED_ERROR, e.getMessage());
     }
 
-    private ResponseEntity<ErrorResponse> createErrorResponseEntity(ErrorCode errorCode) {
-        return new ResponseEntity<>(ErrorResponse.of(errorCode), errorCode.getStatus());
+    private ResponseEntity<ErrorResponse> createErrorResponseEntity(ErrorCode errorCode, String msg) {
+        var body = ErrorResponse.of(errorCode);
+        body.addMessage(msg);
+
+        return new ResponseEntity<>(body, errorCode.getStatus());
     }
 }

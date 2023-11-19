@@ -1,13 +1,10 @@
 package app.beautyminder.service.cosmetic;
 
-import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.CosmeticExpiry;
-import app.beautyminder.domain.User;
 import app.beautyminder.dto.expiry.AddExpiryProduct;
 import app.beautyminder.repository.CosmeticExpiryRepository;
 import app.beautyminder.service.MongoService;
 import lombok.RequiredArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -15,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,7 +40,7 @@ public class CosmeticExpiryService {
         }
 
         // MUST
-        builder.expiryDate(cosmeticExpiryDTO.getExpiryDate());
+        builder.expiryDate(cosmeticExpiryDTO.getExpiryDate().atStartOfDay());
         builder.productName(cosmeticExpiryDTO.getProductName());
         builder.isExpiryRecognized(cosmeticExpiryDTO.isExpiryRecognized());
         builder.isOpened(cosmeticExpiryDTO.isOpened());
@@ -87,8 +86,22 @@ public class CosmeticExpiryService {
         }
     }
 
-    public List<CosmeticExpiry> filterCosmeticExpiries(String userId, LocalDate startDate, LocalDate endDate) {
-        return cosmeticExpiryRepository.findAllByUserIdAndExpiryDateBetween(userId, startDate, endDate);
+    public List<CosmeticExpiry> filterCosmeticExpiries(String userId, String start, String end) {
+        LocalDateTime startDateTime = LocalDate.parse(start).atStartOfDay(); // 00:00:00 of start day
+        LocalDateTime endDateTime = LocalDate.parse(end).plusDays(1).atStartOfDay(); // 00:00:00 of the day after end day
+
+        return cosmeticExpiryRepository.findAllByUserIdAndExpiryDateBetween(userId, startDateTime, endDateTime);
+    }
+
+    private DateTimeFormatter parser(String dateStr) {
+        DateTimeFormatter formatter;
+        if (dateStr.contains("-")) {
+            formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        } else {
+            formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        }
+        return formatter;
+//        return LocalDate.parse(dateStr, formatter);
     }
 
     public void deleteAllByUserId(String userId) {

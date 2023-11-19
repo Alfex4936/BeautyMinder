@@ -11,13 +11,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
-@Document(collection = "todos")
+@Document(collection = "baumanns")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Getter
-@CompoundIndex(name = "idx_date_user", def = "{'date': 1, 'user.id': 1}", unique = true)
-public class Todo {
+@Setter
+@Builder
+public class BaumannTest {
 
     @Id
     private String id;
@@ -25,21 +27,14 @@ public class Todo {
     @Indexed
     private LocalDate date;
 
-    private List<TodoTask> tasks;
-
-    private boolean isAllDone; // all tasks done status
-
-    @DBRef
-    @Indexed
-    private User user;
+    private String userId;
 
     @CreatedDate
     private LocalDateTime createdAt;
 
-    @Builder
-    public Todo(LocalDate date, List<TodoTask> tasks, User user) {
-        this.date = date;
-        this.tasks = tasks;
-        this.user = user;
-    }
+    private String baumannType; // "OSNT"
+
+    private List<Integer> surveyAnswers; // Storing the survey answers [1, 2, 3, 4, ...]
+
+    private Map<String, Double> baumannScores;
 }

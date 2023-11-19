@@ -8,6 +8,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Document(collection = "cosmetic_expiries")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -23,7 +24,7 @@ public class CosmeticExpiry {
     private String productName; // 화장품의 이름
     @Nullable
     private String brandName; // 화장품 브랜드 이름
-    private LocalDate expiryDate; // 유통기한. OCR로 인식되거나 사용자가 선택할 수 있음.
+    private LocalDateTime expiryDate; // 유통기한. OCR로 인식되거나 사용자가 선택할 수 있음.
     private boolean isExpiryRecognized = false; // OCR로 유통기한이 정상적으로 인식되었는지 여부
     @Nullable
     private String imageUrl; // 화장품 이미지 또는 유통기한이 표시된 부분의 사진 URL

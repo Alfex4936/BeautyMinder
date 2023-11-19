@@ -239,7 +239,7 @@ public class CosmeticRankService {
             log.info("No existing KeywordRank for today. Creating a new one.");
 
             // Try to get the most recent updated KeywordRank before today, if it exists
-            var mostRecentKeywordRank = keywordRankRepository.findTopByOrderByUpdatedAtDesc();
+            var mostRecentKeywordRank = keywordRankRepository.findTopByOrderByCreatedAtDesc();
 
             // Use the rankings from the most recent KeywordRank, or an empty list if none exists
             var initialRankings = mostRecentKeywordRank.map(KeywordRank::getRankings).orElse(Collections.emptyList());

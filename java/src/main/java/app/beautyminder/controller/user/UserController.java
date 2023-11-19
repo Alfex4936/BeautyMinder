@@ -32,6 +32,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -47,10 +48,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 import static java.util.function.Predicate.not;
 
@@ -69,6 +67,11 @@ public class UserController {
     private final CosmeticRepository cosmeticRepository;
     private final ReviewRepository reviewRepository;
     private final CosmeticRankService cosmeticRankService;
+
+    @Value("${server.default.user}")
+    private String defaultUserProfilePic;
+    @Value("${server.default.admin}")
+    private String defaultAdminProfilePic;
 
     // Standard user sign-up
     @Operation(summary = "Standard User Signup", description = "표준 사용자 등록을 처리합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User signup details"), tags = {"User Operations"}, responses = {@ApiResponse(responseCode = "200", description = "사용자가 생성됨", content = @Content(schema = @Schema(implementation = SignUpResponse.class))), @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = SignUpResponse.class)))})
@@ -215,7 +218,16 @@ public class UserController {
     public String uploadProfileImage(@Parameter(hidden = true) @AuthenticatedUser User user,
 
                                      @Parameter(description = "Profile image file to upload", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, examples = @ExampleObject(name = "file", summary = "A 'binary' file"))) @RequestParam("image") MultipartFile image) {
+
         String imageUrl = fileStorageService.storeFile(image, "profile/");
+
+        // if not default pics, remove the last one.
+        Set<String> defaultPics = Set.of(defaultUserProfilePic, defaultAdminProfilePic);
+
+        Optional.ofNullable(user.getProfileImage())
+                .filter(profileImage -> !defaultPics.contains(profileImage))
+                .ifPresent(fileStorageService::deleteFile);
+
         mongoService.updateFields(user.getId(), Map.of("profileImage", imageUrl), User.class);
 
         return imageUrl;

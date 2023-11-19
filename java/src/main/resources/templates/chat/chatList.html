@@ -15,6 +15,15 @@
     </style>
 </head>
 <body>
+<!-- User Alert -->
+<div id="userAlert" th:if="${user}" class="alert alert-info" role="alert">
+    <p th:text="${user.getEmail() + '님 (' + user.getBaumann() + ') 어서오세요.'}"></p>
+</div>
+
+<!-- Error Alert -->
+<div id="errorAlert" th:if="${error}" class="alert alert-danger" role="alert">
+    <p th:text="${error}"></p>
+</div>
 
 <div class="container mt-4">
     <div class="col-12 logo">
@@ -40,8 +49,16 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>-->
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script>
+    $(document).ready(function() {
+        setTimeout(function() {
+            $('#errorAlert').fadeOut('slow');
+        }, 5000); // 5000 milliseconds = 5 seconds
+    });
+</script>
+
 </body>
 </html>

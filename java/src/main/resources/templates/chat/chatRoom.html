@@ -121,32 +121,40 @@
 
 <script th:inline="javascript">
     let stompClient = null;
-    let nickname = ''; // Global variable to store the nickname
+    let nickname = '';
+    /*<![CDATA[*/
+    let basic = /*[[${room.name}]]*/ '채팅방';
+    /*]]>*/
     let isFirstMessage = true; // Flag to track the first message
-    let basic = `[[${room.name}]] 채팅방`;
 
     window.onload = function() {
-        $('#nicknameModal').modal(); // Show the modal on page load
-
-        // Event listener for the message input
-        document.getElementById('messageInput').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault(); // Prevent the default action (new line)
-                sendMsg(); // Send the message
-            }
-        });
-
-        // Global event listener for keyboard shortcuts
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') { //  && event.ctrlKey
-                // Show confirmation dialog when Escape key is pressed
-                const confirmExit = confirm("정말로 채팅방을 나가시겠습니까?");
-                if (confirmExit) {
-                    quit();
-                }
-            }
-        });
+        $('#nicknameModal').modal();
+        // addNotice();
+        // connect(); // Connect to WebSocket after setting the nickname
     };
+
+    // window.onload = function() {
+    //     // $('#nicknameModal').modal(); // Show the modal on page load
+    //
+    //     // Event listener for the message input
+    //     document.getElementById('messageInput').addEventListener('keypress', function(event) {
+    //         if (event.key === 'Enter' && !event.shiftKey) {
+    //             event.preventDefault(); // Prevent the default action (new line)
+    //             sendMsg(); // Send the message
+    //         }
+    //     });
+    //
+    //     // Global event listener for keyboard shortcuts
+    //     document.addEventListener('keydown', function(event) {
+    //         if (event.key === 'Escape') { //  && event.ctrlKey
+    //             // Show confirmation dialog when Escape key is pressed
+    //             const confirmExit = confirm("정말로 채팅방을 나가시겠습니까?");
+    //             if (confirmExit) {
+    //                 quit();
+    //             }
+    //         }
+    //     });
+    // };
 
 
     function connect() {
@@ -167,6 +175,25 @@
                 updateParticipantCount(JSON.parse(title.body));
             });
 
+            // Event listener for the message input
+            document.getElementById('messageInput').addEventListener('keypress', function(event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault(); // Prevent the default action (new line)
+                    sendMsg(); // Send the message
+                }
+            });
+
+            // Global event listener for keyboard shortcuts
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') { //  && event.ctrlKey
+                    // Show confirmation dialog when Escape key is pressed
+                    const confirmExit = confirm("정말로 채팅방을 나가시겠습니까?");
+                    if (confirmExit) {
+                        quit();
+                    }
+                }
+            });
+
             enterRoom(); // Call enterRoom here, inside the connect callback
         });
     }
@@ -175,11 +202,11 @@
         const roomId = [[${room.roomId}]];
         const enterMsg = {"type": "ENTER", "roomId": roomId, "sender": nickname, "message": "Hello"};
         stompClient.send("/app/chat.enter/" + roomId, {}, JSON.stringify(enterMsg));
-        document.querySelector('.form-control').focus();
+        document.getElementById('messageInput').focus();
     }
 
     function sendMsg() {
-        let inputField = document.querySelector('.form-control');
+        let inputField = document.getElementById('messageInput');
         let content = inputField.value;
 
         if (content.trim() === "") {
@@ -222,7 +249,24 @@
 
     function replaceURLsWithLinks(text) {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
-        return text.replace(urlRegex, '<a href="$1" target="_blank" class="link">$1</a>');
+        let imageIncluded = false; // Flag to track if an image has been added
+
+        return text.replace(urlRegex, function(url) {
+            if (url.match(/\.(jpeg|jpg|gif|png)$/i) != null) {
+                if (!imageIncluded) {
+                    imageIncluded = true; // Set the flag to true after including the first image
+                    return '<a href="' + url + '" target="_blank" class="link">' + url + '</a>' +
+                        '<div style="text-align: center; margin-top: 10px;">' +
+                        '<img src="' + url + '" style="max-width: 100px; max-height: 100px;" onError="this.style.display=\'none\'" alt="Image"/>' +
+                        '</div>';
+                } else {
+                    // If an image has already been included, return just the URL as a link
+                    return '<a href="' + url + '" target="_blank" class="link">' + url + '</a>';
+                }
+            } else {
+                return '<a href="' + url + '" target="_blank" class="link">' + url + '</a>';
+            }
+        });
     }
 
     function scrollToBottom(element) {
@@ -275,7 +319,7 @@
 
     function updateParticipantCount(titleBody) {
         let participantCountElement = document.querySelector('.chat-room-name');
-        participantCountElement.innerText = basic + ` (${titleBody.title}명 대화 중)`;
+        participantCountElement.innerText = basic + ` 채팅방 (${titleBody.title}명 대화 중)`;
 
         // if (users > 0) {
         //     participantCountElement.innerText += `(${users}명 입장 중)`;
@@ -289,7 +333,6 @@
         quit();
     });
 
-    // connect();
 </script>
-
+</body>
 </html>

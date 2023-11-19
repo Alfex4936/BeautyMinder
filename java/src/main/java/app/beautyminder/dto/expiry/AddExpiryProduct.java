@@ -12,7 +12,6 @@ import java.util.List;
 @Getter
 public class AddExpiryProduct {
     private String productName; // 화장품의 이름
-    private List<TodoTask> tasks;
     @Nullable
     private String brandName; // 화장품 브랜드 이름
     private LocalDate expiryDate; // 유통기한. OCR로 인식되거나 사용자가 선택할 수 있음.

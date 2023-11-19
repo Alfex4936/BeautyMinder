@@ -39,7 +39,6 @@ public class StompController {
     private final ChatService chatService;
     private final ObjectMapper objectMapper;
     private final SimpMessageSendingOperations messagingTemplate;
-    private final CosmeticService cosmeticService;
     private final ReviewService reviewService;
     private final Random random = new Random();
     private final BadWordFiltering badWordFiltering = new BadWordFiltering();
@@ -91,6 +90,7 @@ public class StompController {
                 "캐놈", "캐스끼", "캐스키", "캐시키", "탱구", "팔럼", "퍽큐", "호로", "호로놈", "호로새끼",
                 "호로색", "호로쉑", "호로스까이", "호로스키", "후라들", "후래자식", "후레", "후뢰");
         badWordFiltering.addAll(lists);
+        badWordFiltering.remove("공지");
     }
 
 //    @org.springframework.context.event.EventListener
@@ -156,7 +156,7 @@ public class StompController {
         chatMessage.setMessage(chatMessage.getSender() + " 님이 입장 하셨습니다.");
 
         // Optionally, broadcast that a user has entered the room
-        chatService.sendMessageToRoom(roomId, chatMessage);
+//        chatService.sendMessageToRoom(roomId, chatMessage);
         chatService.userEnteredRoom(roomId);
 
         messagingTemplate.convertAndSend("/topic/room/name/" + roomId, Map.of("title", chatService.getRoomUserCount(roomId)));
@@ -170,7 +170,7 @@ public class StompController {
     @SendTo("/topic/room/{roomId}")
     public ChatMessage quitRoom(@DestinationVariable String roomId, @Payload String messageJson) throws Exception {
         ChatMessage chatMessage = objectMapper.readValue(messageJson, ChatMessage.class);
-        chatService.sendMessageToRoom(roomId, chatMessage);
+//        chatService.sendMessageToRoom(roomId, chatMessage);
 
         chatMessage.setMessage(chatMessage.getSender() + " 님이 퇴장 하셨습니다.");
         chatService.userLeftRoom(roomId);

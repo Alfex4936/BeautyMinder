@@ -109,8 +109,8 @@ public class WebSecurityConfig {
 
     // Whitelist approach
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
-        MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector).servletPath("/path");
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//        MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector).servletPath("/path");
 
         http.csrf(AbstractHttpConfigurer::disable);
         http.cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource()));

@@ -1,13 +1,14 @@
 package app.beautyminder.controller.cosmetic;
 
+import app.beautyminder.domain.BaumannTest;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.BaumannSurveyAnswerDTO;
 import app.beautyminder.dto.BaumannTypeDTO;
 import app.beautyminder.service.BaumannService;
+import app.beautyminder.service.BaumannTestService;
 import app.beautyminder.service.LocalFileService;
 import app.beautyminder.service.MongoService;
 import app.beautyminder.util.AuthenticatedUser;
-import app.beautyminder.util.ValidUserId;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,9 +28,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.stream.IntStream;
 
 @AllArgsConstructor
@@ -48,6 +49,7 @@ public class BaumannController {
     private final MongoService mongoService;
     private final BaumannService baumannService;
     private final LocalFileService localFileService;
+    private final BaumannTestService baumannTestService;
 
     @NotNull
     private Map<String, JsonNode> getTestMap(JsonNode categoriesArray) {
@@ -196,7 +198,35 @@ public class BaumannController {
         var map = Map.of("baumann", resultJson.getSkinType(), "baumannScores", resultJson.getScores());
         mongoService.updateFields(user.getId(), map, User.class);
 
+        // Save history
+        var baumannHistory = BaumannTest.builder()
+                .date(LocalDate.now(ZoneId.of("Asia/Seoul")))
+                .userId(user.getId())
+                .surveyAnswers(new ArrayList<>(responses.values()))
+                .baumannType(resultJson.getSkinType())
+                .baumannScores(resultJson.getScores())
+                .build();
+
+        baumannTestService.save(baumannHistory);
+
         return ResponseEntity.ok(resultJson);
+    }
+
+    @Operation(
+            summary = "Get Baumann Test history",
+            description = "바우만 결과 기록 얻기 [User 권한 필요]",
+            tags = {"Baumann Operations"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "바우만 테스트 기록 결과", content = @Content(
+                            mediaType = "application/json", schema = @Schema(implementation = BaumannTest.class, type = "array"
+                    )))
+            }
+    )
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/history")
+    public ResponseEntity<List<BaumannTest>> getHistory(@Parameter(hidden = true) @AuthenticatedUser User user) {
+        List<BaumannTest> history = baumannTestService.findByUserId(user.getId());
+        return ResponseEntity.ok(history);
     }
 
 }
