@@ -30,10 +30,10 @@
                     <h5 class="card-title" th:text="${cosmetic.name}">Cosmetic Name</h5>
                     <img th:src="${cosmetic.thumbnailUrl}" alt="Thumbnail" class="img-fluid"/>
                     <p th:if="${cosmetic.category}" th:text="${'Category: ' + cosmetic.category}">Category</p>
-                    <p th:if="${cosmetic.averageRating}" th:text="${'Average Rating: ' + cosmetic.averageRating}">Average Rating</p>
-                    <p th:if="${cosmetic.totalRating}" th:text="${'Total Rating: ' + cosmetic.totalRating}">Total Rating</p>
-                    <p th:if="${cosmetic.reviewCount}" th:text="${'Review Count: ' + cosmetic.reviewCount}">Review Count</p>
-                    <p th:if="${cosmetic.favCount}" th:text="${'Fav Count: ' + cosmetic.favCount}">Favorite Count</p>
+                    <p th:if="${cosmetic.averageRating != null}" th:text="${'Average Rating: ' + cosmetic.averageRating}">Average Rating</p>
+                    <p th:if="${cosmetic.totalRating != null}" th:text="${'Total Rating: ' + cosmetic.totalRating}">Total Rating</p>
+                    <p th:if="${cosmetic.reviewCount != null}" th:text="${'Review Count: ' + cosmetic.reviewCount}">Review Count</p>
+                    <p th:if="${cosmetic.favCount != null}" th:text="${'Fav Count: ' + cosmetic.favCount}">Favorite Count</p>
                     <p th:if="${cosmetic.glowpick_url}" class="mb-0"><a th:href="${cosmetic.glowpick_url}" target="_blank">Glowpick Link</a></p>
                     <div th:if="${cosmetic.keywords}">
                         <strong>Keywords:</strong>

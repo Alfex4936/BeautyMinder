@@ -1,8 +1,10 @@
 package app.beautyminder.service;
 
 import app.beautyminder.dto.BaumannTypeDTO;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -22,6 +24,18 @@ public class BaumannService {
 
     // A map to hold the scoring functions for different question types or specific questions.
     private final Map<String, Function<Integer, Double>> scoringRules = createScoringRules();
+    private  Map<String, Integer> metaData;
+
+    @PostConstruct
+    public void runUp() {
+        metaData = Map.of(
+                "hydrationMax", 44,
+                "sensitivityMax", 64,
+                "pigmentationMax", 57,
+                "elasticityMax", 85,
+                "moistureRetentionMax", 100
+        );
+    }
 
     /**
      * Calculates the Baumann skin type based on the responses provided.
@@ -55,16 +69,7 @@ public class BaumannService {
                 "moistureRetention", moistureScore
         );
 
-        var metadata = Map.of(
-                "hydrationMax", 44,
-                "sensitivityMax", 64,
-                "pigmentationMax", 57,
-                "elasticityMax", 85,
-                "moistureRetentionMax", 100
-        );
-
-
-        return new BaumannTypeDTO(skinType, scores, metadata);
+        return new BaumannTypeDTO(skinType, scores, metaData);
     }
 
     /**

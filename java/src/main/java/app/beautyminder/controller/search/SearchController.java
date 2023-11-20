@@ -22,6 +22,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,6 +33,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static app.beautyminder.domain.User.MAX_HISTORY_SIZE;
 
@@ -66,8 +70,12 @@ public class SearchController {
     @Operation(summary = "Search Reviews by Content", description = "콘텐츠로 리뷰를 검색합니다. [USER 권한 필요]", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Review.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/review")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<List<Review>> searchByContent(@RequestParam String content, @Parameter(hidden = true) @AuthenticatedUser User user) {
+    public ResponseEntity<?> searchByContent(@RequestParam String content, @Parameter(hidden = true) @AuthenticatedUser User user) {
         String trimmedName = (content != null) ? content.trim() : "";
+        if (trimmedName.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not allowed empty keyword.");
+        }
+
         List<Review> results = reviewSearchService.searchByContent(trimmedName);
         if (!results.isEmpty()) {
             updateUserSearchHistory(user, trimmedName);
@@ -113,17 +121,44 @@ public class SearchController {
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<?> searchAnything(@RequestParam String anything, @Parameter(hidden = true) @AuthenticatedUser User user) {
         String trimmedName = (anything != null) ? anything.trim() : "";
+        if (trimmedName.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not allowed empty keyword.");
+        }
 
+        List<Cosmetic> nameResult = cosmeticSearchService.searchByName(trimmedName);
         List<Cosmetic> keywordResult = cosmeticSearchService.searchByKeyword(trimmedName);
         List<Cosmetic> cateResult = cosmeticSearchService.searchByCategory(trimmedName);
-        List<Cosmetic> nameResult = cosmeticSearchService.searchByName(trimmedName);
         List<Cosmetic> reviewResult = reviewSearchService.searchByContent(trimmedName).stream().map(Review::getCosmetic).toList();
 
-        Set<Cosmetic> finalResult = new HashSet<>();
-        finalResult.addAll(keywordResult);
-        finalResult.addAll(cateResult);
-        finalResult.addAll(nameResult);
-        finalResult.addAll(reviewResult);
+        // Use LinkedHashSet to maintain order and avoid duplicates
+        Set<Cosmetic> uniqueResults = new LinkedHashSet<>();
+
+        // Method to get top 3 results from a list
+        Function<List<Cosmetic>, List<Cosmetic>> topThree = list -> list.stream()
+                .limit(3)
+                .filter(uniqueResults::add) // Add only if not already present
+                .collect(Collectors.toList());
+
+        // Add top 3 results from each list to the set
+        topThree.apply(nameResult);
+        topThree.apply(keywordResult);
+        topThree.apply(cateResult);
+        topThree.apply(reviewResult);
+
+        // Method to append remaining results to the set
+        Consumer<List<Cosmetic>> appendRemaining = list -> {
+            if (list.size() > 3) {
+                uniqueResults.addAll(list.subList(3, list.size()));
+            }
+        };
+
+        // Append remaining results from each list to the set
+        appendRemaining.accept(nameResult);
+        appendRemaining.accept(keywordResult);
+        appendRemaining.accept(cateResult);
+        appendRemaining.accept(reviewResult);
+
+        var finalResult = new ArrayList<>(uniqueResults);
 
         if (!finalResult.isEmpty()) {
             updateUserSearchHistory(user, trimmedName);

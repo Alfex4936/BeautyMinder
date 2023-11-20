@@ -113,7 +113,7 @@ public class ReviewService {
         // Store images and set image URLs in review
         if (images != null) {
             for (var image : images) {
-                var imageUrl = fileStorageService.storeFile(image, "review/");
+                var imageUrl = fileStorageService.storeFile(image, "review/", false);
                 review.getImages().add(imageUrl);
             }
         }
@@ -121,8 +121,7 @@ public class ReviewService {
         // Save the review
         Review savedReview = reviewRepository.save(review);
 
-        // Python NLP work
-        // Call NLP processing asynchronously
+        // !async: Python NLP work
         nlpService.processReviewAsync(savedReview);
 
         return savedReview;
@@ -154,8 +153,8 @@ public class ReviewService {
                 review.setContent(reviewUpdateDetails.getContent());
             }
             if (contentChanged) {
-                // Python NLP work
                 // Call NLP processing asynchronously
+                // If it fails to call the api server, it'll try to queue and rerun periodically
                 nlpService.processReviewAsync(review);
             }
             if (reviewUpdateDetails.getRating() != null) {
@@ -174,7 +173,7 @@ public class ReviewService {
                         // Remove the old image if it exists
                         review.getImages().removeIf(img -> img.contains(originalFilename));
                         // Store the new image and add its URL to the review
-                        var imageUrl = fileStorageService.storeFile(image, "review/");
+                        var imageUrl = fileStorageService.storeFile(image, "review/", false);
                         review.getImages().add(imageUrl);
                     }
                 }

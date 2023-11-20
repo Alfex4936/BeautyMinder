@@ -1,11 +1,12 @@
 package app.beautyminder.controller.chat;
 
+import app.beautyminder.domain.ChatLog;
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
 import app.beautyminder.dto.chat.ChatMessage;
 import app.beautyminder.dto.chat.ChatRoom;
+import app.beautyminder.repository.ChatLogRepository;
 import app.beautyminder.service.chat.ChatService;
-import app.beautyminder.service.cosmetic.CosmeticService;
 import app.beautyminder.service.review.ReviewService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vane.badwordfiltering.BadWordFiltering;
@@ -40,6 +41,8 @@ public class StompController {
     private final ObjectMapper objectMapper;
     private final SimpMessageSendingOperations messagingTemplate;
     private final ReviewService reviewService;
+    private final ChatLogRepository chatLogRepository;
+
     private final Random random = new Random();
     private final BadWordFiltering badWordFiltering = new BadWordFiltering();
 
@@ -119,6 +122,25 @@ public class StompController {
         roomFutures.clear();
     }
 
+    // enter -> if BM, send to /chat.save -> send back to /topic/room
+    @MessageMapping("/chat.save/{roomId}")
+    public void sendSavedMsg(@DestinationVariable String roomId) {
+        var room = chatService.findRoomById(roomId);
+
+        var optRoom = chatLogRepository.findByRoomName(room.getName());
+
+        optRoom.ifPresent(chatLog -> chatLog.getMessages().forEach(message -> {
+            var savedChat = ChatMessage.builder()
+                    .sender(message.getSender())
+                    .message(message.getContent())
+                    .roomId(roomId)
+                    .type(message.getType())
+                    .build();
+            messagingTemplate.convertAndSend("/topic/room/" + roomId, savedChat);
+        }));
+
+    }
+
     @MessageMapping("/chat.send/{roomId}")
     @SendTo("/topic/room/{roomId}")
     public ChatMessage send(@DestinationVariable String roomId, @Payload String messageJson) throws Exception {
@@ -167,6 +189,22 @@ public class StompController {
 //        chatService.sendMessageToRoom(roomId, chatMessage);
         chatService.userEnteredRoom(roomId);
 
+//        var roomName = chatService.findRoomById(roomId).getName();
+//        if (roomName.equals("BeautyMinder")) {
+//            var optionalChatLog = chatLogRepository.findByRoomName(roomName);
+//            optionalChatLog.ifPresent(
+//                    chatlog -> {
+//                        var msgFormat = ChatLog.Message.builder()
+//                                .type(chatMessage.getType())
+//                                .content(chatMessage.getMessage())
+//                                .sender(chatMessage.getSender())
+//                                .timestamp().build();
+//                        chatlog.addMessage();
+//                        chatLogRepository.save()
+//                    }
+//            );
+//        }
+
         messagingTemplate.convertAndSend("/topic/room/name/" + roomId, Map.of("title", chatService.getRoomUserCount(roomId)));
 
 //        messagingTemplate.convertAndSend("/topic/room/" + roomId, chatMessage);
@@ -188,23 +226,19 @@ public class StompController {
         return chatMessage;
     }
 
-    @Scheduled(cron = "*/15 * * * * *")
+    @Scheduled(cron = "*/45 * * * * *") // sends recommended product every 15 seconds
     public void sendProductToWhole() {
-        for (var room : chatService.findAllRoom()) {
-//            log.info("BEMINDER: hey? : {} {}", room.getUserCounts(), room.getName());
-            if (room.getUserCounts() >= 1) {
-                CompletableFuture<Void> future = processRoom(room);
-                roomFutures.put(room.getRoomId(), future);
-            }
-        }
 
-//        List<CompletableFuture<Void>> futures = new ArrayList<>();
-//
-//        for (var room : chatService.findAllRoom()) {
-//            futures.add(processRoom(room));
-//        }
-        // Optionally, wait for all to complete
-//        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        // stream api
+        chatService.findAllRoom().stream()
+                .filter(room -> !room.getName().equals("BeautyMinder"))
+                .filter(room -> room.getUserCounts() >= 1)
+                .forEach(room -> {
+                    CompletableFuture<Void> future = processRoom(room);
+                    roomFutures.put(room.getRoomId(), future);
+                });
+
+        // Wait for all futures to be done
         CompletableFuture.allOf(roomFutures.values().toArray(new CompletableFuture[0])).join();
     }
 

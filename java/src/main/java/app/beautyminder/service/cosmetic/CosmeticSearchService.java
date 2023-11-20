@@ -2,22 +2,30 @@ package app.beautyminder.service.cosmetic;
 
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.EsCosmetic;
+import app.beautyminder.domain.EsReview;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.elastic.EsCosmeticRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.util.EntityUtils;
+import org.opensearch.action.search.SearchRequest;
 import org.opensearch.client.Request;
+import org.opensearch.client.RequestOptions;
 import org.opensearch.client.Response;
 import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.search.SearchHit;
+import org.opensearch.search.builder.SearchSourceBuilder;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -27,6 +35,7 @@ public class CosmeticSearchService {
     private final CosmeticRepository cosmeticRepository;
     private final EsCosmeticRepository esCosmeticRepository;
     private final RestHighLevelClient opensearchClient;
+    private final ObjectMapper objectMapper;
 
     //    @PostConstruct
     @Scheduled(cron = "0 0 4 * * ?", zone = "Asia/Seoul") // everyday 4am
@@ -89,21 +98,50 @@ public class CosmeticSearchService {
         }
     }
 
-
     public List<Cosmetic> searchByName(String name) {
-        List<EsCosmetic> esCosmetics = esCosmeticRepository.findByNameContaining(name);
-        return convertEsCosmeticToCosmetic(esCosmetics);
+        var boolQueryBuilder = QueryBuilders.boolQuery()
+                .should(QueryBuilders.matchPhrasePrefixQuery("name", name).boost(2))
+                .should(QueryBuilders.matchQuery("name", name));
+
+        var searchRequest = new SearchRequest("cosmetics");
+        var searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(boolQueryBuilder);
+        searchSourceBuilder.minScore(5f); // min score 5
+        searchRequest.source(searchSourceBuilder);
+
+        try {
+            var searchResponse = opensearchClient.search(searchRequest, RequestOptions.DEFAULT);
+            var hits = searchResponse.getHits();
+
+            return Stream.of(hits.getHits())
+                    .map(SearchHit::getSourceAsString)
+                    .map(this::convertJsonToEsCosmetic).filter(Objects::nonNull)
+                    .map(EsCosmetic::getId)
+                    .map(cosmeticRepository::findById)
+                    .flatMap(Optional::stream)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            log.error("Exception occurred while searching reviews: ", e);
+            return Collections.emptyList();
+        }
+
+//        List<EsCosmetic> esCosmetics = esCosmeticRepository.findByNameContaining(name);
+//        return convertEsCosmeticToCosmetic(esCosmetics);
     }
 
     public List<Cosmetic> searchByCategory(String category) {
-        List<EsCosmetic> esCosmetics = esCosmeticRepository.findByCategory(category);
+        Pageable pageable = PageRequest.of(0, 10); // Page number 0, max 10 results
+
+        List<EsCosmetic> esCosmetics = esCosmeticRepository.findByCategory(category, pageable);
         return convertEsCosmeticToCosmetic(esCosmetics);
     }
 
     public List<Cosmetic> searchByKeyword(String keyword) {
         Set<EsCosmetic> multipleQueries = new HashSet<>();
+        Pageable pageable = PageRequest.of(0, 5); // Page number 0, max 5 results
+
         for (var word : keyword.split(" ")) {
-            multipleQueries.addAll(esCosmeticRepository.findByKeywordsContains(word));
+            multipleQueries.addAll(esCosmeticRepository.findByKeywordsContains(word, pageable));
         }
         return convertEsCosmeticToCosmetic(multipleQueries.stream().toList());
     }
@@ -116,5 +154,14 @@ public class CosmeticSearchService {
 
         // Fetch and return Cosmetic objects based on the extracted IDs
         return cosmeticRepository.findAllById(ids);
+    }
+
+    private EsCosmetic convertJsonToEsCosmetic(String json) {
+        try {
+            return objectMapper.readValue(json, EsCosmetic.class);
+        } catch (IOException e) {
+            log.error("Failed to deserialize JSON to EsReview: ", e);
+            return null;
+        }
     }
 }

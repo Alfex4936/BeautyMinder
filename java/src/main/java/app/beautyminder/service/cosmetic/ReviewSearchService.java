@@ -15,6 +15,7 @@ import org.opensearch.client.Response;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.SearchHit;
+import org.opensearch.search.builder.SearchSourceBuilder;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -103,9 +104,17 @@ public class ReviewSearchService {
     }
 
     public List<Review> searchByContent(String content) {
-        var fuzzyQueryBuilder = QueryBuilders.fuzzyQuery("content", content);
+        // Use match query for full-text search
+        var matchQueryBuilder = QueryBuilders.matchQuery("content", content);
+
+        // Create a SearchSourceBuilder and set the size to 5
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(matchQueryBuilder);
+        searchSourceBuilder.size(10); // Limit the number of search results to 5
+
+        // Set the source of the search request
         var searchRequest = new SearchRequest("reviews");
-        searchRequest.source().query(fuzzyQueryBuilder);
+        searchRequest.source(searchSourceBuilder);
 
         try {
             var searchResponse = opensearchClient.search(searchRequest, RequestOptions.DEFAULT);

@@ -238,7 +238,7 @@ public class UserController {
 
                                      @Parameter(description = "Profile image file to upload", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, examples = @ExampleObject(name = "file", summary = "A 'binary' file"))) @RequestParam("image") MultipartFile image) {
 
-        String imageUrl = fileStorageService.storeFile(image, "profile/");
+        String imageUrl = fileStorageService.storeFile(image, "profile/", false);
 
         // if not default pics, remove the last one.
         Set<String> defaultPics = Set.of(defaultUserProfilePic, defaultAdminProfilePic);

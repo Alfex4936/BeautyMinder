@@ -155,11 +155,6 @@ public class UserService {
         return userRepository.findByPhoneNumber(phoneNumber);
     }
 
-    // 권한으로 사용자 목록 조회
-    public List<User> findUsersByAuthority(String authority) {
-        return userRepository.findByAuthority(authority);
-    }
-
     // 이메일과 비밀번호로 사용자 조회 (로그인)
     public User findByEmailAndPassword(String email, String password) {
         return userRepository.findByEmailAndPassword(email, password).orElseThrow(() -> new IllegalArgumentException("이메일 혹은 비밀번호가 틀립니다."));
@@ -178,17 +173,6 @@ public class UserService {
             return userRepository.save(user);  // Save the updated user to the database
         }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No user found with id: " + userId));
     }
-
-//    public User updateUser(User user, Map<String, Object> updates) {
-//        if (updates.containsKey("nickname")) {
-//            user.setNickname((String) updates.get("nickname"));
-//        }
-//        if (updates.containsKey("profileImage")) {
-//            user.setProfileImage((String) updates.get("profileImage"));
-//        }
-//        return userRepository.save(user);
-//    }
-
 
     /*
     Cascading

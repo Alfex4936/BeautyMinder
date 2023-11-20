@@ -6,7 +6,7 @@
     <title>[[${room.name}]] 소통방 | BeautyMinder</title>
     <!-- Include Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
     <style>
@@ -37,6 +37,7 @@
             justify-content: space-between; /* This will push the .chat-input to the bottom */
             height: 100vh; /* Set to the height of the viewport */
         }
+
         .msgArea {
             font-size: 1.2em;
             flex-grow: 1; /* Allows this area to grow and fill the available space */
@@ -49,6 +50,7 @@
             padding: 15px;
             display: flex;
         }
+
         .chat-input input[type='text'] {
             flex-grow: 1;
             margin-right: 10px;
@@ -108,6 +110,7 @@
             .timestamp-full {
                 display: none;
             }
+
             .timestamp-short {
                 display: inline;
             }
@@ -199,7 +202,7 @@
     /*]]>*/
     let isFirstMessage = true; // Flag to track the first message
 
-    window.onload = function() {
+    window.onload = function () {
         $('#nicknameModal').modal();
         // addNotice();
         // connect(); // Connect to WebSocket after setting the nickname
@@ -248,7 +251,7 @@
             });
 
             // Event listener for the message input
-            document.getElementById('messageInput').addEventListener('keypress', function(event) {
+            document.getElementById('messageInput').addEventListener('keypress', function (event) {
                 if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault(); // Prevent the default action (new line)
                     sendMsg(); // Send the message
@@ -256,13 +259,10 @@
             });
 
             // Global event listener for keyboard shortcuts
-            document.addEventListener('keydown', function(event) {
+            document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') { //  && event.ctrlKey
-                    // Show confirmation dialog when Escape key is pressed
-                    const confirmExit = confirm("정말로 채팅방을 나가시겠습니까?");
-                    if (confirmExit) {
-                        quit();
-                    }
+                    quit();
+
                 }
             });
 
@@ -285,6 +285,11 @@
             return; // Don't send empty messages
         }
 
+        console.log("==== IM IN DA " + basic);
+        if (basic === "BeautyMinder") {
+            console.log("got in bm room");
+        }
+
         const talkMsg = {"type": "TALK", "sender": nickname, "message": content};
         const roomId = [[${room.roomId}]];
 
@@ -296,10 +301,14 @@
     }
 
     function quit() {
-        const roomId = [[${room.roomId}]]; // This line should correctly get the roomId
+        const confirmExit = confirm("정말로 채팅방을 나가시겠습니까?");
+        if (!confirmExit) {
+            return;
+        }
+        const roomId = [[${room.roomId}]];
         const quitMsg = {"type": "QUIT", "roomId": roomId, "sender": nickname, "message": "Bye"};
         stompClient.send("/app/chat.quit/" + roomId, {}, JSON.stringify(quitMsg));
-        stompClient.disconnect(headers={"TEST": "HEY"});
+        stompClient.disconnect(headers = {"TEST": "HEY"});
         location.href = "/chat/list";
     }
 
@@ -323,23 +332,20 @@
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         let imageIncluded = false; // Flag to track if an image has been added
 
-        return text.replace(urlRegex, function(url) {
-            if (url.match(/\.(jpeg|jpg|gif|png)$/i) != null) {
-                if (!imageIncluded) {
-                    imageIncluded = true; // Set the flag to true after including the first image
-                    return '<a href="' + url + '" target="_blank" class="link">' + url + '</a>' +
-                        '<div style="text-align: center; margin-top: 10px;">' +
-                        '<img src="' + url + '" style="max-width: 100px; max-height: 100px;" onError="this.style.display=\'none\'" alt="Image"/>' +
-                        '</div>';
-                } else {
-                    // If an image has already been included, return just the URL as a link
-                    return '<a href="' + url + '" target="_blank" class="link">' + url + '</a>';
-                }
+        return text.replace(urlRegex, function (url) {
+            if (!imageIncluded) {
+                imageIncluded = true; // Try to include the first URL as an image
+                return '<a href="' + url + '" target="_blank" class="link">' + url + '</a>' +
+                    '<div style="text-align: center; margin-top: 10px;">' +
+                    '<img src="' + url + '" style="max-width: 100px; max-height: 100px;" onError="this.style.display=\'none\'; imageIncluded = false;" alt="Image"/>' +
+                    '</div>';
             } else {
+                // For subsequent URLs or if the first URL was not an image, return just the URL as a link
                 return '<a href="' + url + '" target="_blank" class="link">' + url + '</a>';
             }
         });
     }
+
 
     function scrollToBottom(element) {
         element.scrollTop = element.scrollHeight;
