@@ -9,8 +9,8 @@ import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.TodoRepository;
 import app.beautyminder.repository.UserRepository;
 import app.beautyminder.service.FileStorageService;
-import app.beautyminder.service.review.ReviewService;
 import app.beautyminder.service.cosmetic.CosmeticExpiryService;
+import app.beautyminder.service.review.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -23,7 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -166,14 +169,14 @@ public class UserService {
         return userRepository.findById(userId).map(user -> {
             user.addCosmetic(cosmeticId);
             return userRepository.save(user);  // Save the updated user to the database
-        }).orElseThrow(() -> new NoSuchElementException("No user found with id: " + userId));
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No user found with id: " + userId));
     }
 
     public User removeCosmeticById(String userId, String cosmeticId) {
         return userRepository.findById(userId).map(user -> {
             user.removeCosmetic(cosmeticId);
             return userRepository.save(user);  // Save the updated user to the database
-        }).orElseThrow(() -> new NoSuchElementException("No user found with id: " + userId));
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No user found with id: " + userId));
     }
 
 //    public User updateUser(User user, Map<String, Object> updates) {

@@ -126,11 +126,19 @@ public class StompController {
 
         // Format the current time in Korean timezone
         LocalDateTime now = LocalDateTime.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedDateTime = now.format(formatter);
+        DateTimeFormatter fullFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter shortFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
-        // Append the timestamp to the message
-        chatMessage.setMessage("[" + formattedDateTime + "] " + chatMessage.getSender() + ": " + badWordFiltering.change(chatMessage.getMessage()));
+        String fullFormattedDateTime = now.format(fullFormatter);
+        String shortFormattedDateTime = now.format(shortFormatter);
+
+        // Append the full timestamp for the desktop and the short one for mobile clients
+        chatMessage.setMessage(
+                "<span class=\"timestamp-full\">" + "[" + fullFormattedDateTime + "]" + "</span>" +
+                        "<span class=\"timestamp-short\">" + "[" + shortFormattedDateTime + "]" + "</span>" +
+                        chatMessage.getSender() + ": " +
+                        badWordFiltering.change(chatMessage.getMessage())
+        );
 
         chatService.sendMessageToRoom(roomId, chatMessage);
 

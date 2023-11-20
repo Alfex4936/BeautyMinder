@@ -38,6 +38,7 @@ public class Cosmetic {
     private Double averageRating = 0.0; // ex) 3.14
     private int reviewCount = 0;
     private int totalRating = 0;
+    private int favCount = 0;
 
     @Builder.Default
     private List<String> keywords = new ArrayList<>();
