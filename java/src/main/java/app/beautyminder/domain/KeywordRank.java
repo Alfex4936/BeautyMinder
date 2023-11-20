@@ -24,7 +24,7 @@ public class KeywordRank {
     private String id;
 
     @Indexed
-    private LocalDate date;
+    private String date;
 
     @Builder.Default
     @Setter

@@ -23,7 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -231,8 +233,11 @@ public class CosmeticRankService {
         // Extract the top 10 keywords
         var top10Keywords = sortedEntries.stream().map(entry -> (String) entry.getKey()).toList();
 
-        var today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        var existingKeywordRank = keywordRankRepository.findByDate(today);
+        var today = LocalDateTime.now(TimeZone.getTimeZone("Asia/Seoul").toZoneId());
+        var fullFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        var fullFormattedDateTime = today.format(fullFormatter);
+
+        var existingKeywordRank = keywordRankRepository.findByDate(fullFormattedDateTime);
 
         // Check if there's an entry for today
         if (existingKeywordRank.isEmpty()) {
@@ -245,7 +250,7 @@ public class CosmeticRankService {
             var initialRankings = mostRecentKeywordRank.map(KeywordRank::getRankings).orElse(Collections.emptyList());
 
             // Save a new KeywordRank for today
-            keywordRankRepository.save(KeywordRank.builder().date(today).rankings(initialRankings).build());
+            keywordRankRepository.save(KeywordRank.builder().date(fullFormattedDateTime).rankings(initialRankings).build());
         } else {
             // Update existing entry for today
             log.info("Updating existing KeywordRank for today with top 10 keywords: {}", top10Keywords);
