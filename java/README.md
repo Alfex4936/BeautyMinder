@@ -91,6 +91,9 @@ $$
 \text{{Final Skin Type}} = \text{{Skin Type from A}} + \text{{Skin Type from B}} + \text{{Skin Type from C}} + \text{{Skin Type from D}}
 $$
 
+# OCR
+https://github.com/beminder/BeautyMinder/assets/2356749/585bbfd4-1767-479a-99fb-fc40734a3c47
+
 # ElasticSearch Korean Indexing
 
 ![product keyword kibana](https://github.com/LeeZEun/beautyMinder/assets/2356749/22723ed1-2398-4e77-aff0-7f41516c17ad)

@@ -17,7 +17,9 @@ public class ChatRoom {
     private final String name;
     private final String description;
     private final Set<WebSocketSession> sessions = new HashSet<>();
-    private List<ChatMessage> messages = new ArrayList<>();
+
+    @Builder.Default
+    private final List<ChatMessage> messages = new ArrayList<>();
 
     @Setter
     private Integer userCounts = 0;

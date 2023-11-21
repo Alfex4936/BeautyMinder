@@ -25,10 +25,7 @@ import org.springframework.stereotype.Controller;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -91,7 +88,7 @@ public class StompController {
                 "주뎅이", "주둥아리", "주둥이", "주접", "주접떨", "죽고잡", "죽을래", "죽통", "쥐랄", "쥐롤",
                 "쥬디", "지랄", "지럴", "지롤", "지미랄", "짜식", "짜아식", "쪼다", "쫍빱", "찌랄", "창녀", "캐년",
                 "캐놈", "캐스끼", "캐스키", "캐시키", "탱구", "팔럼", "퍽큐", "호로", "호로놈", "호로새끼",
-                "호로색", "호로쉑", "호로스까이", "호로스키", "후라들", "후래자식", "후레", "후뢰");
+                "호로색", "호로쉑", "호로스까이", "호로스키", "후라들", "후래자식", "후레", "후뢰", "ㅄ");
         badWordFiltering.addAll(lists);
         badWordFiltering.remove("공지");
     }
@@ -126,19 +123,20 @@ public class StompController {
     @MessageMapping("/chat.save/{roomId}")
     public void sendSavedMsg(@DestinationVariable String roomId) {
         var room = chatService.findRoomById(roomId);
-
         var optRoom = chatLogRepository.findByRoomName(room.getName());
 
-        optRoom.ifPresent(chatLog -> chatLog.getMessages().forEach(message -> {
-            var savedChat = ChatMessage.builder()
-                    .sender(message.getSender())
-                    .message(message.getContent())
-                    .roomId(roomId)
-                    .type(message.getType())
-                    .build();
-            messagingTemplate.convertAndSend("/topic/room/" + roomId, savedChat);
-        }));
+        optRoom.ifPresent(chatLog -> {
+            List<ChatMessage> savedChats = chatLog.getMessages().stream().map(message ->
+                    ChatMessage.builder()
+                            .sender(message.getSender())
+                            .message(message.getContent())
+                            .roomId(roomId)
+                            .type(message.getType())
+                            .build()
+            ).collect(Collectors.toList());
 
+            messagingTemplate.convertAndSend("/topic/room/batch/" + roomId, savedChats);
+        });
     }
 
     @MessageMapping("/chat.send/{roomId}")
@@ -162,6 +160,9 @@ public class StompController {
                         badWordFiltering.change(chatMessage.getMessage())
         );
 
+
+        addToDatabase(roomId, chatMessage);
+
         chatService.sendMessageToRoom(roomId, chatMessage);
 
         return chatMessage;
@@ -171,17 +172,6 @@ public class StompController {
     @SendTo("/topic/room/{roomId}")
     public ChatMessage enterRoom(@DestinationVariable String roomId, @Payload String messageJson) throws Exception {
         ChatMessage chatMessage = objectMapper.readValue(messageJson, ChatMessage.class);
-//        List<ChatMessage> oldMessages = chatService.getRoomMessages(roomId);
-
-        // TODO(2023-11-15)
-        // Send old messages to the user who just entered
-//        for (ChatMessage oldMessage : oldMessages) {
-//            messagingTemplate.convertAndSendToUser(
-//                    chatMessage.getSender(),
-//                    "/topic/room/" + roomId,
-//                    oldMessage
-//            );
-//        }
 
         chatMessage.setMessage(chatMessage.getSender() + " 님이 입장 하셨습니다.");
 
@@ -189,21 +179,7 @@ public class StompController {
 //        chatService.sendMessageToRoom(roomId, chatMessage);
         chatService.userEnteredRoom(roomId);
 
-//        var roomName = chatService.findRoomById(roomId).getName();
-//        if (roomName.equals("BeautyMinder")) {
-//            var optionalChatLog = chatLogRepository.findByRoomName(roomName);
-//            optionalChatLog.ifPresent(
-//                    chatlog -> {
-//                        var msgFormat = ChatLog.Message.builder()
-//                                .type(chatMessage.getType())
-//                                .content(chatMessage.getMessage())
-//                                .sender(chatMessage.getSender())
-//                                .timestamp().build();
-//                        chatlog.addMessage();
-//                        chatLogRepository.save()
-//                    }
-//            );
-//        }
+        addToDatabase(roomId, chatMessage);
 
         messagingTemplate.convertAndSend("/topic/room/name/" + roomId, Map.of("title", chatService.getRoomUserCount(roomId)));
 
@@ -220,6 +196,8 @@ public class StompController {
 
         chatMessage.setMessage(chatMessage.getSender() + " 님이 퇴장 하셨습니다.");
         chatService.userLeftRoom(roomId);
+
+        addToDatabase(roomId, chatMessage);
 
         messagingTemplate.convertAndSend("/topic/room/name/" + roomId, Map.of("title", chatService.getRoomUserCount(roomId)));
 
@@ -275,5 +253,35 @@ public class StompController {
         return probablyBaumannReviews.stream()
                 .map(Review::getCosmetic)
                 .collect(Collectors.toList());
+    }
+
+    private void addToDatabase(String roomId, ChatMessage chatMessage) {
+        var roomName = chatService.findRoomById(roomId).getName();
+        if (roomName.equals("BeautyMinder")) {
+            var optionalChatLog = chatLogRepository.findByRoomName(roomName);
+            optionalChatLog.ifPresentOrElse(
+                    chatlog -> {
+                        var msgFormat = ChatLog.Message.builder()
+                                .type(chatMessage.getType())
+                                .content(chatMessage.getMessage())
+                                .sender(chatMessage.getSender())
+                                .timestamp(System.currentTimeMillis()).build();
+                        chatlog.addMessage(msgFormat);
+                        chatLogRepository.save(chatlog);
+                    },
+                    () -> {
+                        ChatLog newChatLog = new ChatLog();
+                        newChatLog.setRoomName(roomName);
+                        newChatLog.setMessages(new ArrayList<>());
+                        var msgFormat = ChatLog.Message.builder()
+                                .type(chatMessage.getType())
+                                .content(chatMessage.getMessage())
+                                .sender(chatMessage.getSender())
+                                .timestamp(System.currentTimeMillis()).build();
+                        newChatLog.addMessage(msgFormat);
+                        chatLogRepository.save(newChatLog);
+                    }
+            );
+        }
     }
 }

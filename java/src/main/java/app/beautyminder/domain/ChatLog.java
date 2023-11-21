@@ -9,7 +9,7 @@ import java.util.List;
 
 @Document(collection = "chats")
 @AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 @Getter
 @Setter
 public class ChatLog {

@@ -246,6 +246,10 @@
                 showMessage(JSON.parse(chat.body));
             });
 
+            stompClient.subscribe('/topic/room/batch/' + [[${room.roomId}]], function (chats) {
+                showMessageList(JSON.parse(chats.body));
+            });
+
             stompClient.subscribe('/topic/room/name/' + [[${room.roomId}]], function (title) {
                 updateParticipantCount(JSON.parse(title.body));
             });
@@ -274,6 +278,8 @@
         const roomId = [[${room.roomId}]];
         const enterMsg = {"type": "ENTER", "roomId": roomId, "sender": nickname, "message": "Hello"};
         stompClient.send("/app/chat.enter/" + roomId, {}, JSON.stringify(enterMsg));
+        stompClient.send("/app/chat.save/" + roomId, {}, {});
+
         document.getElementById('messageInput').focus();
     }
 
@@ -283,11 +289,6 @@
 
         if (content.trim() === "") {
             return; // Don't send empty messages
-        }
-
-        console.log("==== IM IN DA " + basic);
-        if (basic === "BeautyMinder") {
-            console.log("got in bm room");
         }
 
         const talkMsg = {"type": "TALK", "sender": nickname, "message": content};
@@ -320,7 +321,7 @@
             if (chat.type === 'NOTICE') {
                 newMsg.classList.add('notice-message');
             }
-            newMsg.innerText = chat.message;
+            newMsg.innerHTML = chat.message;
         } else {
             newMsg.innerHTML = replaceURLsWithLinks(chat.message);
         }
@@ -329,6 +330,10 @@
     }
 
     function replaceURLsWithLinks(text) {
+        // if (typeof text !== 'string') {
+        //     return '';
+        // }
+
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         let imageIncluded = false; // Flag to track if an image has been added
 
@@ -349,6 +354,24 @@
 
     function scrollToBottom(element) {
         element.scrollTop = element.scrollHeight;
+    }
+
+    function showMessageList(messages) {
+        console.log("Received list of chat messages:", messages);
+        // Disable the input field
+        let messageInput = document.getElementById('messageInput');
+        messageInput.disabled = true;
+
+        try {
+            messages.forEach(message => {
+                showMessage(message);
+            });
+        } catch (error) {
+            console.error('Error displaying list of chat messages:', error);
+        } finally {
+            // Re-enable the input field
+            messageInput.disabled = false;
+        }
     }
 
     function showMessage(chat) {
@@ -384,6 +407,12 @@
         // Check if the nickname is within the length limit
         if (nicknameContent.length === 0 || nicknameContent.length > 12) {
             alert("닉네임은 1자 이상 12자 이하로 해주세요.");
+            nicknameInput.focus(); // Refocus on the nickname input for correction
+            return;
+        }
+
+        if (nicknameContent === "BeautyMinder") {
+            alert("관리자 닉네임은 설정할 수 없습니다.");
             nicknameInput.focus(); // Refocus on the nickname input for correction
             return;
         }

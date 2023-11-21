@@ -2,16 +2,23 @@ package app.beautyminder.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PreDestroy;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @AllArgsConstructor
 @Service
@@ -20,6 +27,10 @@ public class LocalFileService {
     private final ResourceLoader resourceLoader;
 
     private final ObjectMapper objectMapper;
+
+    private static final String TEMP_FILES_PATTERN = "upload_*";
+    private static final long TEMP_FILE_LIFETIME = 1000 * 60 * 60; // 1 hour in milliseconds
+
 
     public JsonNode readJsonFile(String filePath) throws IOException {
         Resource resource = resourceLoader.getResource(filePath);
@@ -63,6 +74,30 @@ public class LocalFileService {
         try (FileWriter file = new FileWriter(filePath)) {
             file.write(jsonObject.toString());
             file.flush();
+        }
+    }
+
+    @PreDestroy
+    public void onDestroy() {
+        cleanupOldTempFiles();
+    }
+
+    @Scheduled(fixedRate = TEMP_FILE_LIFETIME)
+    public void cleanupOldTempFiles() {
+        Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(tempDir, TEMP_FILES_PATTERN)) {
+            for (Path path : directoryStream) {
+                try {
+                    // Delete the file if it's older than 10 mins
+                    if (Files.getLastModifiedTime(path).to(TimeUnit.MILLISECONDS) < System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10)) {
+                        Files.delete(path);
+                    }
+                } catch (IOException e) {
+                    // Log the exception, possibly rethrow or handle it based on your application's needs
+                }
+            }
+        } catch (IOException e) {
+            // Log the exception, possibly rethrow or handle it based on your application's needs
         }
     }
 }
