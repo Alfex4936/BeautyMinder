@@ -7,6 +7,7 @@ import app.beautyminder.repository.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,9 +37,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserApiControllerTest {
 
     private final String userEmail = "usertest@email";
@@ -158,6 +161,7 @@ class UserApiControllerTest {
         refreshToken = Optional.ofNullable(result.getResponse().getCookie("XRT"))
                 .map(Cookie::getValue)
                 .orElseThrow(() -> new AssertionError("XRT cookie is missing"));
+        log.info("BEMINDER: TEST login: {}", accessToken);
 
         assertTrue(tokenProvider.validToken(accessToken), "Access token is invalid");
         assertTrue(tokenProvider.validToken(refreshToken), "Refresh token is invalid");
@@ -178,8 +182,10 @@ class UserApiControllerTest {
         }
         User user = optUser.get();
 
+        log.info("BEMINDER: Test delete {}", accessToken);
+
         // when
-        mockMvc.perform(delete("/user/delete/" + user.getId())
+        mockMvc.perform(delete("/user/delete")
                         .header("Authorization", "Bearer " + accessToken))
 
                 // then

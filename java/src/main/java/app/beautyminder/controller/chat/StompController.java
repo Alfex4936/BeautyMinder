@@ -126,6 +126,9 @@ public class StompController {
         var optRoom = chatLogRepository.findByRoomName(room.getName());
 
         optRoom.ifPresent(chatLog -> {
+            if (chatLog.getMessages().size() == 1) { // on first user entered a room for the first time
+                return;
+            }
             List<ChatMessage> savedChats = chatLog.getMessages().stream().map(message ->
                     ChatMessage.builder()
                             .sender(message.getSender())

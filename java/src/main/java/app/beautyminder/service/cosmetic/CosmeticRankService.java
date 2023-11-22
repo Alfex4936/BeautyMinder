@@ -84,7 +84,7 @@ public class CosmeticRankService {
 
     // Cosmetic Metrics collection (click/search hit)
     // Scheduled Batch Processing
-    @Scheduled(cron = "0 0/10 * * * ?", zone = "Asia/Seoul") // Every 10 minutes
+    @Scheduled(cron = "0 0/7 * * * ?", zone = "Asia/Seoul") // Every 7 minutes
     @Transactional
     public void processEvents() {
         var events = eventQueue.dequeueAll();
@@ -255,7 +255,9 @@ public class CosmeticRankService {
             // Update existing entry for today
             log.info("Updating existing KeywordRank for today with top 10 keywords: {}", top10Keywords);
             existingKeywordRank.ifPresent(rank -> {
-                rank.setRankings(top10Keywords);
+                if (!top10Keywords.isEmpty()) {
+                    rank.setRankings(top10Keywords);
+                }
                 mongoService.touch(KeywordRank.class, rank.getId(), "updatedAt");
                 keywordRankRepository.save(rank);
             });

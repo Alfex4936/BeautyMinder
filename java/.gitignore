@@ -1,6 +1,7 @@
 # Compiled class file
 *.class
 
+loadTest/.env
 redis/redis.conf
 logstash/pipeline/spring-boot-logs.conf
 redis.env

@@ -4,7 +4,12 @@ package app.beautyminder.service.vision;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,42 +55,34 @@ public class ExpirationDateExtractor {
     }
 
     private static Optional<LocalDate> findDatesWithPattern(String text, String[] patterns) {
-        LocalDate latestDate = null;
+        return Arrays.stream(patterns)
+                .flatMap(pattern -> Pattern.compile(pattern)
+                        .matcher(text)
+                        .results()) // Flattens Stream<Stream<MatchResult>> to Stream<MatchResult>
+                .map(ExpirationDateExtractor::matchDate) // Map each MatchResult to Optional<LocalDate>
+                .flatMap(Optional::stream) // Convert Optional<LocalDate> to Stream<LocalDate>
+                .max(Comparator.naturalOrder()); // Get the maximum date
+    }
 
-        for (String regex : patterns) {
-            Pattern pattern = Pattern.compile(regex);
-            Matcher match = pattern.matcher(text);
-
-            while (match.find()) {
-                if (match.group(1) != null && match.group(2) != null && match.group(3) != null) {
-                    var year = Optional.ofNullable(match.group(1)).orElse("");
-                    var month = Optional.ofNullable(match.group(2)).orElse("");
-                    var day = Optional.ofNullable(match.group(3)).orElse("");
-
-                    year = normalizeYear(year);
-                    month = month.replace("O", "0");
-                    day = day.replace("O", "0");
-//                    log.info("BEMINDER: match {} {} {}", year, month, day);
-
-                    if (year.length() == 2) {
-                        year = "20" + year;
-                    }
-
-                    // Try to parse the date and compare
-                    try {
-                        var date = LocalDate.parse(String.format("%s-%s-%s", year, month, day));
-                        //!date.isBefore(LocalDate.now()) &&
-                        if (latestDate == null || date.isAfter(latestDate)) {
-                            latestDate = date;
-                        }
-                    } catch (Exception e) {
-                        // Log or handle invalid date format
-                    }
-                }
-            }
+    private static Optional<LocalDate> matchDate(MatchResult match) {
+        if (Objects.isNull(match.group(1)) || Objects.isNull(match.group(2)) || Objects.isNull(match.group(3))) {
+            return Optional.empty();
         }
 
-        return Optional.ofNullable(latestDate);
+        var year = normalizeYear(Optional.ofNullable(match.group(1)).orElse(""));
+        var month = Optional.ofNullable(match.group(2)).orElse("").replace("O", "0");
+        var day = Optional.ofNullable(match.group(3)).orElse("").replace("O", "0");
+
+        if (year.length() == 2) {
+            year = "20" + year;
+        }
+
+        try {
+            var date = LocalDate.parse(String.format("%s-%s-%s", year, month, day));
+            return Optional.of(date);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     private static String normalizeYear(String year) {

@@ -4,7 +4,7 @@
 - 🌟 [Feature] 새로운 기능 추가할 때
 - 🐛 [Fix] 버그 수정할 때
 - 🚀 [Performance] 성능 향상을 위한 코드 변경할 때
-- git commit -m "🐛 [Fix] Correct way to update keyword rank db"
+- git commit -m "🐛 [Fix] Custom built version of "
 
 # 🏗️ 구조
 

@@ -191,7 +191,7 @@ public class UserService {
 
         // Delete user profile picture from S3
         String userProfileImage = user.getProfileImage();
-        if (!userProfileImage.isEmpty() &&
+        if (userProfileImage != null && !userProfileImage.isEmpty() &&
                 !List.of(defaultUserProfilePic, defaultAdminProfilePic).contains(userProfileImage)) {
             fileStorageService.deleteFile(userProfileImage);
         }

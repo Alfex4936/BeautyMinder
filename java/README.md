@@ -1,6 +1,7 @@
 # BeautyMinder 
 
-Spring Boot v3.1
+> [!IMPORTANT]
+> Spring Boot v3.1.3
 
 ![image](https://github.com/Alfex4936/beautyMinder/assets/2356749/5caf6d91-ab5e-419d-8520-455c91ca59c9)
 

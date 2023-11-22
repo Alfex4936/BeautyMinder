@@ -28,6 +28,8 @@ public class LocalFileService {
 
     private final ObjectMapper objectMapper;
 
+    private static final String TEMP_DIR_JAVA = "java.io.tmpdir";
+
     private static final String TEMP_FILES_PATTERN = "upload_*";
     private static final long TEMP_FILE_LIFETIME = 1000 * 60 * 60; // 1 hour in milliseconds
 
@@ -84,7 +86,7 @@ public class LocalFileService {
 
     @Scheduled(fixedRate = TEMP_FILE_LIFETIME)
     public void cleanupOldTempFiles() {
-        Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+        Path tempDir = Paths.get(System.getProperty(TEMP_DIR_JAVA));
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(tempDir, TEMP_FILES_PATTERN)) {
             for (Path path : directoryStream) {
                 try {

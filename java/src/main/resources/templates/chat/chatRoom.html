@@ -417,6 +417,14 @@
             return;
         }
 
+        // Regular expression to allow English alphabets, numbers, and Korean characters
+        let regex = /^[A-Za-z0-9가-힣]+$/;
+        if (!regex.test(nicknameContent)) {
+            alert("닉네임은 영어, 숫자, 한글만 사용할 수 있습니다.");
+            nicknameInput.focus();
+            return;
+        }
+
         nickname = nicknameContent;
 
         $.modal.close();

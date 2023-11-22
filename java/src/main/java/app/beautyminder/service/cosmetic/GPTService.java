@@ -6,7 +6,10 @@ import app.beautyminder.domain.Review;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.GPTReviewRepository;
 import app.beautyminder.service.review.ReviewService;
+import io.github.flashvayne.chatgpt.dto.chat.ChatRole;
 import io.github.flashvayne.chatgpt.dto.chat.MultiChatMessage;
+import io.github.flashvayne.chatgpt.dto.chat.MultiChatRequest;
+import io.github.flashvayne.chatgpt.property.MultiChatProperties;
 import io.github.flashvayne.chatgpt.service.ChatgptService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +40,9 @@ public class GPTService {
 
     @Value("${chatgpt.system-keyword}")
     private String systemRoleKeyword;
+
+    @Value("${chatgpt.system-bot}")
+    private String systemRoleBot;
 
     @Value("${chatgpt.multi.model}")
     private String gptVersion;
@@ -69,7 +75,7 @@ public class GPTService {
             );
         });
 
-        log.info("GPTReview: Summarization done");
+        log.info("BEMINDER: GPTReview: Summarization done");
     }
 
     public void summaryCosmetic(String cosmeticId) {
@@ -109,19 +115,22 @@ public class GPTService {
         allContents.append(reviewContents);
 
         List<MultiChatMessage> messages = Arrays.asList(
-                new MultiChatMessage("system", systemRole),
-                new MultiChatMessage("user", allContents.toString()));
+                new MultiChatMessage(ChatRole.SYSTEM, systemRole),
+                new MultiChatMessage(ChatRole.USER, allContents.toString()));
 
         return chatgptService.multiChat(messages); // Return the summarized content
     }
 
-    private String generateKeywords(String baumannType) {
-        logger.info("Generating keywords for {}...", baumannType);
+    public String generateNotice(String baumannType) {
+        var multiChatRequest = MultiChatRequest.builder()
+                .maxTokens(128)
+                .model("gpt-3.5-turbo-1106")
+                .build();
 
-        List<MultiChatMessage> messages = List.of(
-                new MultiChatMessage("system", systemRoleKeyword),
-                new MultiChatMessage("user", "My Baumann type " + baumannType));
+        var messages = List.of(
+                new MultiChatMessage(ChatRole.SYSTEM, systemRoleBot),
+                new MultiChatMessage(ChatRole.USER, baumannType + "타입"));
 
-        return chatgptService.multiChat(messages);
+        return chatgptService.multiChat(messages, multiChatRequest);
     }
 }

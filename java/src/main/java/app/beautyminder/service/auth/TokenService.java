@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.Optional;
+import java.util.stream.IntStream;
 
 @RequiredArgsConstructor
 @Service
@@ -23,21 +25,37 @@ public class TokenService {
 
     public static String generateToken(int length) {
         StringBuilder token = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            int index = RANDOM.nextInt(CHARACTERS.length());
-            token.append(CHARACTERS.charAt(index));
-        }
+
+        IntStream.range(0, length).forEach(
+                i -> {
+                    var index = RANDOM.nextInt(CHARACTERS.length());
+                    token.append(CHARACTERS.charAt(index));
+                }
+        );
+//        for (int i = 0; i < length; i++) {
+//            int index = RANDOM.nextInt(CHARACTERS.length());
+//            token.append(CHARACTERS.charAt(index));
+//        }
         return token.toString();
     }
 
     public PasswordResetToken createPasswordResetToken(User user) {
         String token = generateToken(LENGTH);
+        LocalDateTime expiryDate = LocalDateTime.now().plusHours(VALID_HOURS);
 
-        PasswordResetToken passwordResetToken = PasswordResetToken.builder()
-                .email(user.getEmail())
-                .token(token)
-                .expiryDate(LocalDateTime.now().plusHours(VALID_HOURS))
-                .build();
+        // Using Optional's or() method for cleaner code
+        PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByEmail(user.getEmail())
+                .map(existingToken -> {
+                    existingToken.setToken(token);
+                    existingToken.setExpiryDate(expiryDate);
+                    return existingToken;
+                })
+                .or(() -> Optional.of(PasswordResetToken.builder()
+                        .email(user.getEmail())
+                        .token(token)
+                        .expiryDate(expiryDate)
+                        .build()))
+                .get();
 
         passwordResetTokenRepository.save(passwordResetToken);
 

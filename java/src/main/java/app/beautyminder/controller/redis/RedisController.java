@@ -97,4 +97,11 @@ public class RedisController {
         cosmeticRankService.saveTop10Keywords();
         return ResponseEntity.ok("good");
     }
+
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @GetMapping("/product/eval")
+    public ResponseEntity<?> runProductRank() {
+        cosmeticRankService.processEvents();
+        return ResponseEntity.ok("good");
+    }
 }
