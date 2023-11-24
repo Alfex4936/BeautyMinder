@@ -2,6 +2,7 @@ package app.beautyminder.domain;
 
 import app.beautyminder.dto.NlpAnalysis;
 import app.beautyminder.dto.PyReviewAnalysis;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -50,7 +51,8 @@ public class Review {
 
     @Setter
     @Builder.Default
-    private boolean isFiltered = false; // Field for offensive content flag
+//    @JsonProperty("isFiltered")
+    private boolean isFiltered = false; // Field for offensive content flag, will become "filtered" in jsons
 
     // Field for NLP analysis results
     @Setter

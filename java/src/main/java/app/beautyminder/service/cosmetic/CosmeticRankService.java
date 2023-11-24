@@ -84,7 +84,7 @@ public class CosmeticRankService {
 
     // Cosmetic Metrics collection (click/search hit)
     // Scheduled Batch Processing
-    @Scheduled(cron = "0 0/7 * * * ?", zone = "Asia/Seoul") // Every 7 minutes
+    @Scheduled(cron = "0 0/5 * * * ?", zone = "Asia/Seoul") // Every 5 minutes
     @Transactional
     public void processEvents() {
         var events = eventQueue.dequeueAll();

@@ -195,8 +195,10 @@ public class UserController {
 
                     // Check if the cosmetic was actually removed before decrementing favCount
                     if (wasFavoriteBefore) {
-                        // Update cosmetic's favCount only if it was actually removed
-                        mongoService.updateFields(cosmeticId, Map.of("favCount", cosmetic.getFavCount() - 1), Cosmetic.class);
+                        if (cosmetic.getFavCount() != 0) {
+                            // Update cosmetic's favCount only if it was actually removed
+                            mongoService.updateFields(cosmeticId, Map.of("favCount", cosmetic.getFavCount() - 1), Cosmetic.class);
+                        }
                     }
 
                     return new ResponseEntity<>(updatedUser, HttpStatus.OK);
