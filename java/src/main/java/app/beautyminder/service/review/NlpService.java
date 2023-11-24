@@ -6,6 +6,7 @@ import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.service.MongoService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vane.badwordfiltering.BadWordFiltering;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,7 @@ public class NlpService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ReviewRepository reviewRepository;
     private final MongoService mongoService;
+    private final BadWordFiltering badWordFiltering;
 
     @Value("${server.python.review}")
     private String reviewProcessServer;
@@ -53,13 +55,12 @@ public class NlpService {
                             var reviewJson = objectMapper.writeValueAsString(review);
                             var nlpResultJson = callProcessAPI(reviewJson).getBody();
 
-                            review.setFiltered(nlpResultJson.isFiltered());
-                            review.setNlpAnalysis(nlpResultJson.nlpAnalysis());
+                            var isFiltered = badWordFiltering.check(review.getContent());
+                            var nlpAnalysis = nlpResultJson.nlpAnalysis();
 
                             mongoService.updateFields(review.getId(),
-                                    Map.of("isFiltered", nlpResultJson.isFiltered(), "nlpAnalysis", nlpResultJson.nlpAnalysis()), Review.class);
+                                    Map.of("isFiltered", isFiltered, "nlpAnalysis", nlpAnalysis), Review.class);
 
-                            reviewRepository.save(review);
                             toRemove.add(reviewId);
                         } catch (JsonProcessingException | RestClientException e) {
                             log.error("Failed to process review asynchronously: " + reviewId, e);
@@ -78,13 +79,14 @@ public class NlpService {
             processQueue.add(review.getId());
             var reviewJson = objectMapper.writeValueAsString(review);
             var nlpResultJson = callProcessAPI(reviewJson).getBody();
-            review.setFiltered(nlpResultJson.isFiltered());
-            review.setNlpAnalysis(nlpResultJson.nlpAnalysis());
+
+            var isFiltered = badWordFiltering.check(review.getContent());
+            var nlpAnalysis = nlpResultJson.nlpAnalysis();
 
             mongoService.updateFields(review.getId(),
-                    Map.of("isFiltered", nlpResultJson.isFiltered(), "nlpAnalysis", nlpResultJson.nlpAnalysis()), Review.class);
+                    Map.of("isFiltered", isFiltered, "nlpAnalysis", nlpAnalysis), Review.class);
 
-            reviewRepository.save(review);
+//            reviewRepository.save(review);
             processQueue.remove(review.getId());
             log.info("BEMINDER: async-ly updated Review's NLP analysis.");
         } catch (JsonProcessingException | RestClientException e) {

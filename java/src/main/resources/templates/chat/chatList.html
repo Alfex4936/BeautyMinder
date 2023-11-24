@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <title>바우만 소통방 | BeautyMinder</title>
     <!-- Include Bootstrap CSS -->
@@ -11,6 +12,17 @@
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
+        }
+        .btn-primary {
+            background-color: #e5b000; /* Custom primary color */
+            border-color: #e5b000; /* Custom primary color for border */
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus,
+        .btn-primary:active {
+            background-color: #cc9e00 !important; /* Darker shade of #e5b000 */
+            border-color: #cc9e00 !important; /* Darker shade of #e5b000 */
         }
     </style>
 </head>

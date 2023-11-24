@@ -1,4 +1,4 @@
-// Dry vs. Oily (D vs O): 11 questions
+ // Dry vs. Oily (D vs O): 11 questions
 // Sensitive vs. Resistant (S vs R): 16 questions
 // Pigmented vs. Non-Pigmented (P vs N): 14 questions
 // Wrinkled vs. Tight (W vs T): 21 questions

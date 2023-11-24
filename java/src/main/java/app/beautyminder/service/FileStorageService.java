@@ -35,7 +35,7 @@ public class FileStorageService {
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
 
-    public String storeFile(MultipartFile file, String folderPath) {
+    public String storeFile(MultipartFile file, String folderPath, boolean shouldThumbnail) {
         validateImageFileType(file);
 
         var extension = Objects.requireNonNull(file.getOriginalFilename()).substring(file.getOriginalFilename().lastIndexOf('.'));
@@ -45,6 +45,10 @@ public class FileStorageService {
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(file.getContentType());
             metadata.setContentLength(file.getSize());
+
+            if (shouldThumbnail) {
+                uploadThumbnail(file, fileName);
+            }
 
             amazonS3.putObject(new PutObjectRequest(bucket, fileName, fileInputStream, metadata));
             URL fileUrl = amazonS3.getUrl(bucket, fileName);

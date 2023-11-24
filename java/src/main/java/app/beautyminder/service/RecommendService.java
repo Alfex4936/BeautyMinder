@@ -111,7 +111,7 @@ public class RecommendService {
 
     private Set<String> getTrendingCosmeticIds() {
         // Implementation of fetching IDs of trending cosmetics
-        List<Cosmetic> cosmetics = cosmeticRankService.getTopRankedCosmetics(5);
+        List<Cosmetic> cosmetics = cosmeticRankService.getTopRankedCosmetics(3);
         return convertCosmeticsToStrings(cosmetics);
     }
 

@@ -91,7 +91,7 @@ public class MongoService {
                 .and(referenceFieldName + ".$id").is(new ObjectId(referenceId)));
         query.fields().position("program", 1);
         T application = mongoTemplate.findOne(query, entityClass);
-        log.error("existsWithReference: {}", application);
+//        log.error("existsWithReference: {}", application);
 
         return mongoTemplate.exists(query, entityClass);
     }

@@ -1,6 +1,7 @@
 # BeautyMinder 
 
-Spring Boot v3.1
+> [!IMPORTANT]
+> Spring Boot v3.1.3
 
 ![image](https://github.com/Alfex4936/beautyMinder/assets/2356749/5caf6d91-ab5e-419d-8520-455c91ca59c9)
 
@@ -90,6 +91,9 @@ The final skin type is a string concatenation of the individual skin type descri
 $$
 \text{{Final Skin Type}} = \text{{Skin Type from A}} + \text{{Skin Type from B}} + \text{{Skin Type from C}} + \text{{Skin Type from D}}
 $$
+
+# OCR
+https://github.com/beminder/BeautyMinder/assets/2356749/585bbfd4-1767-479a-99fb-fc40734a3c47
 
 # ElasticSearch Korean Indexing
 

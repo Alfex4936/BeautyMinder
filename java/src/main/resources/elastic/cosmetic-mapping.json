@@ -2,7 +2,7 @@
   "properties": {
     "name": {
       "type": "text",
-      "analyzer": "seunjeon",
+      "analyzer": "korean_ngram_analyzer",
       "fields": {
         "keyword": {
           "type": "keyword"

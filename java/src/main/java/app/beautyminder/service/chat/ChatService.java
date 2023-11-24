@@ -26,7 +26,7 @@ public class ChatService {
                 "OSNT (번들민감)", "OSNW (주름민감)", "OSPT (색소민감)", "OSPW (복합고민)",
                 "ORNT (튼튼번들)", "ORNW (튼튼주름)", "ORPT (튼튼색소)", "ORPW (관리필요)",
                 "DSNT (건민감)", "DSNW (건조주름)", "DSPT (건색민감)", "DSPW (건조복합)",
-                "DRNT (튼튼건조)", "DRNW (튼튼건조주름)", "DRPT (건조튼튼색소)", "DRPW (건조관리)");
+                "DRNT (튼튼건조)", "DRNW (튼튼건조주름)", "DRPT (건조튼튼색소)", "DRPW (건조관리)", "BeautyMinder");
 
         var descriptions = List.of(
                 "(Oily, Sensitive, Non-pigmented, Tight): \"번들번들하지만 민감해요. 탄력 있는 피부지만 주름은 걱정 없는 타입!\"",
@@ -44,7 +44,8 @@ public class ChatService {
                 "(Dry, Resistant, Non-pigmented, Tight): \"건조하지만 강한 피부. 탄력 있고 건강한 모습을 유지해요!\"",
                 "(Dry, Resistant, Non-pigmented, Wrinkled): \"건조하지만 튼튼한 피부! 하지만 주름 관리는 필수에요.\"",
                 "(Dry, Resistant, Pigmented, Tight): \"건조하지만 튼튼하고 탄력 있는 피부. 색소 침착에 주의해야 해요.\"",
-                "(Dry, Resistant, Pigmented, Wrinkled): \"건조하고 튼튼하지만 주름과 색소가 걱정되는 복합 피부 타입!\"");
+                "(Dry, Resistant, Pigmented, Wrinkled): \"건조하고 튼튼하지만 주름과 색소가 걱정되는 복합 피부 타입!\"",
+                "모든 대화가 저장되는 관리자와 대화할 수 있는 방이에요.");
 
         IntStream.range(0, baumannTypes.size()).mapToObj(i ->
                         ChatRoom.builder()

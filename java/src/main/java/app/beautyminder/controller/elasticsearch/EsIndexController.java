@@ -47,6 +47,12 @@ public class EsIndexController {
         return ResponseEntity.ok("Deleted review indices successfully");
     }
 
+    @PostMapping("/cosmetics/index")
+    public ResponseEntity<String> triggerIndexingCosmetic() {
+        cosmeticSearchService.indexCosmetics();
+        return ResponseEntity.ok("Indexed cosmetic successfully!");
+    }
+
     @PostMapping("/reviews/index")
     public ResponseEntity<String> triggerIndexingReview() {
         reviewSearchService.indexReviews();

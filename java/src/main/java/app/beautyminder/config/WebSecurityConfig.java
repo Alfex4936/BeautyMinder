@@ -60,7 +60,7 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 public class WebSecurityConfig {
 
     public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(21);
-    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(14);
+    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
 
     private final TokenProvider tokenProvider;

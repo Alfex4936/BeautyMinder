@@ -8,19 +8,18 @@ import app.beautyminder.dto.todo.AddTodoResponse;
 import app.beautyminder.dto.todo.TodoUpdateDTO;
 import app.beautyminder.service.MongoService;
 import app.beautyminder.service.TodoService;
-import app.beautyminder.service.auth.UserService;
 import app.beautyminder.util.AuthenticatedUser;
-import app.beautyminder.util.ValidUserId;
+import io.lettuce.core.dynamic.annotation.Param;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,6 +37,13 @@ public class TodoController {
     public Map<String, Object> getTodos(@Parameter(hidden = true) @AuthenticatedUser User user) {
         List<Todo> existingTodos = todoService.findTodosByUserId(user.getId());
         return createResponse("Here are the todos", existingTodos.isEmpty() ? Collections.emptyList() : existingTodos);
+    }
+
+    @Operation(summary = "Retrieve all todos of a day", parameters = {@Parameter(name="date", description = "a valid date ex) 2023-12-23")}, description = "특정 날짜의 모든 Todo 항목을 검색합니다. [User 권한 필요]", tags = {"Todo Operations"})
+    @GetMapping("/{date}")
+    public Map<String, Object> getTodosOfDay(@Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable LocalDate date) {
+        List<Todo> existingTodos = todoService.findTodosByUserIdAndDate(user.getId(), date);
+        return createResponse("Here are the todos of the day", existingTodos.isEmpty() ? Collections.emptyList() : existingTodos);
     }
 
     @Operation(summary = "Create a new todo", description = "새로운 Todo 항목을 추가합니다. [User 권한 필요]", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Todo details for creation"), tags = {"Todo Operations"})
@@ -79,7 +85,12 @@ public class TodoController {
         try {
             Optional<Todo> updatedTodo = todoService.updateTodoTasks(todoId, todoUpdateDTO);
 
-            return updatedTodo.map(todo -> ResponseEntity.ok(new AddTodoResponse("Updated Todo", todo))).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(new AddTodoResponse("Failed to update Todo", null)));
+            if (updatedTodo.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK).body(new AddTodoResponse("Todo deleted as it had no tasks left", null));
+            }
+
+            return updatedTodo.map(todo -> ResponseEntity.ok(new AddTodoResponse("Updated Todo", todo)))
+                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(new AddTodoResponse("Failed to update Todo", null)));
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }

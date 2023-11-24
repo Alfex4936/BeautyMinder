@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <title>[[${room.name}]] 소통방 | BeautyMinder</title>
     <!-- Include Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
     <style>
@@ -29,19 +30,27 @@
             margin-left: auto; /* Aligns the button to the right */
             padding: 0; /* Reduces button padding */
         }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* This will push the .chat-input to the bottom */
+            height: 100vh; /* Set to the height of the viewport */
+        }
+
         .msgArea {
-            height: auto;
-            min-height: 476px;
-            max-height: 712px;
-            overflow-y: auto;
-            padding: 15px;
+            font-size: 1.2em;
+            flex-grow: 1; /* Allows this area to grow and fill the available space */
+            overflow-y: auto; /* Ensures the content is scrollable if it overflows */
             background-color: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
         }
+
         .chat-input {
             padding: 15px;
             display: flex;
         }
+
         .chat-input input[type='text'] {
             flex-grow: 1;
             margin-right: 10px;
@@ -75,6 +84,72 @@
         .notice-message {
             color: #e58d00;
             font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #e5b000; /* Custom primary color */
+            border-color: #e5b000; /* Custom primary color for border */
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus,
+        .btn-primary:active {
+            background-color: #cc9e00 !important; /* Darker shade of #e5b000 */
+            border-color: #cc9e00 !important; /* Darker shade of #e5b000 */
+        }
+
+        .timestamp-full {
+            display: inline;
+        }
+
+        .timestamp-short {
+            display: none;
+        }
+
+        @media only screen and (max-width: 576px) {
+            .timestamp-full {
+                display: none;
+            }
+
+            .timestamp-short {
+                display: inline;
+            }
+
+            .chat-header {
+                /*flex-direction: column; !* Stack the elements instead of side by side *!*/
+                padding: 10px; /* Increase padding for smaller screens */
+                font-size: 1.2em; /* Larger text for the header */
+            }
+
+            .chat-header .chat-room-name {
+                margin-bottom: 10px; /* Add space between title and button */
+            }
+
+            .chat-input {
+                display: flex; /* Align input and button in a row */
+                padding: 10px; /* Padding for the chat-input container */
+            }
+
+
+            .chat-input input[type='text'] {
+                flex-grow: 1; /* Allows input to grow and fill available space */
+                font-size: 1.1em; /* Larger font size for input */
+                padding: 10px; /* Increase padding for easier interaction */
+                margin-right: 10px; /* Space between input and button */
+            }
+
+            .chat-input button {
+                /*width: 100%; !* Full width button for mobile *!*/
+                font-size: 1.1em; /* Increase font size for readability */
+                padding: 10px 15px; /* Increase padding for a larger tap area */
+            }
+
+            .msgArea {
+                font-size: 1.2em; /* Increase the font size for message content */
+                padding: 15px; /* Increase padding for better spacing */
+            }
+
+            /* Adjust other styles as needed for better mobile experience */
         }
     </style>
 </head>
@@ -127,7 +202,7 @@
     /*]]>*/
     let isFirstMessage = true; // Flag to track the first message
 
-    window.onload = function() {
+    window.onload = function () {
         $('#nicknameModal').modal();
         // addNotice();
         // connect(); // Connect to WebSocket after setting the nickname
@@ -171,12 +246,16 @@
                 showMessage(JSON.parse(chat.body));
             });
 
+            stompClient.subscribe('/topic/room/batch/' + [[${room.roomId}]], function (chats) {
+                showMessageList(JSON.parse(chats.body));
+            });
+
             stompClient.subscribe('/topic/room/name/' + [[${room.roomId}]], function (title) {
                 updateParticipantCount(JSON.parse(title.body));
             });
 
             // Event listener for the message input
-            document.getElementById('messageInput').addEventListener('keypress', function(event) {
+            document.getElementById('messageInput').addEventListener('keypress', function (event) {
                 if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault(); // Prevent the default action (new line)
                     sendMsg(); // Send the message
@@ -184,13 +263,10 @@
             });
 
             // Global event listener for keyboard shortcuts
-            document.addEventListener('keydown', function(event) {
+            document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') { //  && event.ctrlKey
-                    // Show confirmation dialog when Escape key is pressed
-                    const confirmExit = confirm("정말로 채팅방을 나가시겠습니까?");
-                    if (confirmExit) {
-                        quit();
-                    }
+                    quit();
+
                 }
             });
 
@@ -202,6 +278,8 @@
         const roomId = [[${room.roomId}]];
         const enterMsg = {"type": "ENTER", "roomId": roomId, "sender": nickname, "message": "Hello"};
         stompClient.send("/app/chat.enter/" + roomId, {}, JSON.stringify(enterMsg));
+        stompClient.send("/app/chat.save/" + roomId, {}, {});
+
         document.getElementById('messageInput').focus();
     }
 
@@ -224,10 +302,14 @@
     }
 
     function quit() {
-        const roomId = [[${room.roomId}]]; // This line should correctly get the roomId
-        const quitMsg = {"type": "QUIT", "roomId": roomId, "sender": nickname, "message": "Bye "};
+        const confirmExit = confirm("정말로 채팅방을 나가시겠습니까?");
+        if (!confirmExit) {
+            return;
+        }
+        const roomId = [[${room.roomId}]];
+        const quitMsg = {"type": "QUIT", "roomId": roomId, "sender": nickname, "message": "Bye"};
         stompClient.send("/app/chat.quit/" + roomId, {}, JSON.stringify(quitMsg));
-        stompClient.disconnect(headers={"TEST": "HEY"});
+        stompClient.disconnect(headers = {"TEST": "HEY"});
         location.href = "/chat/list";
     }
 
@@ -239,7 +321,7 @@
             if (chat.type === 'NOTICE') {
                 newMsg.classList.add('notice-message');
             }
-            newMsg.innerText = chat.message;
+            newMsg.innerHTML = chat.message;
         } else {
             newMsg.innerHTML = replaceURLsWithLinks(chat.message);
         }
@@ -248,29 +330,48 @@
     }
 
     function replaceURLsWithLinks(text) {
+        // if (typeof text !== 'string') {
+        //     return '';
+        // }
+
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         let imageIncluded = false; // Flag to track if an image has been added
 
-        return text.replace(urlRegex, function(url) {
-            if (url.match(/\.(jpeg|jpg|gif|png)$/i) != null) {
-                if (!imageIncluded) {
-                    imageIncluded = true; // Set the flag to true after including the first image
-                    return '<a href="' + url + '" target="_blank" class="link">' + url + '</a>' +
-                        '<div style="text-align: center; margin-top: 10px;">' +
-                        '<img src="' + url + '" style="max-width: 100px; max-height: 100px;" onError="this.style.display=\'none\'" alt="Image"/>' +
-                        '</div>';
-                } else {
-                    // If an image has already been included, return just the URL as a link
-                    return '<a href="' + url + '" target="_blank" class="link">' + url + '</a>';
-                }
+        return text.replace(urlRegex, function (url) {
+            if (!imageIncluded) {
+                imageIncluded = true; // Try to include the first URL as an image
+                return '<a href="' + url + '" target="_blank" class="link">' + url + '</a>' +
+                    '<div style="text-align: center; margin-top: 10px;">' +
+                    '<img src="' + url + '" style="max-width: 100px; max-height: 100px;" onError="this.style.display=\'none\'; imageIncluded = false;" alt="Image"/>' +
+                    '</div>';
             } else {
+                // For subsequent URLs or if the first URL was not an image, return just the URL as a link
                 return '<a href="' + url + '" target="_blank" class="link">' + url + '</a>';
             }
         });
     }
 
+
     function scrollToBottom(element) {
         element.scrollTop = element.scrollHeight;
+    }
+
+    function showMessageList(messages) {
+        console.log("Received list of chat messages:", messages);
+        // Disable the input field
+        let messageInput = document.getElementById('messageInput');
+        messageInput.disabled = true;
+
+        try {
+            messages.forEach(message => {
+                showMessage(message);
+            });
+        } catch (error) {
+            console.error('Error displaying list of chat messages:', error);
+        } finally {
+            // Re-enable the input field
+            messageInput.disabled = false;
+        }
     }
 
     function showMessage(chat) {
@@ -307,6 +408,20 @@
         if (nicknameContent.length === 0 || nicknameContent.length > 12) {
             alert("닉네임은 1자 이상 12자 이하로 해주세요.");
             nicknameInput.focus(); // Refocus on the nickname input for correction
+            return;
+        }
+
+        if (nicknameContent === "BeautyMinder") {
+            alert("관리자 닉네임은 설정할 수 없습니다.");
+            nicknameInput.focus(); // Refocus on the nickname input for correction
+            return;
+        }
+
+        // Regular expression to allow English alphabets, numbers, and Korean characters
+        let regex = /^[A-Za-z0-9가-힣]+$/;
+        if (!regex.test(nicknameContent)) {
+            alert("닉네임은 영어, 숫자, 한글만 사용할 수 있습니다.");
+            nicknameInput.focus();
             return;
         }
 

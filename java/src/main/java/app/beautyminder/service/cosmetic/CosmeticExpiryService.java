@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,11 +41,19 @@ public class CosmeticExpiryService {
         }
 
         // MUST
-        builder.expiryDate(cosmeticExpiryDTO.getExpiryDate().atStartOfDay());
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+
+        try {
+            validateAndSetDate(cosmeticExpiryDTO.getExpiryDate(), formatter, builder::expiryDate);
+            validateAndSetDate(cosmeticExpiryDTO.getOpenedDate(), formatter, builder::openedDate);
+        } catch (DateTimeParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not invalid dates");
+        }
+
         builder.productName(cosmeticExpiryDTO.getProductName());
         builder.isExpiryRecognized(cosmeticExpiryDTO.isExpiryRecognized());
         builder.isOpened(cosmeticExpiryDTO.isOpened());
-        builder.openedDate(cosmeticExpiryDTO.getOpenedDate());
+
 
         // Set the user ID from the User object
         builder.userId(userId);
@@ -110,5 +119,11 @@ public class CosmeticExpiryService {
 
     public Optional<CosmeticExpiry> findByUserIdAndId(String userId, String expiryId) {
         return cosmeticExpiryRepository.findByUserIdAndId(userId, expiryId);
+    }
+
+    private static void validateAndSetDate(String dateString, DateTimeFormatter formatter,
+                                           java.util.function.Consumer<String> dateSetter) {
+        LocalDate.parse(dateString, formatter); // Will throw DateTimeParseException if invalid
+        dateSetter.accept(dateString);
     }
 }

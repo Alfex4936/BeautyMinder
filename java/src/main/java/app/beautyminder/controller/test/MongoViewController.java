@@ -8,26 +8,35 @@ import app.beautyminder.repository.UserRepository;
 import app.beautyminder.service.LogService;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticService;
+import app.beautyminder.service.vision.VisionService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.*;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -43,6 +52,7 @@ public class MongoViewController {
     private final TodoRepository todoRepository;
     private final CosmeticService cosmeticService;
     private final LogService logService;
+    private final VisionService visionService;
 
     @GetMapping("/spring/list")
     public String getSpringLogHTML(Model model) {
@@ -107,4 +117,52 @@ public class MongoViewController {
         model.addAttribute("cosmeticList", cosmeticList);
         return "db/cosmeticList";
     }
+
+    @PreAuthorize("hasRole('ROLE_USER')")
+    @GetMapping("/ocr")
+    public String testOCR(Model model) {
+        return "db/ocrTest";
+    }
+
+    @PostMapping("/ocr/upload")
+    public String handleFileUpload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) throws IOException {
+        var base64Image = Base64.getEncoder().encodeToString(file.getBytes());
+
+        // Save the file to a temporary directory and create a reference to it
+        String filename = file.getOriginalFilename();
+        Path tempFile = Files.createTempFile("upload_", filename);
+        Files.copy(file.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+
+        // Create a URL to access the temporary file
+        String tempFileUrl = "/test/temp-files/" + tempFile.getFileName().toString();
+
+        // Store the URL in the redirect attributes
+        redirectAttributes.addFlashAttribute("tempFileUrl", tempFileUrl);
+
+        // Process the file and call the OCR API
+        visionService.execute(base64Image).ifPresentOrElse(
+                result -> {
+                    redirectAttributes.addFlashAttribute("result", result);
+                },
+                () -> {
+                    redirectAttributes.addFlashAttribute("result", "");
+                }
+        );
+
+        return "redirect:/test/ocr";
+    }
+
+    @GetMapping("/temp-files/{filename:.+}")
+    @ResponseBody
+    public ResponseEntity<Resource> serveTempFile(@PathVariable String filename) throws MalformedURLException {
+        Path tempFile = Paths.get(System.getProperty("java.io.tmpdir")).resolve(filename);
+        if (Files.exists(tempFile)) {
+            Resource file = new UrlResource(tempFile.toUri());
+            return ResponseEntity.ok().body(file);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
 }

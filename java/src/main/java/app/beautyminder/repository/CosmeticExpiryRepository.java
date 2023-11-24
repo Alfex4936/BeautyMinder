@@ -19,6 +19,8 @@ public interface CosmeticExpiryRepository extends MongoRepository<CosmeticExpiry
 
     Optional<CosmeticExpiry> findByCosmeticId(String cosmeticId);
 
+    Optional<CosmeticExpiry> findByExpiryDate(String date);
+
     List<CosmeticExpiry> findAllByUserIdAndExpiryDateBetween(String userId, LocalDateTime startDate, LocalDateTime endDate);
 
     @Query(value = "{ 'userId': ?0 }", delete = true)

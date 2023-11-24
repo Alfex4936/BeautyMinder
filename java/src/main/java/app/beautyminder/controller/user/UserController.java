@@ -48,7 +48,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import static java.util.function.Predicate.not;
 
@@ -161,28 +164,46 @@ public class UserController {
     @Operation(summary = "Add to User Favorite", description = "사용자의 즐겨찾기에 화장품을 추가합니다. [USER 권한 필요]", tags = {"User Profile Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품의 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = User.class))), @ApiResponse(responseCode = "404", description = "사용자 또는 화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))})
     @PostMapping("/favorites/{cosmeticId}")
     public ResponseEntity<User> addToUserFavorite(@Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable String cosmeticId) {
-        try {
-            User updatedUser = userService.addCosmeticById(user.getId(), cosmeticId);
+        return cosmeticRepository.findById(cosmeticId)
+                .map(cosmetic -> {
+                    boolean wasNotFavoriteBefore = !user.getCosmeticIds().contains(cosmeticId);
 
-            // Redis
-            cosmeticRankService.collectFavEvent(cosmeticId);
+                    // Add to user db
+                    var updatedUser = userService.addCosmeticById(user.getId(), cosmeticId);
 
-            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+                    if (wasNotFavoriteBefore) {
+                        // Update cosmetic's favCount only if it was not already a favorite
+                        mongoService.updateFields(cosmeticId, Map.of("favCount", cosmetic.getFavCount() + 1), Cosmetic.class);
+
+                        // Redis
+                        cosmeticRankService.collectFavEvent(cosmeticId);
+                    }
+
+                    return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+                })
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @Operation(summary = "Delete a favourite of User", description = "사용자의 즐겨찾기에 화장품을 삭제합니다. [USER 권한 필요]", tags = {"User Profile Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품의 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = User.class))), @ApiResponse(responseCode = "404", description = "사용자 또는 화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))})
     @DeleteMapping("/favorites/{cosmeticId}")
     public ResponseEntity<User> removeFromUserFavorite(@Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable String cosmeticId) {
-        try {
-            User updatedUser = userService.removeCosmeticById(user.getId(), cosmeticId);
+        return cosmeticRepository.findById(cosmeticId)
+                .map(cosmetic -> {
+                    boolean wasFavoriteBefore = user.getCosmeticIds().contains(cosmeticId);
 
-            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
-        } catch (NoSuchElementException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+                    var updatedUser = userService.removeCosmeticById(user.getId(), cosmeticId);
+
+                    // Check if the cosmetic was actually removed before decrementing favCount
+                    if (wasFavoriteBefore) {
+                        if (cosmetic.getFavCount() != 0) {
+                            // Update cosmetic's favCount only if it was actually removed
+                            mongoService.updateFields(cosmeticId, Map.of("favCount", cosmetic.getFavCount() - 1), Cosmetic.class);
+                        }
+                    }
+
+                    return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+                })
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @Operation(summary = "Get favorites of User", description = "사용자의 즐겨찾기를 전부 불러옵니다. [USER 권한 필요]", tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class))))})
@@ -219,7 +240,7 @@ public class UserController {
 
                                      @Parameter(description = "Profile image file to upload", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, examples = @ExampleObject(name = "file", summary = "A 'binary' file"))) @RequestParam("image") MultipartFile image) {
 
-        String imageUrl = fileStorageService.storeFile(image, "profile/");
+        String imageUrl = fileStorageService.storeFile(image, "profile/", false);
 
         // if not default pics, remove the last one.
         Set<String> defaultPics = Set.of(defaultUserProfilePic, defaultAdminProfilePic);

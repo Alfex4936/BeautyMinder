@@ -9,8 +9,8 @@ import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.TodoRepository;
 import app.beautyminder.repository.UserRepository;
 import app.beautyminder.service.FileStorageService;
-import app.beautyminder.service.review.ReviewService;
 import app.beautyminder.service.cosmetic.CosmeticExpiryService;
+import app.beautyminder.service.review.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -23,7 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -152,11 +155,6 @@ public class UserService {
         return userRepository.findByPhoneNumber(phoneNumber);
     }
 
-    // 권한으로 사용자 목록 조회
-    public List<User> findUsersByAuthority(String authority) {
-        return userRepository.findByAuthority(authority);
-    }
-
     // 이메일과 비밀번호로 사용자 조회 (로그인)
     public User findByEmailAndPassword(String email, String password) {
         return userRepository.findByEmailAndPassword(email, password).orElseThrow(() -> new IllegalArgumentException("이메일 혹은 비밀번호가 틀립니다."));
@@ -166,26 +164,15 @@ public class UserService {
         return userRepository.findById(userId).map(user -> {
             user.addCosmetic(cosmeticId);
             return userRepository.save(user);  // Save the updated user to the database
-        }).orElseThrow(() -> new NoSuchElementException("No user found with id: " + userId));
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No user found with id: " + userId));
     }
 
     public User removeCosmeticById(String userId, String cosmeticId) {
         return userRepository.findById(userId).map(user -> {
             user.removeCosmetic(cosmeticId);
             return userRepository.save(user);  // Save the updated user to the database
-        }).orElseThrow(() -> new NoSuchElementException("No user found with id: " + userId));
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No user found with id: " + userId));
     }
-
-//    public User updateUser(User user, Map<String, Object> updates) {
-//        if (updates.containsKey("nickname")) {
-//            user.setNickname((String) updates.get("nickname"));
-//        }
-//        if (updates.containsKey("profileImage")) {
-//            user.setProfileImage((String) updates.get("profileImage"));
-//        }
-//        return userRepository.save(user);
-//    }
-
 
     /*
     Cascading
@@ -204,7 +191,7 @@ public class UserService {
 
         // Delete user profile picture from S3
         String userProfileImage = user.getProfileImage();
-        if (!userProfileImage.isEmpty() &&
+        if (userProfileImage != null && !userProfileImage.isEmpty() &&
                 !List.of(defaultUserProfilePic, defaultAdminProfilePic).contains(userProfileImage)) {
             fileStorageService.deleteFile(userProfileImage);
         }

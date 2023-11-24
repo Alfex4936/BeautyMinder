@@ -44,10 +44,6 @@ public class TodoService {
         return todoRepository.findByUserId(userId);
     }
 
-    public List<Todo> findTodosByDate(LocalDate date) {
-        return todoRepository.findByDate(date);
-    }
-
     public List<Todo> findTodosByUserIdAndDate(String userId, LocalDate date) {
         return todoRepository.findByUserIdAndDate(userId, date);
     }
@@ -102,7 +98,8 @@ public class TodoService {
                     if (todo.getTasks().isEmpty()) {
                         // If there are no tasks left, remove the Todo
                         mongoTemplate.remove(todo);
-                        throw new ResponseStatusException(HttpStatus.OK, "Todo updated but has no tasks, got deleted");
+                        return null;
+                        // throw new ResponseStatusException(HttpStatus.OK, "Todo updated but has no tasks, got deleted");
                         // Return null or an appropriate response to indicate the Todo was removed
                     } else {
                         // Save the updated Todo

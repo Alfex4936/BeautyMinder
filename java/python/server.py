@@ -29,10 +29,6 @@ model = tf.keras.models.load_model(model_path)
 with open(tokenizer_path, "rb") as f:
     tokenizer = pickle.load(f)
 
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),
-)
-
 SYSTEM_ROLE = os.environ.get("SYSTEM_ROLE")
 
 logger = logging.getLogger(__name__)
@@ -106,6 +102,10 @@ def assistant():
 
 
 def process_review(review):
+    client = OpenAI(
+        api_key=os.environ.get("OPENAI_API_KEY"),
+    )
+
     review_text = review.content
 
     # Calculate offensiveness probability
@@ -175,4 +175,4 @@ def health_check():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("__main__:app", host="0.0.0.0", port=9000, reload=True)
+    uvicorn.run("__main__:app", host="0.0.0.0", port=9000)
