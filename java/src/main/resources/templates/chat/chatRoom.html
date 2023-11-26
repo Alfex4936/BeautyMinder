@@ -181,7 +181,7 @@
     </div>
     <div class="msgArea"></div>
     <div class="chat-input">
-        <input type="text" maxlength="120" id="messageInput" class="form-control" placeholder="보낼 메세지를 입력하세요.">
+        <input disabled type="text" maxlength="120" id="messageInput" class="form-control" placeholder="보낼 메세지를 입력하세요.">
         <button type="button" class="btn btn-primary" onclick="sendMsg()">
             <i class="fas fa-paper-plane"></i> <!-- Send icon -->
         </button>
@@ -196,41 +196,17 @@
 
 <script th:inline="javascript">
     let stompClient = null;
-    let nickname = '';
     /*<![CDATA[*/
+    let nickname = /*[[${user.email}]]*/ '';
     let basic = /*[[${room.name}]]*/ '채팅방';
     /*]]>*/
     let isFirstMessage = true; // Flag to track the first message
 
     window.onload = function () {
-        $('#nicknameModal').modal();
-        // addNotice();
-        // connect(); // Connect to WebSocket after setting the nickname
+        // $('#nicknameModal').modal();
+        addNotice();
+        connect(); // Connect to WebSocket after setting the nickname
     };
-
-    // window.onload = function() {
-    //     // $('#nicknameModal').modal(); // Show the modal on page load
-    //
-    //     // Event listener for the message input
-    //     document.getElementById('messageInput').addEventListener('keypress', function(event) {
-    //         if (event.key === 'Enter' && !event.shiftKey) {
-    //             event.preventDefault(); // Prevent the default action (new line)
-    //             sendMsg(); // Send the message
-    //         }
-    //     });
-    //
-    //     // Global event listener for keyboard shortcuts
-    //     document.addEventListener('keydown', function(event) {
-    //         if (event.key === 'Escape') { //  && event.ctrlKey
-    //             // Show confirmation dialog when Escape key is pressed
-    //             const confirmExit = confirm("정말로 채팅방을 나가시겠습니까?");
-    //             if (confirmExit) {
-    //                 quit();
-    //             }
-    //         }
-    //     });
-    // };
-
 
     function connect() {
         const socket = new SockJS('/ws/chat');
@@ -241,6 +217,10 @@
 
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
+
+            stompClient.subscribe('/user/queue/kick', function (msg) {
+                kick(JSON.parse(msg.body));
+            });
 
             stompClient.subscribe('/topic/room/' + [[${room.roomId}]], function (chat) {
                 showMessage(JSON.parse(chat.body));
@@ -270,7 +250,14 @@
                 }
             });
 
+            let messageInput = document.getElementById('messageInput');
+            messageInput.disabled = false;
+
             enterRoom(); // Call enterRoom here, inside the connect callback
+        }, function (error) {
+            console.error("what is " + error )
+            alert("Unable to connect. Please try again later or check if you are already connected elsewhere.");
+            location.href = "/chat/list";
         });
     }
 
@@ -299,6 +286,17 @@
         // Clear the input field and refocus it
         inputField.value = "";
         inputField.focus(); // Refocus the input field for new input
+    }
+
+    function kick(_msg) {
+        alert("관리자에 의해 추방당했습니다.");
+
+        const roomId = [[${room.roomId}]];
+        const quitMsg = {"type": "QUIT", "roomId": roomId, "sender": "(관리자에 의해) " + nickname, "message": "Bye"};
+        stompClient.send("/app/chat.quit/" + roomId, {}, JSON.stringify(quitMsg));
+        stompClient.disconnect();
+
+        location.href = "/chat/list";
     }
 
     function quit() {
@@ -358,9 +356,6 @@
 
     function showMessageList(messages) {
         console.log("Received list of chat messages:", messages);
-        // Disable the input field
-        let messageInput = document.getElementById('messageInput');
-        messageInput.disabled = true;
 
         try {
             messages.forEach(message => {
@@ -368,9 +363,6 @@
             });
         } catch (error) {
             console.error('Error displaying list of chat messages:', error);
-        } finally {
-            // Re-enable the input field
-            messageInput.disabled = false;
         }
     }
 

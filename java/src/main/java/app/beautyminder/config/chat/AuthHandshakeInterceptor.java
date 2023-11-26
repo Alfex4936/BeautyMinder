@@ -1,54 +1,36 @@
 package app.beautyminder.config.chat;
 
-import app.beautyminder.config.TokenAuthenticationFilter;
-import jakarta.servlet.http.Cookie;
+import app.beautyminder.config.jwt.TokenProvider;
+import app.beautyminder.service.chat.WebSocketSessionManager;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.socket.WebSocketHandler;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.HandshakeInterceptor;
+import org.springframework.web.util.WebUtils;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 
-import static app.beautyminder.config.TokenAuthenticationFilter.HEADER_AUTHORIZATION;
-import static app.beautyminder.config.TokenAuthenticationFilter.TOKEN_PREFIX;
-import static app.beautyminder.config.WebSecurityConfig.REFRESH_TOKEN_COOKIE_NAME;
+import static app.beautyminder.config.TokenAuthenticationFilter.*;
 
 @Slf4j
 @RequiredArgsConstructor
 public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
-
-
-    @Override
-    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                                   WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-        // Extract JWT token from the request header and validate it
-        // If valid, put the authentication object in the attributes map
-        var token = getAccessToken(request);
-        log.info("BEMINDER: token is {}", token);
-
-        return true; // Proceed with the handshake if valid
-    }
-
-    @Override
-    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                               WebSocketHandler wsHandler, Exception exception) {
-        // Post-handshake logic
-    }
+    private final TokenProvider tokenProvider;
+    private final WebSocketSessionManager sessionManager; // Inject the session manager
 
     public static String getAccessToken(ServerHttpRequest request) {
         HttpHeaders headers = request.getHeaders();
         List<String> authorizationHeader = headers.get(HEADER_AUTHORIZATION);
+
 
         if (authorizationHeader != null && !authorizationHeader.isEmpty()) {
             String authHeader = authorizationHeader.get(0);
@@ -57,7 +39,44 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
             }
         }
 
+        // check for cookies too
+        if (request instanceof ServletServerHttpRequest servletRequest) {
+            var accessCookie = WebUtils.getCookie(servletRequest.getServletRequest(), ACCESS_TOKEN_COOKIE);
+            return Objects.requireNonNull(accessCookie).getValue();
+        }
+
         return null;
+    }
+
+    @Override
+    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
+                                   WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+        if (request instanceof ServletServerHttpRequest servletRequest) {
+            String token = getAccessToken(servletRequest);
+            if (token != null && tokenProvider.validToken(token)) {
+                String username = tokenProvider.getUserEmail(token);
+
+                // Check if user already has an active session
+                if (sessionManager.isAlreadyConnected(username)) {
+                    response.setStatusCode(HttpStatus.FORBIDDEN);
+                    response.getHeaders().add("message", "403 duplicated name,");
+                    return false; // Reject the handshake
+                }
+
+                var session = servletRequest.getServletRequest().getSession();
+                sessionManager.registerSession(username, session.getId());
+                attributes.put("username", username); // Storing the username in session attributes
+            } else {
+                return false; // Reject the handshake
+            }
+        }
+        return true; // Proceed with the handshake if valid
+    }
+
+    @Override
+    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
+                               WebSocketHandler wsHandler, Exception exception) {
+        // Post-handshake logic
     }
 
 }

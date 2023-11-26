@@ -72,6 +72,10 @@ public class TokenProvider {
         return claims.get("id", String.class);
     }
 
+    public String getUserEmail(String token) {
+        return getClaims(token).getSubject();
+    }
+
     private Claims getClaims(String token) {
         return Jwts.parser()
                 .setSigningKey(jwtProperties.getSecretKey())

@@ -25,22 +25,26 @@ import java.util.List;
 public class ChatController {
     private final ChatService chatService;
 
+    @GetMapping("/login")
+    public String login(Model model) {
+        return "chat/login";
+    }
 
-//    @PreAuthorize("hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_USER')")
     // @Parameter(hidden = true) @AuthenticatedUser User user
     @GetMapping("/list")
-    public String listChat(Model model) {
+    public String listChat(Model model, @Parameter(hidden = true) @AuthenticatedUser User user) {
         List<ChatRoom> roomList = chatService.findAllRoom();
         model.addAttribute("roomList", roomList);
-//        if (user.getBaumann() != null) {
-//            model.addAttribute("user", user);
-//        }
+        if (user.getBaumann() != null) {
+            model.addAttribute("user", user);
+        }
         return "chat/chatList";
     }
 
-//    @PreAuthorize("hasRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping("/enter")
-    public String enterRoom(Model model, @RequestParam String roomId, RedirectAttributes redirectAttributes) {
+    public String enterRoom(Model model, @RequestParam String roomId, RedirectAttributes redirectAttributes, @Parameter(hidden = true) @AuthenticatedUser User user) {
         ChatRoom room = chatService.findRoomById(roomId);
         if (room == null) {
             redirectAttributes.addFlashAttribute("error", "Room not found");
@@ -56,7 +60,7 @@ public class ChatController {
 //            return "redirect:/chat/list";
 //        }
 
-//        model.addAttribute("user", user);
+        model.addAttribute("user", user);
         model.addAttribute("room", room);
         return "chat/chatRoom";
     }

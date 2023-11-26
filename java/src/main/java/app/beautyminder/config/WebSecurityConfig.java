@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -49,6 +50,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static app.beautyminder.config.TokenAuthenticationFilter.ACCESS_TOKEN_COOKIE;
 import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
@@ -59,8 +61,8 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-    public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(21);
-    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(1);
+    public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
+    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofHours(3);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
 
     private final TokenProvider tokenProvider;
@@ -129,11 +131,13 @@ public class WebSecurityConfig {
         http.formLogin(f -> f.loginPage("/login").usernameParameter("email").passwordParameter("password").permitAll()
 //                .defaultSuccessUrl("/articles")
                 .failureHandler((request, response, exception) -> {
-                    log.warn("Login failed: {}", exception.getMessage());
+                    log.error("Login failed: {}", exception.getMessage());
 
-                    Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);
+                    handleFailure(response);
 
-                    optionalRefreshToken.filter(tokenProvider::validToken).flatMap(refreshTokenService::findUserByRefreshToken).ifPresentOrElse(user -> generateNewAccessTokenAndRespond(user, request, response), () -> handleFailure(response));
+//                    Optional<String> optionalRefreshToken = getRefreshTokenFromRequest(request);
+//
+//                    optionalRefreshToken.filter(tokenProvider::validToken).flatMap(refreshTokenService::findUserByRefreshToken).ifPresentOrElse(user -> generateNewAccessTokenAndRespond(user, request, response), () -> handleFailure(response));
                 }).successHandler(((request, response, authentication) -> {
                     log.info("Login successful for user: {}", authentication.getName());
 
@@ -144,8 +148,10 @@ public class WebSecurityConfig {
                     saveRefreshToken(user, refreshToken);
                     addRefreshTokenToCookie(request, response, refreshToken);
 
+
                     // Generate access token
                     var accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
+                    addAccessTokenToCookie(request, response, accessToken);
                     log.info("ACCESS TOKEN: {}", accessToken);
 
                     response.setContentType("application/json");
@@ -175,7 +181,7 @@ public class WebSecurityConfig {
 
             SecurityContextHolder.getContext().setAuthentication(null);
 
-            response.sendRedirect("/login");
+//            response.sendRedirect("/login");
         })));
 
 
@@ -242,6 +248,15 @@ public class WebSecurityConfig {
         refreshTokenRepository.save(refreshToken);
     }
 
+    private void addAccessTokenToCookie(HttpServletRequest request, HttpServletResponse response, String accessToken) {
+        log.debug("Adding access token to cookie.");
+
+        int cookieMaxAge = (int) ACCESS_TOKEN_DURATION.toSeconds();
+
+        CookieUtil.deleteCookie(request, response, ACCESS_TOKEN_COOKIE);
+        CookieUtil.addCookie(response, ACCESS_TOKEN_COOKIE, accessToken, cookieMaxAge);
+    }
+
     private void addRefreshTokenToCookie(HttpServletRequest request, HttpServletResponse response, String refreshToken) {
         log.debug("Adding refresh token to cookie.");
 
@@ -249,11 +264,6 @@ public class WebSecurityConfig {
 
         CookieUtil.deleteCookie(request, response, REFRESH_TOKEN_COOKIE_NAME);
         CookieUtil.addCookie(response, REFRESH_TOKEN_COOKIE_NAME, refreshToken, cookieMaxAge);
-    }
-
-    private void addAccessTokenToCookie(HttpServletRequest request, HttpServletResponse response, String accessToken) {
-        int cookieMaxAge = (int) ACCESS_TOKEN_DURATION.toSeconds();
-        CookieUtil.addCookie(response, "access_token", accessToken, cookieMaxAge);
     }
 
     private Optional<String> getRefreshTokenFromRequest(@NotNull HttpServletRequest request) {
@@ -275,11 +285,12 @@ public class WebSecurityConfig {
     }
 
     private void handleFailure(HttpServletResponse response) {
-        log.warn("Handling failure, redirecting to login page.");
+        log.error("Handling failure, redirecting to login page.");
 
         // Set the content type of the response to JSON
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+        response.setStatus(HttpStatus.FORBIDDEN.value());
 
         // Create a JSON object with the error message
         String jsonMessage = "{\"msg\":\"Unauthorized. Please provide correct user info.\"}";
@@ -291,11 +302,11 @@ public class WebSecurityConfig {
             throw new RuntimeException(e);
         }
 
-        try {
-            response.sendRedirect("/login?error");
-        } catch (IOException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        }
+//        try {
+//            response.sendRedirect("/login?error");
+//        } catch (IOException e) {
+//            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//        }
     }
 
 }

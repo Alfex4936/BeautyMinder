@@ -54,6 +54,7 @@
           <option value="x-ncp-apigw-timestamp" />
           <option value="New-Refresh-Token" />
           <option value="New-Access-Token" />
+          <option value="message" />
         </set>
       </option>
     </inspection_tool>

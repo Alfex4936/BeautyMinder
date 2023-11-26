@@ -1,13 +1,18 @@
 # Compiled class file
 *.class
 
-loadTest/.env
 redis/redis.conf
 logstash/pipeline/spring-boot-logs.conf
 redis.env
 spring.env
 python.env
 google-beautyminder.json
+copy.ps1
+docker.ps1
+spring-boot-logs.conf
+ec2/
+loadTest/.env
+openapi.json
 
 # Log file
 *.log

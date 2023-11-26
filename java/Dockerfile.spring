@@ -6,7 +6,6 @@ RUN rm -f /usr/app/beautyminder-1.0.jar
 
 # Copy the JAR file into the image
 COPY beautyminder-1.0.jar /usr/app/beautyminder-1.0.jar
-COPY google-beautyminder.json /usr/app/google-beautyminder.json
 
 # Set the working directory
 WORKDIR /usr/app

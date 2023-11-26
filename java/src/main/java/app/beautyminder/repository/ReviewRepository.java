@@ -14,6 +14,9 @@ import java.util.Optional;
 
 public interface ReviewRepository extends MongoRepository<Review, String> {
 
+    @Query(value = "{ 'isFiltered': true }")
+    List<Review> findAllFiltered();
+
     @Query(value = "{ 'user.$id': ?0 }")
     List<Review> findByUserId(ObjectId userId);
     List<Review> findByUser(User user);
