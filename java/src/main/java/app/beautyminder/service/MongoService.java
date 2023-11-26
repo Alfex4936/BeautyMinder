@@ -1,6 +1,7 @@
 package app.beautyminder.service;
 
 import app.beautyminder.domain.CosmeticExpiry;
+import app.beautyminder.domain.Review;
 import app.beautyminder.domain.Todo;
 import app.beautyminder.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class MongoService {
         // Initialize the map with banned fields for each class
         bannedFieldsPerClass.put(Todo.class, Set.of("user"));
         bannedFieldsPerClass.put(User.class, Set.of("password", "email"));
+//        bannedFieldsPerClass.put(Review.class, Set.of("isFiltered", "nlpAnalysis"));
         bannedFieldsPerClass.put(CosmeticExpiry.class, Set.of("id", "createdAt"));
     }
 

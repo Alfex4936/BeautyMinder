@@ -1,22 +1,22 @@
 version: '3.8'
 services:
-#  python-fastapi:
-#    container_name: beauty-fastapi
-#    build:
-#      context: ./python
-#      dockerfile: Dockerfile.python
-#    ports:
-#      - "9000:9000"
-#    env_file:
-#      - python.env
-#    links:
-#      - redis
-#    healthcheck:
-#      test: [ "CMD-SHELL", "curl -f http://localhost:9000/health || exit 1" ]
-#      interval: 15s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 10s
+  python-fastapi:
+    container_name: beauty-fastapi
+    build:
+      context: ./python
+      dockerfile: Dockerfile.python
+    ports:
+      - "9000:9000"
+    env_file:
+      - python.env
+    links:
+      - redis
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9000/health || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   spring-boot:
     container_name: beauty-spring-boot
@@ -28,8 +28,10 @@ services:
         condition: service_healthy
       logstash:
         condition: service_healthy
-#      python-fastapi:
-#        condition: service_started
+      python-fastapi:
+        condition: service_started
+    volumes:
+      - ./google-beautyminder.json:/usr/app/google-beautyminder.json
     env_file:
       - spring.env
     ports:

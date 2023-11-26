@@ -4,72 +4,144 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta charset="UTF-8">
     <title>바우만 소통방 | BeautyMinder</title>
-    <!-- Include Bootstrap CSS -->
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
 
     <style>
-        .logo {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .btn-primary {
-            background-color: #e5b000; /* Custom primary color */
-            border-color: #e5b000; /* Custom primary color for border */
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa; /* Soft background color */
         }
 
-        .btn-primary:hover,
-        .btn-primary:focus,
-        .btn-primary:active {
-            background-color: #cc9e00 !important; /* Darker shade of #e5b000 */
-            border-color: #cc9e00 !important; /* Darker shade of #e5b000 */
+        .logout {
+            color: black !important;
+        }
+
+        .card-body {
+            padding: 1.5rem !important;
+        }
+
+        .card {
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); /* Card shadow for depth */
+            transition: 0.3s; /* Transition for hover effect */
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2); /* Larger shadow on hover */
+        }
+
+        .btn-custom {
+            background-color: #e5b000; /* Custom button color */
+            border-color: #e5b000;
+            color: white !important;
+        }
+
+        .btn-custom:hover {
+            background-color: #cc9e00;
+            border-color: #cc9e00;
+        }
+
+        .logo img {
+            max-width: 100%; /* Responsive image */
+            height: auto;
+        }
+
+        .relative-container {
+            position: relative; /* Make the position relative for absolute positioning inside */
+            padding-top: 20px;
+        }
+
+        .logout-container {
+            position: absolute; /* Position the logout button absolutely */
+            top: 20px; /* Position from the top of the relative container */
+            right: 20px; /* Position from the right of the relative container */
+            z-index: 100; /* Ensure it's above other content */
         }
     </style>
 </head>
 <body>
-<!-- User Alert -->
-<div id="userAlert" th:if="${user}" class="alert alert-info" role="alert">
-    <p th:text="${user.getEmail() + '님 (' + user.getBaumann() + ') 어서오세요.'}"></p>
-</div>
 
-<!-- Error Alert -->
-<div id="errorAlert" th:if="${error}" class="alert alert-danger" role="alert">
-    <p th:text="${error}"></p>
-</div>
+<div class="relative-container">
+    <div class="container">
+        <!-- Logout Button -->
+        <div class="logout-container">
+            <button type="button" class="btn btn-link logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> <!-- Logout icon -->
+            </button>
+        </div>
 
-<div class="container mt-4">
-    <div class="col-12 logo">
-        <img alt="BeautyMinder Logo" src="img/logo.png" style="max-width: 250px; max-height: 250px;"
-             th:src="@{/img/logo.png}"/>
-    </div>
-    <h2 class="mb-3">채팅방 목록</h2>
-    <div class="row">
-        <div th:each="room, iterStat : ${roomList}" class="col-md-3 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title" th:text="${room.name}">Room name</h5>
-                    <!-- Replace colon with line break -->
-                    <p class="card-text" style="font-size: smaller; font-style: italic;">
-                        <span th:utext="${#strings.replace(room.description, ':', '<br>')}"></span>
-                    </p>
-                </div>
-                <div class="card-footer">
-                    <a class="btn btn-primary" th:href="@{enter(roomId=${room.roomId})}">입장하기</a>
+        <!-- User Alert -->
+        <div id="userAlert" th:if="${user}" class="alert alert-info text-center">
+            <p th:text="${user.getEmail() + '님 (' + (user.getBaumann() ?: '알 수 없음') + ') 어서오세요.'}"></p>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="errorAlert" th:if="${error}" class="alert alert-danger text-center">
+            <p th:text="${error}"></p>
+        </div>
+
+        <div class="text-center mb-4 logo">
+            <img alt="BeautyMinder Logo" src="img/logo.png" style="max-width: 250px; max-height: 250px;"
+                 th:src="@{/img/logo.png}"/>
+        </div>
+
+        <h2 class="mb-3 text-center">채팅방 목록</h2>
+
+        <div class="row">
+            <div th:each="room : ${roomList}" class="col-md-4 col-sm-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${room.name}">Room name</h5>
+                        <p class="card-text" th:utext="${#strings.replace(room.description, ':', '<br>')}"></p>
+                    </div>
+                    <div class="card-footer">
+                        <!-- Call enterRoom with roomId when the button is clicked -->
+                        <button class="btn btn-custom btn-block" th:data-room-id="${room.roomId}" onclick="enterRoom(this.getAttribute('data-room-id'))">입장하기</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>-->
+<!-- Bootstrap and jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-<script>
-    $(document).ready(function() {
-        setTimeout(function() {
-            $('#errorAlert').fadeOut('slow');
-        }, 5000); // 5000 milliseconds = 5 seconds
+<script th:inline="javascript">
+    $(document).ready(function () {
+        $('#errorAlert').delay(5000).fadeOut('slow');
     });
+
+    function enterRoom(roomId) {
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+            alert('No token found, please log in again.');
+            window.location.href = '/chat/login';
+            return;
+        }
+
+        window.location.href = '/chat/enter?roomId=' + encodeURIComponent(roomId);
+    }
+
+    function logout() {
+        // Send a POST request to the server to log the user out
+        fetch('/logout', {
+            method: 'POST'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Logout failed');
+                }
+                // Clear JWT token from local storage
+                localStorage.removeItem('jwtToken');
+                // Redirect to the home page or login page
+                window.location.href = '/chat/login';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
 </script>
 
 </body>

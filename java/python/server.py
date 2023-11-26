@@ -6,40 +6,13 @@ import pickle
 import re
 import time
 
-import tensorflow as tf
 from fastapi import FastAPI
-from korcen import korcen
 from openai import OpenAI
 from pydantic import BaseModel, ConfigDict
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # or any {'0', '1', '2'}
-tf.keras.utils.disable_interactive_logging()
 
 app = FastAPI()
 
-# mongo_client = AsyncIOMotorClient("mongodb://localhost:27017")
-# db = mongo_client.your_db_name
-maxlen = 1000  # 모델마다 값이 다름
-
-model_path = "vdcnn_model_with_kogpt2.h5"
-tokenizer_path = "tokenizer_with_kogpt2.pickle"
-
-model = tf.keras.models.load_model(model_path)
-with open(tokenizer_path, "rb") as f:
-    tokenizer = pickle.load(f)
-
 SYSTEM_ROLE = os.environ.get("SYSTEM_ROLE")
-
-logger = logging.getLogger(__name__)
-
-def predict_text(text):
-    encoded_sentence = tokenizer.encode_plus(
-        text, max_length=maxlen, padding="max_length", truncation=True
-    )["input_ids"]
-    sentence_seq = pad_sequences([encoded_sentence], maxlen=maxlen, truncating="post")
-    prediction = model.predict(sentence_seq)[0][0]
-    return prediction
 
 
 def clean_text(text):
@@ -108,13 +81,6 @@ def process_review(review):
 
     review_text = review.content
 
-    # Calculate offensiveness probability
-    overall_offensiveness_probability = round(
-        (korcen.check(review_text) + predict_text(review_text)) / 2, 2  # 0.00
-    )
-    is_filtered = bool(overall_offensiveness_probability >= 0.8)
-
-    logger.info(f"FASTAPI: dealing with {review_text[:12]}")
     # Filter similarities above threshold K and create a dictionary with the results
     response = client.chat.completions.create(
         response_format={"type": "json_object"},
@@ -151,12 +117,10 @@ def process_review(review):
         frequency_penalty=0,
         presence_penalty=0,
     )
-    logger.info(f"FASTAPI: done with {review_text[:12]}")
 
     nlpanalysis = json.loads(response.choices[0].message.content)
 
     return {
-        "isFiltered": is_filtered,
         "nlpAnalysis": nlpanalysis["nlpAnalysis"],
     }
 

@@ -1,8 +1,4 @@
-tensorflow
-torch
 pymongo
 fastapi
-korcen
-sentence-transformers
 uvicorn
 openai

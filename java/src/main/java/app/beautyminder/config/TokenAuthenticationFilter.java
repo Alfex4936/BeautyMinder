@@ -34,13 +34,14 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     public final static String HEADER_AUTHORIZATION = "Authorization";
     public final static String NEW_HEADER_AUTHORIZATION = "New-Access-Token";
     public final static String NEW_XRT_AUTHORIZATION = "New-Refresh-Token";
+    public final static String ACCESS_TOKEN_COOKIE = "Access-Token";
     public final static String TOKEN_PREFIX = "Bearer ";
     private static final Pattern UNPROTECTED_SWAGGER_API =
             Pattern.compile("^/(vision|swagger-ui|v3/api-docs|proxy|search/test)(/.*)?$");
     private static final Pattern UNPROTECTED_API =
-            Pattern.compile("^/(test|cosmetic/hit|cosmetic/click|chat|ws)(/.*)?$");
+            Pattern.compile("^/(test|cosmetic/hit|cosmetic/click|ws)(/.*)?$");
     private static final Pattern TEST_PROTECTED_API =
-            Pattern.compile("^/(actuator|expiry|admin|gpt/review/summarize|es-index|data-view|todo|review|baumann/test|baumann/history|recommend|search|user|redis/eval|redis/batch|redis/product)(/.*)?$");
+            Pattern.compile("^/(chat|actuator|expiry|admin|gpt/review/summarize|es-index|data-view|todo|review|baumann/test|baumann/history|recommend|search|user|redis/eval|redis/batch|redis/product)(/.*)?$");
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -166,7 +167,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if ("BEARER_TOKEN".equals(cookie.getName())) {
+                if (ACCESS_TOKEN_COOKIE.equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }
