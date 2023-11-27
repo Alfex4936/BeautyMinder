@@ -1,0 +1,295 @@
+import 'package:beautyminder/dto/baumann_model.dart';
+import 'package:beautyminder/pages/baumann/baumann_result_page.dart';
+import 'package:beautyminder/widget/baumannTestAppBar.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
+import '../../config.dart';
+import '../../services/baumann_service.dart';
+import '../../services/shared_service.dart';
+
+class BaumannTestPage extends StatefulWidget {
+  const BaumannTestPage({Key? key, required this.data}) : super(key: key);
+
+  final SurveyWrapper data;
+
+  @override
+  _BaumannTestPageState createState() => _BaumannTestPageState();
+}
+
+class _BaumannTestPageState extends State<BaumannTestPage> {
+  int currentPage = 0; // 현재 페이지 인덱스
+  List<QuestionPage> pages = [];
+  Map<String, int?> selectedOptionIndices = {};
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 페이지 목록을 생성합니다.
+    for (String surveyKey in widget.data.surveys.keys) {
+      BaumannSurveys survey = widget.data.surveys[surveyKey]!;
+      pages.add(QuestionPage(surveyKey, survey.questionKr, survey.options));
+      selectedOptionIndices[surveyKey] = null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (pages.isEmpty) {
+      return Scaffold(
+        appBar: BaumannTestAppBar(),
+        body: const Center(
+          child: Text('페이지가 없습니다.'),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: BaumannTestAppBar(),
+      body: baumannTestUI(),
+    );
+  }
+
+  Widget baumannTestUI() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10), // 좌우 여백 10
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 60), // 위 여백 추가
+          _textUIs(),
+          SizedBox(height: 80), // 아래 여백 추가
+          _btnType(),
+        ],
+      ),
+    );
+
+    // return Column(
+    //   crossAxisAlignment: CrossAxisAlignment.start,
+    //   children: [
+    //     SizedBox(height: 100), // 여백 추가
+    //     _textUIs(),
+    //     SizedBox(height: 80), // 여백 추가
+    //     _btnType(),
+    //   ],
+    // );
+  }
+
+  Widget _textUIs() {
+    QuestionPage currentPageData = pages[currentPage];
+    int? selectedOptionIndex = selectedOptionIndices[currentPageData.surveyKey];
+
+    return ListTile(
+      title: Text(
+        '문항 번호 : ${currentPageData.surveyKey}',
+        style: TextStyle(
+          color: Color(0xffd86a04),
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 30), // 여백 추가
+          Text(
+            '문제 : ${currentPageData.question}',
+            style: TextStyle(
+              color: Color(0xff545454),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 80), // 여백 추가
+          Column(
+            children: currentPageData.options.asMap().entries.map((entry) {
+              int index = entry.key + 1;
+              Option option = entry.value;
+              return RadioListTile(
+                value: index,
+                groupValue: selectedOptionIndex,
+                onChanged: (int? value) {
+                  setState(() {
+                    selectedOptionIndices[currentPageData.surveyKey] = value;
+                  });
+                },
+                title: Text(
+                  '선택지 ${option.option} : ${option.description}',
+                  style: TextStyle(
+                    color: Color(0xff545454),
+                    fontSize: 18,
+                  ),
+                ),
+              );
+            }).toList(),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _btnType() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        if (currentPage > 0 && currentPage != pages.length - 1) _prevBtn(),
+        if (currentPage < pages.length - 1) _nextBtn(),
+        if (currentPage == pages.length - 1) _resultBtn(),
+      ],
+    );
+  }
+
+  Widget _prevBtn() {
+    return ElevatedButton(
+      onPressed: previousPage,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xffff820e),
+        elevation: 0,
+      ),
+      child: const Text(
+        '이전',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+        ),
+      ),
+    );
+  }
+
+  Widget _nextBtn() {
+    return ElevatedButton(
+      onPressed: nextPage,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xffff820e),
+        elevation: 0,
+      ),
+      child: const Text(
+        '다음',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+        ),
+      ),
+    );
+  }
+
+  Widget _resultBtn() {
+    return ElevatedButton(
+      onPressed: () async {
+        print('Selected Option Indices : ');
+        selectedOptionIndices.forEach((key, value) {
+          print('$key: ${value != null ? value + 1 : null}');
+        });
+        // 새로 추가한 함수 호출: 선택된 데이터를 백엔드로 보내기
+        await sendSurveyToBackend(selectedOptionIndices);
+
+        // Navigator.of(context).push(MaterialPageRoute(builder: (context) => const BaumannResultPage()));
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xffff820e),
+        elevation: 0,
+      ),
+      child: const Text(
+        '결과보기',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+        ),
+      ),
+    );
+  }
+
+  // 새로운 함수: 데이터를 백엔드로 전송
+  Future<void> sendSurveyToBackend(Map<String, int?> surveyData) async {
+    // 유저 정보 가지고 오기
+    final user = await SharedService.getUser();
+
+    // AccessToken가지고오기
+    final accessToken =
+        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJiZWF1dHltaW5kZXIiLCJpYXQiOjE2OTk5NDQ2MzksImV4cCI6MTcwMDU0OTQzOSwic3ViIjoidG9rZW5AdGVzdCIsImlkIjoiNjU1MGFmZWYxYWI2ZDU4YjNmMTVmZTFjIn0.-tq20j-ZRmL9WRdBZEPrELjpxrbOJ0JUztzfGHCwLKM";
+    //refreshToken 가지고오기
+    final refreshToken =
+        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJiZWF1dHltaW5kZXIiLCJpYXQiOjE2OTk5NDQ2MzksImV4cCI6MTcwMTE1NDIzOSwic3ViIjoidG9rZW5AdGVzdCIsImlkIjoiNjU1MGFmZWYxYWI2ZDU4YjNmMTVmZTFjIn0.dAXFUJI2vpjiQKakrRC_UTqgpG_BD_Df4vOeQq46HWQ";
+
+    // user.id가 있으면 userId에 user.id를 저장 없으면 -1을 저장
+    final userId = user?.id ?? '-1';
+
+    final url = Uri.http(Config.apiURL, Config.baumannTestAPI).toString();
+
+    final headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
+    };
+
+    try {
+      // JSON 데이터 생성
+      final jsonData = {
+        "responses": surveyData,
+      };
+
+      // 백엔드로 JSON 데이터 전송
+      final response =
+          await BaumannService.postJson(url, jsonData, headers: headers);
+
+      // 응답 처리
+      if (response.statusCode == 200) {
+        // 성공적으로 전송됨
+        // 이후 결과 페이지로 이동하거나 다른 작업을 수행
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => BaumannResultPage(resultData: response)));
+        print(response);
+      } else {
+        // 전송 실패 또는 오류 발생
+        // 오류 메시지를 사용자에게 표시
+        Fluttertoast.showToast(
+          msg: '서버로 데이터를 전송하는 중 문제가 발생했습니다',
+          gravity: ToastGravity.CENTER,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
+      }
+    } catch (e) {
+      // 예외 처리
+      print('An error occurred: $e');
+    }
+  }
+
+  void nextPage() {
+    int? selectedOptionIndex =
+        selectedOptionIndices[pages[currentPage].surveyKey];
+
+    if (selectedOptionIndex == null) {
+      // 옵션이 선택되지 않았을 때 Toast 메시지 표시
+      Fluttertoast.showToast(
+        msg: '항목이 선택되지 않았습니다',
+        gravity: ToastGravity.CENTER,
+        backgroundColor: Colors.grey,
+        textColor: Colors.white,
+      );
+      return;
+    } else {
+      setState(() {
+        if (currentPage < pages.length - 1) {
+          currentPage++;
+        }
+      });
+    }
+  }
+
+  void previousPage() {
+    setState(() {
+      if (currentPage > 0) {
+        currentPage--;
+      }
+    });
+  }
+}
+
+class QuestionPage {
+  final String surveyKey;
+  final String question;
+  final List<Option> options;
+
+  QuestionPage(this.surveyKey, this.question, this.options);
+}
