@@ -4,7 +4,7 @@ import 'package:beautyminder/services/auth_service.dart';
 import 'package:dio/dio.dart'; // DIO 패키지를 이용해 HTTP 통신
 
 import '../../config.dart';
-import '../dto/todo_model.dart';
+import '../dto/baumann_model.dart';
 import 'shared_service.dart';
 
 class BaumannService {
@@ -35,7 +35,7 @@ class BaumannService {
   }
 
   // Get All Surveys
-  static Future<Result<List<Todo>>> getAllSurveys() async {
+  static Future<Result<List<Baumann>>> getAllSurveys() async {
     final user = await SharedService.getUser();
     final accessToken = await SharedService.getAccessToken();
     final refreshToken = await SharedService.getRefreshToken();
@@ -43,7 +43,7 @@ class BaumannService {
 
     // Create the URI with the query parameter
     final url =
-    Uri.http(Config.apiURL, Config.todoAPI, {'userId': userId}).toString();
+    Uri.http(Config.apiURL, Config.baumannSurveyAPI, {'userId': userId}).toString();
 
     final headers = {
       'Authorization': 'Bearer $accessToken',
@@ -69,62 +69,17 @@ class BaumannService {
           return Result.failure("Unexpected response data type");
         }
 
-        print("Todo response: $decodedResponse");
-        if (decodedResponse.containsKey('todos')) {
-          List<dynamic> todoList = decodedResponse['todos'];
-          List<Todo> todos =
-          todoList.map((data) => Todo.fromJson(data)).toList();
-          print(todos);
-          return Result.success(todos);
+        print("Baumann response: $decodedResponse");
+        if (decodedResponse.containsKey('surveys')) {
+          List<dynamic> surveyList = decodedResponse['surveys'];
+          List<Baumann> surveys =
+          surveyList.map((data) => Baumann.fromJson(data)).toList();
+          print(surveys);
+          return Result.success(surveys);
         }
-        return Result.failure("Failed to get todos: No todos key in response");
+        return Result.failure("Failed to get surveys: No surveys key in response");
       }
-      return Result.failure("Failed to get todos");
-    } catch (e) {
-      return Result.failure("An error occurred: $e");
-    }
-  }
-
-  // Add a new Todo
-  static Future<Result<Todo>> addTodo(Todo todo) async {
-    final accessToken = await SharedService.getAccessToken();
-    final refreshToken = await SharedService.getRefreshToken();
-
-    final url = Uri.http(Config.apiURL, Config.todoAddAPI).toString();
-    final headers = {
-      'Authorization': 'Bearer $accessToken',
-      'Cookie': 'XRT=$refreshToken',
-    };
-
-    try {
-      final response = await _postJson(url, todo.toJson(), headers: headers);
-      return Result.success(Todo.fromJson(jsonDecode(response.data)));
-    } catch (e) {
-      return Result.failure("An error occurred: $e");
-    }
-  }
-
-  // Delete a Todo
-  static Future<Result<String>> deleteTodo(String todoId) async {
-    final accessToken = await SharedService.getAccessToken();
-    final refreshToken = await SharedService.getRefreshToken();
-
-    final url =
-    Uri.http(Config.apiURL, Config.todoDelAPI + todoId).toString();
-    final headers = {
-      'Authorization': 'Bearer $accessToken',
-      'Cookie': 'XRT=$refreshToken',
-    };
-
-    try {
-      final response = await client.delete(
-        url,
-        options: _httpOptions('DELETE', headers),
-      );
-      if (response.statusCode == 200) {
-        return Result.success("Todo deleted successfully");
-      }
-      return Result.failure("Failed to delete todo");
+      return Result.failure("Failed to get surveys");
     } catch (e) {
       return Result.failure("An error occurred: $e");
     }
