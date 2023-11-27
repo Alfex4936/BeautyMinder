@@ -23,16 +23,29 @@ class SearchAppBar extends AppBar {
           child: TextField(
             decoration: InputDecoration(
               contentPadding: EdgeInsets.symmetric(
-                vertical: 1,
-                horizontal: 8,
+                vertical: 5,
+                horizontal: 15,
               ),
-              border: OutlineInputBorder(
+              // border: OutlineInputBorder(
+              //   borderRadius: BorderRadius.all(
+              //     Radius.circular(10),
+              //   ),
+              // ),
+              focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.all(
-                  Radius.circular(1),
+                  Radius.circular(10), //포커스 시
                 ),
                 borderSide: BorderSide(
                   color: Color(0xffd86a04),
-                )
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(10), // 활성화 상태 모서리를 둥글게 조정
+                ),
+                borderSide: BorderSide(
+                  color: Colors.grey,
+                ),
               ),
               hintText: "검색 키워드를 입력해주세요.",
             ),
@@ -58,8 +71,8 @@ class SearchAppBar extends AppBar {
     //   "BeautyMinder",
     //   style: TextStyle(color: Color(0xffd86a04)),
     // ),
-    // iconTheme: IconThemeData(
-    //   color: Color(0xffd86a04),
-    // ),
+    iconTheme: IconThemeData(
+      color: Color(0xffd86a04),
+    ),
   );
 }
