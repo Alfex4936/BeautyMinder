@@ -5,37 +5,35 @@ BeautyMinder is the culmination of our capstone design class, commenced in Septe
 A cosmetic recommendation app, meticulously tuned to individual skin types as determined through the Baumann skin type assessment.
 
 # Team Members 👥
-| Name          | Student ID | Role             | Major                     |
-|---------------|------------|------------------|---------------------------|
-| **Jieun Lee** ([LeeZEun](https://github.com/LeeZEun)) | 202020719  | Frontend         | Software Engineering      |
-| **Suji Bae** ([Bae-suji](https://github.com/Bae-suji))  | 201620984  | Frontend         | Software Engineering      |
-| **Yoon Wook Cho** ([yoonwook](https://github.com/yoonwook))|201720730| Frontend         | Software Engineering      |
-| **Heesang Kwak** ([KWAKMANBO](https://github.com/KWAKMANBO))|202022311 | Frontend         | Software Engineering      |
-| **Seok Won Choi** ([Alfex4936](https://github.com/Alfex4936))|201720710| Backend          | Software Engineering      |
+| Name                                                          | Role           | Major                     |
+|---------------------------------------------------------------|----------------|---------------------------|
+| **Jieun Lee** ([LeeZEun](https://github.com/LeeZEun))         | Frontend        | Software Engineering      |
+| **Suji Bae** ([Bae-suji](https://github.com/Bae-suji))        | Frontend         | Software Engineering      |
+| **Yoon Wook Cho** ([yoonwook](https://github.com/yoonwook))   | Frontend         | Software Engineering      |
+| **Heesang Kwak** ([KWAKMANBO](https://github.com/KWAKMANBO))  | Frontend         | Software Engineering      |
+| **Seok Won Choi** ([Alfex4936](https://github.com/Alfex4936)) | Backend          | Software Engineering      |
 
 # Technology Stack 🛠️
 
-| Area                  | Technology                                      |
-|-----------------------|-------------------------------------------------|
-| **Frontend Framework**| Flutter                                         |
-| **Backend Server**    | AWS EC2 (Docker: Spring Boot v3.1+Redis+Logstash)            |
-| **Database**          | MongoDB (hosted on Atlas)|
-| **Real-Time Metrics** | Redis                                           |
-| **Search Engine**     | Elasticsearch (AWS OpenSearch)                                   |
-| **Data Visualization**| Kibana (AWS OpenSearch Dashboard)                                          |
-| **Text Summarization**| GPT-4 API                                        |
-| **Notification Svcs** | Naver Cloud SMS API, SMTP Protocol              |
-| **CI/CD**             | GitHub Actions                                  |
+> [!IMPORTANT]
+> Spring Boot v3.1.3, ELK
+
+| Area                 | Technology                                                                                                                                                                      |
+|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Frontend** | [Flutter](https://flutter.dev/)                                                                                                                                                 |
+| **Backend**    | [AWS EC2](https://aws.amazon.com/ko/ec2/) (Docker: Spring Boot+Redis+Logstash+FastAPI)                                                                                          |
+| **Database**         | MongoDB (hosted on [Atlas](https://www.mongodb.com/ko-kr/atlas/database)), [AWS S3](https://aws.amazon.com/ko/s3/)                                                              |
+| **Real-Time Metrics** | [Redis](https://redis.io/)                                                                                                                                                      |
+| **WebSocket**        | [STOMP](https://github.com/stomp-js/stompjs)                                                                                                                                    |
+| **Search Engine**    | Elasticsearch ([AWS OpenSearch](https://aws.amazon.com/ko/what-is/opensearch/))                                                                                                 |
+| **Log analysis**     | [Logstash](https://www.elastic.co/kr/logstash), Kibana ([AWS OpenSearch Dashboard](https://docs.aws.amazon.com/ko_kr/opensearch-service/latest/developerguide/dashboards.html)) |
+| **Text Summarization** | [GPT API](https://platform.openai.com/docs/guides/text-generation)                                                                                                              |
+| **Image OCR**        | [Google Cloud Vision](https://cloud.google.com/vision?hl=ko)                                                                                                                    |
+| **Notification Svcs** | [Naver Cloud SMS API](https://api.ncloud-docs.com/docs/ai-application-service-sens-smsv2), SMTP Protocol                                                                        |
+| **DevOps**           | [JUnit5](https://junit.org/junit5/), [Locust](https://locust.io/), [GitHub Actions](https://github.com/features/actions)                                                        |
 
 # System Architecture 🏗️
 ![SA](https://github.com/beminder/BeautyMinder/assets/2356749/71bbf6e8-dadf-4ba3-ba08-d1faacc4bde5)
-
-## Detailed Breakdown 🔍
-- **Redis**: Harnesses real-time metrics like product click counters, search hit counters, and favorite counters, utilizing pipeline/batch methods for data collection.
-- **MongoDB**: The cornerstone for data persistence.
-- **Elasticsearch**: The search conduit within the app, empowering users to delve into product data based on cosmetic name, brand name, category, keywords, and review texts.
-- **Kibana**: The lens to our data, illustrating the narrative encoded in Elasticsearch data.
-- **GPT-4 API**: Our text maestro, summarizing reviews for each cosmetic product, categorized by high and low ratings for a nuanced understanding of user feedback.
 
 # Baumann Skin Type Survey
 ![types](https://cdn.shopify.com/s/files/1/0740/5984/1838/files/img_1_-_16-baumann-skin-types_800x.png?v=1689709313)
@@ -119,3 +117,10 @@ The final skin type is a string concatenation of the individual skin type descri
 $$
 \text{{Final Skin Type}} = \text{{Skin Type from A}} + \text{{Skin Type from B}} + \text{{Skin Type from C}} + \text{{Skin Type from D}}
 $$
+
+# Elasticsearch
+
+> [!IMPORTANT]
+> 은전한닢 + N-gram 
+
+![image](https://github.com/LeeZEun/beautyMinder/assets/2356749/b80069c3-7b96-4c80-a2c3-8600d258819a)
