@@ -14,6 +14,19 @@ class CosmeticSearchWidget extends StatefulWidget {
 class _CosmeticSearchWidgetState extends State<CosmeticSearchWidget> {
   List<Cosmetic> cosmetics = [];
   String query = '';
+  late FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   void _search() async {
     if (query.isNotEmpty) {
@@ -40,6 +53,7 @@ class _CosmeticSearchWidgetState extends State<CosmeticSearchWidget> {
         title: Container(
           height: 40,
           child: TextField(
+            focusNode: _focusNode,
             onChanged: (text) {
               query = text;
             },
@@ -48,6 +62,9 @@ class _CosmeticSearchWidgetState extends State<CosmeticSearchWidget> {
             },
             decoration: InputDecoration(
               hintText: '화장품을 검색하세요',
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xffd86a04)),
+              ),
             ),
           ),
         ),
@@ -57,7 +74,11 @@ class _CosmeticSearchWidgetState extends State<CosmeticSearchWidget> {
         actions: [
           IconButton(
             icon: Icon(Icons.search),
-            onPressed: _search,
+            onPressed: () {
+              _search();
+              // 텍스트 필드에 포커스를 주고자 할 때
+              _focusNode.requestFocus();
+            },
           ),
         ],
       ),
