@@ -16,13 +16,12 @@ class ExpiryInputDialog extends StatefulWidget {
 class _ExpiryInputDialogState extends State<ExpiryInputDialog> {
   bool isOpened = false;
   //DateTime expiryDate = DateTime.now().add(Duration(days: 365));
-  DateTime? expiryDate;
-  DateTime? openedDate;
+  DateTime? expiryDate = DateTime.now();
+  DateTime? openedDate = DateTime.now(); // 개봉 날짜 기본값
 
   String formatDate(DateTime date) {
     return DateFormat('yyyy-MM-dd').format(date);
   }
-
 
   Future<void> _selectDate(BuildContext context, {bool isExpiryDate = true}) async {
     final DateTime? picked = await showDatePicker(
