@@ -1,5 +1,4 @@
 import 'package:beautyminder/dto/delete_request_model.dart';
-import 'package:beautyminder/dto/update_request_model.dart';
 import 'package:beautyminder/dto/user_model.dart';
 import 'package:beautyminder/pages/my/user_info_modify_page.dart';
 import 'package:beautyminder/pages/my/widgets/my_divider.dart';
@@ -9,6 +8,7 @@ import 'package:beautyminder/services/api_service.dart';
 import 'package:beautyminder/services/shared_service.dart';
 import 'package:beautyminder/widget/commonAppBar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class UserInfoPage extends StatefulWidget {
   UserInfoPage({super.key});
@@ -46,8 +46,10 @@ class _UserInfoPageState extends State<UserInfoPage> {
     return Scaffold(
         appBar: CommonAppBar(),
         body: isLoading
-            ? Center(
-                child: Text('로딩 중'),
+            ? SpinKitThreeInOut(
+                color: Color(0xffd86a04),
+                size: 50.0,
+                duration: Duration(seconds: 2),
               )
             : Stack(
                 children: [
@@ -68,10 +70,10 @@ class _UserInfoPageState extends State<UserInfoPage> {
                         UserInfoItem(
                             title: '전화번호', content: user!.phoneNumber ?? ''),
                         MyDivider(),
-                        SizedBox(height: 150),
+                        SizedBox(height: 200),
                       ])),
                   Positioned(
-                    bottom: 10, // 원하는 위치에 배치
+                    bottom: 70, // 원하는 위치에 배치
                     left: 10, // 원하는 위치에 배치
                     right: 10, // 원하는 위치에 배치
                     child: Padding(
@@ -85,13 +87,17 @@ class _UserInfoPageState extends State<UserInfoPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFFF820E),
                               ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const UserInfoModifyPage()),
-                                );
+                              onPressed: () async {
+                                if (user != null) {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            UserInfoModifyPage()),
+                                  );
+
+                                  getUserInfo();
+                                }
                               },
                               child: const Text('회원정보 수정'),
                             ),
@@ -132,6 +138,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
 class UserInfoProfile extends StatelessWidget {
   final String nickname;
   final String profileImage;
+
   const UserInfoProfile(
       {super.key, required this.nickname, required this.profileImage});
 
@@ -141,15 +148,10 @@ class UserInfoProfile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          // SizedBox(
-          //   width: 50,
-          //   child: Image.asset(
-          //     'assets/images/profile.jpg', // profileImage,
-          //     errorBuilder: (context, error, stackTrace) {
-          //       return Image.asset('assets/images/profile.jpg');
-          //     },
-          //   ),
-          // ),
+          CircleAvatar(
+            radius: 30,
+            backgroundImage: NetworkImage(profileImage!),
+          ),
           // Container(
           //     width: 58,
           //     height: 58,

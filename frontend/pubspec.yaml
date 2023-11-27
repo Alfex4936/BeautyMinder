@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=2.17.0 <3.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -29,17 +29,41 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^1.1.0
   snippet_coder_utils: ^1.0.9
   flutter_secure_storage: ^9.0.0
+
+  flutter_rating_bar: ^4.0.1
+
+  equatable: ^2.0.5
+  flutter_bloc: ^8.1.0
+  bloc_test: ^9.0.3
 
   fluttertoast: ^8.2.2
 
   #Network
   dio: ^5.3.3
+  flutter_inappwebview: ^5.8.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
+  #google_fonts: ˆ5.1.0
+  kg_charts: ^0.0.4
+  carousel_slider: ^4.0.0
+  intl: ^0.18.1
+  file_picker: ^6.1.1
+  flutter_spinkit: ^5.1.0
+  flutter_svg: ^2.0.9
+  flutter_slidable: ^3.0.1
+  image_picker: ^0.8.4
+  provider: ^6.1.1
+  shared_preferences: ^2.0.8
+  webview_flutter: ^4.2.0
+  webview_flutter_wkwebview: ^3.9.4
+  table_calendar: ^3.0.9
+  marquee: ^2.0.0
+
 
 dev_dependencies:
   flutter_test:
@@ -50,7 +74,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^1.0.0
+  flutter_lints: ^2.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -93,3 +117,18 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+  fonts:
+    - family: Oswald
+      fonts:
+        - asset: assets/fonts/Oswald-Bold.ttf
+          weight: 100
+        - asset: assets/fonts/Oswald-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Oswald-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Oswald-Medium.ttf
+          weight: 400
+        - asset: assets/fonts/Oswald-Regular.ttf
+          weight: 500
+        - asset: assets/fonts/Oswald-SemiBold.ttf
+          weight: 600

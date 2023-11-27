@@ -1,29 +1,66 @@
-class Baumann {
-  Baumann({
-    required this.questions,
+class SurveyWrapper {
+  Map<String, BaumannSurveys> surveys;
+
+  SurveyWrapper({required this.surveys});
+
+  factory SurveyWrapper.fromJson(Map<String, dynamic> json) {
+    Map<String, BaumannSurveys> surveysMap =
+        json.map((key, value) => MapEntry(key, BaumannSurveys.fromJson(value)));
+
+    return SurveyWrapper(surveys: surveysMap);
+  }
+
+  Map<String, dynamic> toJson() {
+    return surveys.map((key, value) => MapEntry(key, value.toJson()));
+  }
+}
+
+class BaumannSurveys {
+  final String questionKr;
+  final List<Option> options;
+
+  BaumannSurveys({
+    required this.questionKr,
+    required this.options,
   });
 
-  late final Map<String, dynamic> questions;
-
-  @override
-  String toString() {
-    return 'Baumann { questions: $questions }';
+  Map<String, dynamic> toJson() {
+    return {
+      'question_kr': questionKr,
+      'options': options.map((option) => option.toJson()).toList(),
+    };
   }
 
-  factory Baumann.fromJson(Map<String, dynamic> json) {
-    return Baumann(
-      questions: Map<String, dynamic>.from(json),
+  factory BaumannSurveys.fromJson(Map<String, dynamic> json) {
+    return BaumannSurveys(
+      questionKr: json['question_kr'],
+      options: (json['options'] as List)
+          .map((item) => Option.fromJson(item))
+          .toList(),
     );
   }
+}
 
-  //백으로 전송
+class Option {
+  final int option;
+  final String description;
+
+  Option({
+    required this.option,
+    required this.description,
+  });
+
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> json = {
-      'reponses': {},
+    return {
+      'option': option,
+      'description': description,
     };
-    questions.forEach((key, value) {
-      json['responses'][key]=value['option'];
-    });
-    return json;
+  }
+
+  factory Option.fromJson(Map<String, dynamic> json) {
+    return Option(
+      option: json['option'],
+      description: json['description'],
+    );
   }
 }

@@ -1,20 +1,15 @@
-import 'package:beautyminder/dto/todo_model.dart';
 import 'package:beautyminder/pages/todo/todo_page.dart';
-import 'package:beautyminder/services/todo_service.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:logging/logging.dart';
 
 import '../../dto/task_model.dart';
+import '../../dto/todo_model.dart';
 import '../../services/api_service.dart';
+import '../../services/todo_service.dart';
 import '../../widget/commonAppBar.dart';
 import '../../widget/commonBottomNavigationBar.dart';
 import '../home/home_page.dart';
 import '../my/my_page.dart';
 import '../pouch/expiry_page.dart';
-import '../recommend/recommend_bloc_screen.dart';
-import 'calendar_page.dart';
-
 
 class TodoAddPage extends StatefulWidget {
   const TodoAddPage({Key? key}) : super(key: key);
@@ -31,9 +26,9 @@ class _TodoAddPage extends State<TodoAddPage> {
   List<String> categorys = [];
   Todo? todo;
   DateTime? picked;
+  bool isEmptyTextField = false;
 
   late List<Task> tasks;
-  final Logger _log = Logger('TodoAddPage');
 
   @override
   void initState() {
@@ -41,7 +36,7 @@ class _TodoAddPage extends State<TodoAddPage> {
     super.initState();
     _controllers.add(TextEditingController());
     _dateController.text = DateTime.now().toString().substring(0, 10);
-    _toggleSelections.add([false, false, false]);
+    _toggleSelections.add([false, false, true]);
     picked = DateTime.parse(_dateController.text);
   }
 
@@ -58,7 +53,7 @@ class _TodoAddPage extends State<TodoAddPage> {
     setState(() {
       // 새로운 TextEditingContrller을 추가
       _controllers.add(TextEditingController());
-      _toggleSelections.add([false, false, false]);
+      _toggleSelections.add([false, false, true]);
     });
   }
 
@@ -111,7 +106,13 @@ class _TodoAddPage extends State<TodoAddPage> {
       return Task(category: category, description: description, done: false);
     });
 
-    return tasks;
+    for (int i = 0; i < tasks.length; i++) {
+      if (tasks[i].description.isEmpty) {
+        tasks.removeAt(i);
+      }
+    }
+
+    return tasks.length < 1 ? [] : tasks;
   }
 
   Todo? createRoutine() {
@@ -122,9 +123,9 @@ class _TodoAddPage extends State<TodoAddPage> {
 
   String getCategory(List<bool> categorys) {
     if (categorys[0]) {
-      return "morning";
-    } else if (categorys[1]) {
       return "dinner";
+    } else if (categorys[1]) {
+      return "morning";
     } else {
       return "other";
     }
@@ -141,12 +142,18 @@ class _TodoAddPage extends State<TodoAddPage> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
                     createRoutine();
-                    TodoService.addTodo(todo!);
+
+                    if (tasks.length == 0) {
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) => const CalendarPage()));
+                    } else {
+                      await TodoService.addTodo(todo!);
 
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const CalendarPage()));
+                    }
                   },
                   icon: const Icon(Icons.add_box_rounded,
                       size: 50, color: Color(0xffd86a04)),
@@ -164,13 +171,18 @@ class _TodoAddPage extends State<TodoAddPage> {
                   child: AbsorbPointer(
                     child: TextField(
                       controller: _dateController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
+                          prefixStyle: TextStyle(color: Color(0xffd86a04)),
                           labelText: 'Date',
                           hintText: 'Date',
-                          icon: Icon(Icons.calendar_month),
+                          icon: const Icon(
+                            Icons.calendar_month,
+                            color: Color(0xffd86a04),
+                          ),
                           border: OutlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.amber, width: 1.0)),
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                  color: Colors.black, width: 1.0)),
                           contentPadding: EdgeInsets.all(3)),
                     ),
                   ),
@@ -187,11 +199,16 @@ class _TodoAddPage extends State<TodoAddPage> {
                         child: TextField(
                           controller: controller,
                           decoration: InputDecoration(
-                            labelText: 'Todo $index',
-                            hintText: 'Enter Todo $index',
-                            icon: const Icon(Icons.add_task_sharp),
-                            border: const OutlineInputBorder(),
-                          ),
+                              labelText: 'Todo $index',
+                              hintText: 'Enter Todo $index',
+                              icon: const Icon(Icons.add_task_sharp,
+                                  color: Color(0xffd86a04)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              focusedBorder: const OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Colors.amber, width: 2.0))),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -199,10 +216,12 @@ class _TodoAddPage extends State<TodoAddPage> {
                         isSelected: _toggleSelections[index],
                         onPressed: (int buttonIndex) {
                           setState(() {
-                            for (int i = 0;
-                                i < _toggleSelections[index].length;
-                                i++) {
-                              _toggleSelections[index][i] = i == buttonIndex;
+                            if (!_toggleSelections[index][buttonIndex]) {
+                              for (int i = 0;
+                                  i < _toggleSelections[index].length;
+                                  i++) {
+                                _toggleSelections[index][i] = i == buttonIndex;
+                              }
                             }
                           });
                         },
@@ -273,27 +292,25 @@ class _TodoAddPage extends State<TodoAddPage> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        child: CommonBottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (int index) async {
-            // 페이지 전환 로직 추가
-            if (index == 1) {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => CosmeticExpiryPage()));
-            }
-            else if (index == 2) {
-              final userProfileResult = await APIService.getUserProfile();
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => HomePage(user: userProfileResult.value)));
-            }
-            else if (index == 3) {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const TodoPage()));
-            }
-            else if (index == 4) {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const MyPage()));
-            }
-          },
-        ),
+      bottomNavigationBar: CommonBottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (int index) async {
+          // 페이지 전환 로직 추가
+          if (index == 1) {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => CosmeticExpiryPage()));
+          } else if (index == 2) {
+            final userProfileResult = await APIService.getUserProfile();
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => HomePage(user: userProfileResult.value)));
+          } else if (index == 3) {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const CalendarPage()));
+          } else if (index == 4) {
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => const MyPage()));
+          }
+        },
       ),
     );
   }

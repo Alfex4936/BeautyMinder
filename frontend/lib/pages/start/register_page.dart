@@ -1,17 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:beautyminder/dto/login_request_model.dart';
 import 'package:beautyminder/dto/register_request_model.dart';
-import 'package:beautyminder/services/api_service.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:snippet_coder_utils/FormHelper.dart';
 import 'package:snippet_coder_utils/ProgressHUD.dart';
-import 'package:snippet_coder_utils/hex_color.dart';
 
-<<<<<<< HEAD:frontend/lib/pages/register_page.dart
-import '../config.dart';
-=======
 import '../../config.dart';
-import 'package:http/http.dart' as http;
->>>>>>> 21eb18a (Feat: Make Page Folders):frontend/lib/pages/start/register_page.dart
+import '../../services/api_service.dart';
+import '../../widget/registerAppBar.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -21,183 +16,15 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-<<<<<<< HEAD:frontend/lib/pages/register_page.dart
-=======
-
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController idController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  bool isButtonEnabled() {
-    return nameController.text.isNotEmpty &&
-        emailController.text.isNotEmpty &&
-        phoneController.text.isNotEmpty &&
-        idController.text.isNotEmpty &&
-        passwordController.text.isNotEmpty;
-  }
-
-  Widget _entryField(String title, TextEditingController controller,{bool isPassword = false}) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            title,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-          ),
-          SizedBox(
-            height: 10,
-          ),
-          TextField(
-              controller: controller,
-              onChanged: (text) {
-                setState(() {}); //text 변경시에 화면 다시 그림
-              },
-              obscureText: isPassword,
-              decoration: InputDecoration(
-                  border: InputBorder.none,
-                  fillColor: Color(0xfff3f3f4),
-                  filled: true))
-        ],
-      ),
-    );
-  }
-
-
-  Future<String> tryRegister(String name, String email,String phone, String id, String password) async {
-    try {
-      var request_body = jsonEncode(
-          {
-            "name" : "${name}",
-            "email" : "${email}",
-            "phone" : "${phone}",
-            "id" : "${id}",
-            "password" : "${password}"
-          });
-
-      print(request_body);
-      final response = await http.post(
-        // Uri.parse("/user/signup"),
-        Uri.parse("http://118.34.170.132:8080/user/signup"),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: request_body,
-      );
-      print(response.body);
-      // if (response.statusCode != 201) {
-      //   throw Exception("Failed to send data");
-      // } else {
-      //   print("User Data sent successfully");
-      //   Get.to(const HomePage());
-      // }
-    } catch (e) {
-      print("Failed to send post data: ${e}");
-    }
-    return "signup check";
-  }
-
-
-  Widget _submitButton() {
-    return InkWell(
-      onTap: isButtonEnabled() ? () {
-
-        // nameController),
-        // _entryField("이메일 입력", emailController),
-        // _entryField("전화번호 입력", phoneController),
-        // _entryField("아이디 입력", idController),
-        // _entryField("비밀번호 입력", passwordController
-
-        tryRegister(nameController.text,emailController.text,phoneController.text,idController.text,passwordController.text);
-
-      } : null,
-      child: Container(
-        width: MediaQuery.of(context).size.width,
-        padding: EdgeInsets.symmetric(vertical: 15),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(5)),
-          border: Border.all(
-            color: isButtonEnabled() ? Color(0xfffe9738) : Colors.grey,
-            width: 2,
-          ),
-        ),
-        child: Text(
-          '회원가입',
-          style: TextStyle(
-            fontSize: 20,
-            color: isButtonEnabled() ? Color(0xfffe9738) : Colors.grey,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _loginAccountLabel() {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => LoginPage()));
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 20),
-        padding: EdgeInsets.all(15),
-        alignment: Alignment.bottomCenter,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              '이미 등록된 계정이 있으신가요 ?',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-            ),
-            SizedBox(
-              width: 10,
-            ),
-            Text(
-              '로그인하기',
-              style: TextStyle(
-                  color: Color(0xfff79c4f),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-  Widget _emailPasswordWidget() {
-    return Column(
-      children: <Widget>[
-        _entryField("이름 입력", nameController),
-        _entryField("이메일 입력", emailController),
-        _entryField("전화번호 입력", phoneController),
-        _entryField("아이디 입력", idController),
-        _entryField("비밀번호 입력", passwordController, isPassword: true),
-      ],
-    );
-  }
-
-
-
-  ///////////////////////
->>>>>>> 21eb18a (Feat: Make Page Folders):frontend/lib/pages/start/register_page.dart
   bool isApiCallProcess = false;
   bool hidePassword = true;
   static final GlobalKey<FormState> globalFormKey = GlobalKey<FormState>();
 
   String? email;
   String? password;
+  String? checkpassword;
   String? nickname;
+  String? phoneNumber;
 
   @override
   void initState() {
@@ -206,236 +33,352 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: HexColor("#283B71"),
-        body: ProgressHUD(
-          child: Form(
-            key: globalFormKey,
-            child: _registerUI(context),
-          ),
-          inAsyncCall: isApiCallProcess,
-          opacity: 0.3,
-          key: UniqueKey(),
+    return Scaffold(
+      appBar: RegisterAppBar(),
+      backgroundColor: Colors.white,
+      body: ProgressHUD(
+        child: Form(
+          key: globalFormKey,
+          child: _registerUI(context),
+        ),
+        inAsyncCall: isApiCallProcess,
+        opacity: 0.3,
+        key: UniqueKey(),
+      ),
+    );
+  }
+
+  // 로그인 UI
+  Widget _registerUI(BuildContext context) {
+    return SingleChildScrollView(
+      // SingleChildScrollView로 감싼다
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        height: MediaQuery.of(context).size.height,
+        child: Column(
+          children: <Widget>[
+            SizedBox(height: 50),
+            _buildEmailField(),
+            SizedBox(height: 30),
+            _buildNumberField(),
+            SizedBox(height: 30),
+            _buildNicknameField(),
+            SizedBox(height: 30),
+            _buildPasswordField(),
+            SizedBox(height: 20),
+            _buildPasswordCheckField(),
+            SizedBox(height: 60),
+            _buildRegisterButton(),
+            SizedBox(height: 50),
+            _buildOrText(),
+            SizedBox(height: 30),
+            _buildSignupText(),
+          ],
         ),
       ),
     );
   }
 
-  Widget _registerUI(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height / 5.2,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white,
-                  Colors.white,
-                ],
-              ),
-              borderRadius: BorderRadius.only(
-                bottomRight: Radius.circular(100),
-                bottomLeft: Radius.circular(100),
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: Center(
-                    child: Text(
-                      "beautyMinder",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 40,
-                        color: HexColor("#283B71"),
-                      ),
-                    ),
-                  ),
-                ),
-                // Align(
-                //   alignment: Alignment.center,
-                //   child: Image.asset(
-                //     "assets/images/ShoppingAppLogo.png",
-                //     fit: BoxFit.contain,
-                //     width: 250,
-                //   ),
-                // ),
-              ],
-            ),
+  // 이메일 필드
+  Widget _buildEmailField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "이메일 입력",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 16,
           ),
-          const Padding(
-            padding: EdgeInsets.only(left: 20, bottom: 30, top: 50),
-            child: Text(
-              "Register",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 25,
-                color: Colors.white,
+        ),
+        SizedBox(height: 5), // 제목과 입력 필드 사이의 간격 조절
+        TextFormField(
+          validator: (val) => val!.isEmpty ? '이메일이 입력되지 않았습니다.' : null,
+          onChanged: (val) => email = val,
+          obscureText: false,
+          style: TextStyle(color: Colors.black),
+          decoration: InputDecoration(
+            hintText: "이메일을 입력하세요.",
+            hintStyle: TextStyle(color: Colors.grey.withOpacity(0.7)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: Color(0xffd86a04), // 클릭 시 테두리 색상 변경
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: FormHelper.inputFieldWidget(
-              context,
-              "email",
-              "Email",
-              (onValidateVal) {
-                if (onValidateVal.isEmpty) {
-                  return 'Email can\'t be empty.';
-                }
+        ),
+      ],
+    );
+  }
 
-                return null;
-              },
-              (onSavedVal) => {
-                email = onSavedVal,
-              },
-              initialValue: "",
-              borderFocusColor: Colors.white,
-              prefixIconColor: Colors.white,
-              borderColor: Colors.white,
-              textColor: Colors.white,
-              hintColor: Colors.white.withOpacity(0.7),
-              borderRadius: 10,
-              prefixIcon: const Icon(Icons.mail),
-            ),
+  // 전화번호 필드
+  Widget _buildNumberField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "전화번호 입력",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 16,
           ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: FormHelper.inputFieldWidget(
-              context,
-              "password",
-              "Password",
-              (onValidateVal) {
-                if (onValidateVal.isEmpty) {
-                  return 'Password can\'t be empty.';
-                }
-
-                return null;
-              },
-              (onSavedVal) => {
-                password = onSavedVal,
-              },
-              initialValue: "",
-              obscureText: hidePassword,
-              borderFocusColor: Colors.white,
-              prefixIconColor: Colors.white,
-              borderColor: Colors.white,
-              textColor: Colors.white,
-              hintColor: Colors.white.withOpacity(0.7),
-              borderRadius: 10,
-              prefixIcon: const Icon(Icons.lock),
-              suffixIcon: IconButton(
-                onPressed: () {
-                  setState(() {
-                    hidePassword = !hidePassword;
-                  });
-                },
-                color: Colors.white.withOpacity(0.7),
-                icon: Icon(
-                  hidePassword ? Icons.visibility_off : Icons.visibility,
-                ),
+        ),
+        SizedBox(height: 5), // 제목과 입력 필드 사이의 간격 조절
+        TextFormField(
+          validator: (val) => val!.isEmpty ? '전화번호가 입력되지 않았습니다.' : null,
+          onChanged: (val) => phoneNumber = val,
+          obscureText: false,
+          style: TextStyle(color: Colors.black),
+          decoration: InputDecoration(
+            hintText: "전화번호를 입력하세요.(- 없이 입력하세요.)",
+            hintStyle: TextStyle(color: Colors.grey.withOpacity(0.7)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: Color(0xffd86a04), // 클릭 시 테두리 색상 변경
               ),
             ),
           ),
-          // Adding Nickname field
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: FormHelper.inputFieldWidget(
-              context,
-              "nickName",
-              "Nickname (Optional)",
-                  (onValidateVal) => null,
-                  (onSavedVal) => {
-                nickname = onSavedVal,
-              },
-              initialValue: "",
-              borderFocusColor: Colors.white,
-              prefixIconColor: Colors.white,
-              borderColor: Colors.white,
-              textColor: Colors.white,
-              hintColor: Colors.white.withOpacity(0.7),
-              borderRadius: 10,
-              prefixIcon: const Icon(Icons.person),
+        ),
+      ],
+    );
+  }
+
+  // 닉네임 필드
+  Widget _buildNicknameField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "닉네임 입력",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 16,
+          ),
+        ),
+        SizedBox(height: 5), // 제목과 입력 필드 사이의 간격 조절
+        TextFormField(
+          validator: (val) => val!.isEmpty ? '닉네임이 입력되지 않았습니다.' : null,
+          onChanged: (val) => nickname = val,
+          obscureText: false,
+          style: TextStyle(color: Colors.black),
+          decoration: InputDecoration(
+            hintText: "사용하실 닉네임을 입력하세요.",
+            hintStyle: TextStyle(color: Colors.grey.withOpacity(0.7)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: Color(0xffd86a04), // 클릭 시 테두리 색상 변경
+              ),
             ),
           ),
+        ),
+      ],
+    );
+  }
 
-          const SizedBox(
-            height: 20,
+  // 비밀번호 필드
+  Widget _buildPasswordField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "비밀번호 입력",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 16,
           ),
-          Center(
-            child: FormHelper.submitButton(
-              "Register",
-              () {
-                if (validateAndSave()) {
-                  setState(() {
-                    isApiCallProcess = true;
-                  });
-
-                  RegisterRequestModel model = RegisterRequestModel(
-                    // username: userName,
-                    password: password,
-                    email: email,
-                  );
-
-                  APIService.register(model).then(
-                    (result) {
-                      setState(() {
-                        isApiCallProcess = false;
-                      });
-
-                      if (result.value != null) {
-                        FormHelper.showSimpleAlertDialog(
-                          context,
-                          Config.appName,
-                          "Registration Successful. Please login to the account",
-                          "OK",
-                          () {
-                            Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              '/',
-                              (route) => false,
-                            );
-                          },
-                        );
-                      } else {
-                        FormHelper.showSimpleAlertDialog(
-                          context,
-                          Config.appName,
-                          result.error ?? "Registration Failed",
-                          "OK",
-                          () {
-                            Navigator.of(context).pop();
-                          },
-                        );
-                      }
-                    },
-                  );
-                }
+        ),
+        SizedBox(height: 5),
+        TextFormField(
+          onChanged: (val) => password = val,
+          validator: (val) => val!.isEmpty ? '비밀번호가 입력되지 않았습니다.' : null,
+          obscureText: hidePassword,
+          style: TextStyle(color: Colors.black),
+          decoration: InputDecoration(
+            hintText: "비밀번호를 입력하세요.",
+            hintStyle: TextStyle(color: Colors.grey.withOpacity(0.7)),
+            suffixIcon: IconButton(
+              onPressed: () {
+                setState(() {
+                  hidePassword = !hidePassword;
+                });
               },
-              btnColor: HexColor("283B71"),
-              borderColor: Colors.white,
-              txtColor: Colors.white,
-              borderRadius: 10,
+              color: hidePassword
+                  ? Colors.grey.withOpacity(0.7)
+                  : Color(0xffd86a04),
+              icon: Icon(
+                hidePassword ? Icons.visibility_off : Icons.visibility,
+                color: hidePassword
+                    ? Colors.grey.withOpacity(0.7)
+                    : Color(0xffd86a04),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: Color(0xffd86a04), // 클릭 시 테두리 색상 변경
+              ),
             ),
           ),
-          const SizedBox(
-            height: 20,
+        ),
+      ],
+    );
+  }
+
+  // 비밀번호 확인 필드
+  Widget _buildPasswordCheckField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextFormField(
+          onChanged: (val) => checkpassword = val,
+          validator: (val) {
+            if (val!.isEmpty) {
+              return '비밀번호가 입력되지 않았습니다.';
+            } else if (val != password) {
+              return '비밀번호가 일치하지 않습니다.';
+            }
+            return null;
+          },
+          obscureText: hidePassword,
+          style: TextStyle(color: Colors.black),
+          decoration: InputDecoration(
+            hintText: "비밀번호를 한번 더 입력하세요.",
+            hintStyle: TextStyle(color: Colors.grey.withOpacity(0.7)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: Color(0xffd86a04), // 클릭 시 테두리 색상 변경
+              ),
+            ),
           ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  // 회원가입 버튼
+  Widget _buildRegisterButton() {
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    return InkWell(
+      child: Container(
+        width: screenWidth, // 원하는 너비 설정
+        height: 50, // 원하는 높이 설정
+        decoration: BoxDecoration(
+          color: Color(0xfffe9738), // 버튼 배경색 설정
+          borderRadius: BorderRadius.circular(10.0), // 원하는 모양 설정
+        ),
+        child: Center(
+          child: Text(
+            "등록하기",
+            style: TextStyle(
+              color: Colors.white, // 텍스트 색상 설정
+              fontSize: 18, // 텍스트 크기 설정
+            ),
+          ),
+        ),
+      ),
+      onTap: () async {
+        if (validateAndSave()) {
+          setState(() {
+            isApiCallProcess = true;
+          });
+
+          RegisterRequestModel model = RegisterRequestModel(
+            email: email,
+            phoneNumber: phoneNumber,
+            nickname: nickname,
+            password: password,
+          );
+
+          APIService.register(model).then(
+            (result) {
+              setState(() {
+                isApiCallProcess = false;
+              });
+
+              if (result.value != null) {
+                FormHelper.showSimpleAlertDialog(
+                  context,
+                  Config.appName,
+                  "가입이 완료되었습니다.",
+                  "확인",
+                  () {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/login',
+                      (route) => false,
+                    );
+                  },
+                );
+              } else {
+                FormHelper.showSimpleAlertDialog(
+                  context,
+                  Config.appName,
+                  result.error ?? "Register Failed",
+                  "OK",
+                  () {
+                    Navigator.of(context).pop();
+                  },
+                );
+              }
+            },
+          );
+        }
+      },
+    );
+  }
+
+  // OR 텍스트
+  Widget _buildOrText() {
+    return const Center(
+      child: Text(
+        "OR",
+        style: TextStyle(
+          fontSize: 15,
+          color: Colors.black,
+        ),
       ),
     );
   }
 
+  // 로그인 텍스트
+  Widget _buildSignupText() {
+    return Align(
+      alignment: Alignment.center,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 25),
+        child: RichText(
+          text: TextSpan(
+            style: const TextStyle(color: Colors.black, fontSize: 14.0),
+            children: <TextSpan>[
+              const TextSpan(text: '이미 등록된 계정이 있으신가요? '),
+              TextSpan(
+                text: '로그인',
+                style: const TextStyle(
+                  color: Color(0xffd86a04),
+                  fontWeight: FontWeight.bold,
+                ),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () {
+                    Navigator.pushNamed(context, '/login');
+                  },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 입력 유효성 검사
   bool validateAndSave() {
     final form = globalFormKey.currentState;
     if (form!.validate()) {

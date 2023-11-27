@@ -1,5 +1,5 @@
-import 'package:beautyminder/dto/baumann_model.dart';
 import 'package:beautyminder/dto/gptReview_model.dart';
+import 'package:beautyminder/services/shared_service.dart';
 import 'package:dio/dio.dart';
 
 import '../../config.dart';
@@ -22,15 +22,32 @@ class GPTReviewService {
   }
 
   static Future<Result<GPTReviewInfo>> getGPTReviews(String id) async {
+    // 로그인 상세 정보 가져오기
+    final user = await SharedService.getUser();
+    // AccessToken가지고오기
+    final accessToken = await SharedService.getAccessToken();
+    final refreshToken = await SharedService.getRefreshToken();
+
+    final userId = user?.id ?? '-1';
 
     // URL 생성
-    final url = Uri.http(Config.apiURL, '${Config.getGPTReviewAPI}/$id').toString();
+    final url =
+        Uri.http(Config.apiURL, '${Config.getGPTReviewAPI}/$id').toString();
     print("******$url\n");
+
+    // 헤더 설정
+    final headers = {
+      'Authorization': 'Bearer ${Config.acccessToken}',
+      'Cookie': 'XRT=${Config.refreshToken}',
+      // 'Authorization': 'Bearer $accessToken',
+      // 'Cookie': 'XRT=$refreshToken',
+    };
+
     try {
       // GET 요청
       final response = await client.get(
         url,
-        // options: _httpOptions('GET', headers),
+        options: _httpOptions('GET', headers),
       );
 
       print("hehehehehehh-----$response");
@@ -38,7 +55,8 @@ class GPTReviewService {
       if (response.statusCode == 200) {
         // 정보 파싱
         // final user = SurveyWrapper.fromJson(response.data as Map<String, dynamic>);
-        final gptReviewInfo = GPTReviewInfo.fromJson(response.data as Map<String, dynamic>);
+        final gptReviewInfo =
+            GPTReviewInfo.fromJson(response.data as Map<String, dynamic>);
         print("dfdssdfsdfsfdsfdsfds\n");
         print(gptReviewInfo);
         print("aaaa\n");
@@ -52,7 +70,6 @@ class GPTReviewService {
       return Result.failure("An error occurred: $e");
     }
   }
-
 }
 
 // 결과 클래스

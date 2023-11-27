@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart';
-import 'register_page.dart';
 
 class WelcomePage extends StatefulWidget {
   WelcomePage({Key? key, this.title}) : super(key: key);

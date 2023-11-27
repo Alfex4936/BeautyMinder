@@ -1,6 +1,5 @@
 import 'package:beautyminder/dto/task_model.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/cupertino.dart';
 
 import '../dto/todo_model.dart';
 
@@ -10,6 +9,7 @@ abstract class TodoState extends Equatable {
   final List<Todo>? todos;
   final Todo? todo; // 삭제, 수정에 사용될 객체
   final Task? task;
+
 
   const TodoState({this.isError = false, this.todos, this.todo, this.task});
 }

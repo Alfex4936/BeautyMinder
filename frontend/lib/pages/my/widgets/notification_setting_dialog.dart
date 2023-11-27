@@ -1,10 +1,10 @@
 import 'package:beautyminder/services/shared_service.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class NotificationSettingDialog extends StatefulWidget {
   @override
-  _NotificationSettingDialogState createState() => _NotificationSettingDialogState();
+  _NotificationSettingDialogState createState() =>
+      _NotificationSettingDialogState();
 }
 
 class _NotificationSettingDialogState extends State<NotificationSettingDialog> {
@@ -42,7 +42,13 @@ class _NotificationSettingDialogState extends State<NotificationSettingDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('알림 설정', style: TextStyle(fontSize: 20, fontFamily: 'NanumGothic', fontWeight: FontWeight.w700),),
+      title: Text(
+        '알림 설정',
+        style: TextStyle(
+            fontSize: 20,
+            fontFamily: 'NanumGothic',
+            fontWeight: FontWeight.w700),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
@@ -69,7 +75,6 @@ class _NotificationSettingDialogState extends State<NotificationSettingDialog> {
               ),
             ],
           ),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -93,7 +98,6 @@ class _NotificationSettingDialogState extends State<NotificationSettingDialog> {
               ),
             ],
           ),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -118,7 +122,6 @@ class _NotificationSettingDialogState extends State<NotificationSettingDialog> {
               ),
             ],
           ),
-
         ],
       ),
       actions: <Widget>[
@@ -151,7 +154,8 @@ class _DdayDropDownMenuState extends State<DdayDropDownMenu> {
 
   Future<void> readData() async {
     try {
-      String dropdownStorageValue = await SharedService.getString('d-day') ?? '3';
+      String dropdownStorageValue =
+          await SharedService.getString('d-day') ?? '3';
 
       setState(() {
         dropdownValue = dropdownStorageValue;
@@ -168,7 +172,7 @@ class _DdayDropDownMenuState extends State<DdayDropDownMenu> {
       print(e);
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return DropdownButton<String>(
@@ -194,8 +198,20 @@ class _DdayDropDownMenuState extends State<DdayDropDownMenu> {
           dropdownValue = newValue!;
         });
       },
-      items: <String>['3', '5', '7', '10', '15', '20', '30', '60', '90', '120', '180', '365']
-          .map<DropdownMenuItem<String>>((String value) {
+      items: <String>[
+        '3',
+        '5',
+        '7',
+        '10',
+        '15',
+        '20',
+        '30',
+        '60',
+        '90',
+        '120',
+        '180',
+        '365'
+      ].map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
           value: value,
           child: Center(child: Text(value)),

@@ -1,18 +1,12 @@
+import 'package:beautyminder/pages/home/home_page.dart';
+import 'package:beautyminder/widget/loginAppBar.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:snippet_coder_utils/FormHelper.dart';
 import 'package:snippet_coder_utils/ProgressHUD.dart';
-import 'package:snippet_coder_utils/hex_color.dart';
 
-<<<<<<< HEAD:frontend/lib/pages/login_page.dart
-import '../services/api_service.dart';
-import '../config.dart';
-import '../dto/login_request_model.dart';
-=======
-import '../../services/api_service.dart';
 import '../../dto/login_request_model.dart';
->>>>>>> 21eb18a (Feat: Make Page Folders):frontend/lib/pages/start/login_page.dart
+import '../../services/api_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -27,21 +21,38 @@ class _LoginPageState extends State<LoginPage> {
   GlobalKey<FormState> globalFormKey = GlobalKey<FormState>();
   String? email;
   String? password;
-  String? nickname; // 별명 필드 추가
+
+  FocusNode emailFocusNode = FocusNode();
+  FocusNode passwordFocusNode = FocusNode();
+
+  Color emailIconColor = Colors.grey.withOpacity(0.7);
+  Color passwordIconColor = Colors.grey.withOpacity(0.7);
+
+  @override
+  void initState() {
+    super.initState();
+    email = "token@test";
+    password = '1234';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: HexColor("#283B71"),
-        body: ProgressHUD(
-          child: Form(
-            key: globalFormKey,
-            child: _loginUI(context),
-          ),
-          inAsyncCall: isApiCallProcess,
-          opacity: 0.3,
-          key: UniqueKey(),
+    return Scaffold(
+      appBar: LoginAppBar(),
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            ProgressHUD(
+              child: Form(
+                key: globalFormKey,
+                child: _loginUI(context),
+              ),
+              inAsyncCall: isApiCallProcess,
+              opacity: 0.3,
+              key: UniqueKey(),
+            )
+          ],
         ),
       ),
     );
@@ -49,49 +60,35 @@ class _LoginPageState extends State<LoginPage> {
 
   // 로그인 UI
   Widget _loginUI(BuildContext context) {
-    return SingleChildScrollView(
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      height: MediaQuery.of(context).size.height,
       child: Column(
         children: <Widget>[
-          _buildHeader(), // 헤더 구성
+          SizedBox(height: 200), // 여백 추가
           _buildEmailField(), // 이메일 필드
+
+          SizedBox(height: 30), // 여백 추가
           _buildPasswordField(), // 비밀번호 필드
+
+          SizedBox(height: 50), // 여백 추가
           _buildForgetPassword(), // 비밀번호 찾기
+
+          SizedBox(height: 20), // 여백 추가
           _buildLoginButton(), // 로그인 버튼
+
+          SizedBox(height: 50), // 여백 추가
           _buildOrText(), // OR 텍스트
+
+          SizedBox(height: 20), // 여백 추가
           _buildSignupText(), // 회원가입 텍스트
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return const Padding(
-      padding: EdgeInsets.only(left: 20, bottom: 30, top: 50),
-      child: Text(
-        "Login",
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 25,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-
-  // 이메일 필드
+  // Update _buildEmailField method
   Widget _buildEmailField() {
-<<<<<<< HEAD:frontend/lib/pages/login_page.dart
-    return FormHelper.inputFieldWidget(
-      context,
-      "email",
-      "Email",
-      (val) => val.isEmpty ? 'Email can\'t be empty.' : null,
-      (val) => email = val,
-      obscureText: false,
-      textColor: Colors.white,
-      hintColor: Colors.white.withOpacity(0.7),
-      prefixIcon: const Icon(Icons.person),
-=======
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -103,86 +100,104 @@ class _LoginPageState extends State<LoginPage> {
             fontSize: 16,
           ),
         ),
-        SizedBox(height: 5), // 제목과 입력 필드 사이의 간격 조절
-        TextFormField(
-          validator: (val) => val!.isEmpty ? '이메일이 입력되지 않았습니다.' : null,
-          onChanged: (val) => email = val,
-          obscureText: false,
-          style: TextStyle(color: Colors.black),
-          decoration: InputDecoration(
-            hintText: "이메일을 입력하세요",
-            hintStyle: TextStyle(color: Colors.grey.withOpacity(0.7)),
-            prefixIcon: Icon(Icons.person),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(
-                color: Color(0xffd86a04), // 클릭 시 테두리 색상 변경
+        SizedBox(height: 5),
+        Focus(
+            onFocusChange: (hasFocus) {
+              setState(() {
+                emailIconColor =
+                    hasFocus ? Color(0xffd86a04) : Colors.grey.withOpacity(0.7);
+              });
+            },
+            child: Container(
+              height: 60,
+              child: TextFormField(
+                initialValue: 'token@test',
+                focusNode: emailFocusNode,
+                validator: (val) => val!.isEmpty ? '이메일이 입력되지 않았습니다.' : null,
+                onChanged: (val) => email = val,
+                obscureText: false,
+                style: TextStyle(color: Colors.black),
+                decoration: InputDecoration(
+                  hintText: "이메일을 입력하세요",
+                  hintStyle: TextStyle(color: Colors.grey.withOpacity(0.7)),
+                  prefixIcon: Icon(
+                    Icons.person,
+                    color: emailIconColor,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(
+                      color: Color(0xffd86a04), // 클릭 시 테두리 색상 변경
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
+            )),
       ],
->>>>>>> 21eb18a (Feat: Make Page Folders):frontend/lib/pages/start/login_page.dart
     );
   }
 
-  // 비밀번호 필드
+// Update _buildPasswordField method
   Widget _buildPasswordField() {
-    return FormHelper.inputFieldWidget(
-      context,
-      "password",
-      "Password",
-      (val) => val.isEmpty ? 'Password can\'t be empty.' : null,
-      (val) => password = val,
-      obscureText: hidePassword,
-      textColor: Colors.white,
-      hintColor: Colors.white.withOpacity(0.7),
-      prefixIcon: const Icon(Icons.lock),
-      suffixIcon: IconButton(
-        onPressed: () {
-          setState(() {
-            hidePassword = !hidePassword;
-          });
-        },
-        color: Colors.white.withOpacity(0.7),
-        icon: Icon(
-          hidePassword ? Icons.visibility_off : Icons.visibility,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "비밀번호 입력",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+            fontSize: 16,
+          ),
         ),
-<<<<<<< HEAD:frontend/lib/pages/login_page.dart
-      ),
-=======
         SizedBox(height: 5),
-        TextFormField(
-          validator: (val) => val!.isEmpty ? '비밀번호가 입력되지 않았습니다.' : null,
-          onChanged: (val) => password = val,
-          obscureText: hidePassword,
-          style: TextStyle(color: Colors.black),
-          decoration: InputDecoration(
-            hintText: "비밀번호를 입력하세요",
-            hintStyle: TextStyle(color: Colors.grey.withOpacity(0.7)),
-            prefixIcon: Icon(Icons.lock),
-            suffixIcon: IconButton(
-              onPressed: () {
-                setState(() {
-                  hidePassword = !hidePassword;
-                });
-              },
-              color: hidePassword ? Colors.grey.withOpacity(0.7) : Color(0xffd86a04),
-              icon: Icon(
-                hidePassword ? Icons.visibility_off : Icons.visibility,
-                color: hidePassword ? Colors.grey.withOpacity(0.7) : Color(0xffd86a04),
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(
-                color: Color(0xffd86a04), // 클릭 시 테두리 색상 변경
+        Focus(
+          onFocusChange: (hasFocus) {
+            setState(() {
+              passwordIconColor =
+                  hasFocus ? Color(0xffd86a04) : Colors.grey.withOpacity(0.7);
+            });
+          },
+          child: Container(
+            height: 60,
+            child: TextFormField(
+              initialValue: '1234',
+              focusNode: passwordFocusNode,
+              validator: (val) => val!.isEmpty ? '비밀번호가 입력되지 않았습니다.' : null,
+              onChanged: (val) => password = val,
+              obscureText: hidePassword,
+              style: TextStyle(color: Colors.black),
+              decoration: InputDecoration(
+                hintText: "비밀번호를 입력하세요",
+                hintStyle: TextStyle(color: Colors.grey.withOpacity(0.7)),
+                prefixIcon: Icon(
+                  Icons.lock,
+                  color: passwordIconColor,
+                ),
+                suffixIcon: InkWell(
+                  onTap: () {
+                    setState(() {
+                      hidePassword = !hidePassword;
+                    });
+                  },
+                  child: Icon(
+                    hidePassword ? Icons.visibility_off : Icons.visibility,
+                    color: hidePassword
+                        ? Colors.grey.withOpacity(0.7)
+                        : Color(0xffd86a04),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: Color(0xffd86a04), // 클릭 시 테두리 색상 변경
+                  ),
+                ),
               ),
             ),
           ),
         ),
       ],
->>>>>>> 21eb18a (Feat: Make Page Folders):frontend/lib/pages/start/login_page.dart
     );
   }
 
@@ -194,12 +209,12 @@ class _LoginPageState extends State<LoginPage> {
         padding: const EdgeInsets.only(right: 25),
         child: RichText(
           text: TextSpan(
-            style: const TextStyle(color: Colors.grey, fontSize: 14.0),
+            style: const TextStyle(color: Colors.black, fontSize: 14.0),
             children: <TextSpan>[
               TextSpan(
                 text: 'Forget Password ?',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Colors.black,
                   decoration: TextDecoration.underline,
                 ),
                 recognizer: TapGestureRecognizer()..onTap = () {},
@@ -213,8 +228,27 @@ class _LoginPageState extends State<LoginPage> {
 
   // 로그인 버튼
   Widget _buildLoginButton() {
-    return Center(
-      child: FormHelper.submitButton("Login", () async {
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    return InkWell(
+      child: Container(
+        width: screenWidth, // 원하는 너비 설정
+        height: 50, // 원하는 높이 설정
+        decoration: BoxDecoration(
+          color: Color(0xfffe9738), // 버튼 배경색 설정
+          borderRadius: BorderRadius.circular(10.0), // 원하는 모양 설정
+        ),
+        child: Center(
+          child: Text(
+            "로그인",
+            style: TextStyle(
+              color: Colors.white, // 텍스트 색상 설정
+              fontSize: 18, // 텍스트 크기 설정
+            ),
+          ),
+        ),
+      ),
+      onTap: () async {
         if (validateAndSave()) {
           setState(() {
             isApiCallProcess = true;
@@ -224,13 +258,18 @@ class _LoginPageState extends State<LoginPage> {
             final model = LoginRequestModel(email: email, password: password);
             final result = await APIService.login(model);
 
+            print("1111 : ${result.value}");
+
             if (result.value == true) {
-              Navigator.pushNamedAndRemoveUntil(
-                  context, '/home', (route) => false);
+              final userProfileResult = await APIService.getUserProfile();
+              print("Here is LoginPage : ${userProfileResult.value}");
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) =>
+                      HomePage(user: userProfileResult.value)));
             } else {
               // 에러 토스트 메시지
               Fluttertoast.showToast(
-                msg: result.error ?? "Login Failed",
+                msg: result.error ?? "로그인에 실패하였습니다.",
                 toastLength: Toast.LENGTH_SHORT,
                 gravity: ToastGravity.BOTTOM,
               );
@@ -241,7 +280,7 @@ class _LoginPageState extends State<LoginPage> {
             });
           }
         }
-      }),
+      },
     );
   }
 
@@ -251,9 +290,8 @@ class _LoginPageState extends State<LoginPage> {
       child: Text(
         "OR",
         style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-          color: Colors.white,
+          fontSize: 15,
+          color: Colors.black,
         ),
       ),
     );
@@ -267,18 +305,18 @@ class _LoginPageState extends State<LoginPage> {
         padding: const EdgeInsets.only(right: 25),
         child: RichText(
           text: TextSpan(
-            style: const TextStyle(color: Colors.white, fontSize: 14.0),
+            style: const TextStyle(color: Colors.black, fontSize: 14.0),
             children: <TextSpan>[
-              const TextSpan(text: 'Don\'t have an account? '),
+              const TextSpan(text: '등록된 계정이 없으신가요? '),
               TextSpan(
-                text: 'Sign up',
+                text: '회원 가입',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xffd86a04),
                   fontWeight: FontWeight.bold,
                 ),
                 recognizer: TapGestureRecognizer()
                   ..onTap = () {
-                    Navigator.pushNamed(context, '/register');
+                    Navigator.pushNamed(context, '/user/signup');
                   },
               ),
             ],

@@ -1,4 +1,7 @@
+import 'package:beautyminder/pages/pouch/search_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:intl/intl.dart';
 
 import '../../dto/cosmetic_expiry_model.dart';
 import '../../dto/cosmetic_model.dart';
@@ -10,6 +13,8 @@ import '../home/home_page.dart';
 import '../my/my_page.dart';
 import '../recommend/recommend_bloc_screen.dart';
 import '../todo/todo_page.dart';
+import 'expiry_edit_dialog.dart';
+import 'expiry_input_dialog.dart';
 
 class CosmeticExpiryPage extends StatefulWidget {
   @override
@@ -18,7 +23,13 @@ class CosmeticExpiryPage extends StatefulWidget {
 
 class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
   int _currentIndex = 1;
-  List<CosmeticExpiry> cosmetics = [];
+  List<CosmeticExpiry> expiries = [];
+  bool isLoading = true;
+
+  String formatDate(DateTime? date) {
+    if (date == null) return 'N/A'; // 날짜가 null인 경우 처리
+    return DateFormat('yyyy-MM-dd').format(date); // 날짜를 'yyyy-MM-dd' 형식으로 변환
+  }
 
   @override
   void initState() {
@@ -27,19 +38,45 @@ class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
   }
 
   void _loadExpiryData() async {
-    final result = await APIService.getUserProfile();
-    final userId = result.isSuccess ? result.value?.id ?? '-1' : '-1';  // 사용자 프로필을 가져오지 못하면 기본값 '-1'을 사용
-    final expiryData = await ExpiryService.getAllExpiriesByUserId(userId);
     setState(() {
-      cosmetics = expiryData;
+      isLoading = true; // 로딩 시작
     });
+
+    try {
+      final expiryData = await ExpiryService.getAllExpiries();
+      for (var expiry in expiryData) {
+        try {
+          // productName을 이용하여 관련 Cosmetic 검색
+          List<Cosmetic> cosmetics =
+              await SearchService.searchCosmeticsByName(expiry.productName);
+          if (cosmetics.isNotEmpty) {
+            // 첫 번째 일치하는 Cosmetic의 이미지 URL 사용
+            expiry.imageUrl = cosmetics.first.images.isNotEmpty
+                ? cosmetics.first.images.first
+                : null;
+          }
+        } catch (e) {
+          print("Error loading cosmetic data for ${expiry.productName}: $e");
+        }
+      }
+
+      setState(() {
+        expiries = expiryData;
+        isLoading = false; // 로딩 완료
+      });
+    } catch (e) {
+      print("Error loading cosmetic expiries: $e");
+      setState(() {
+        isLoading = false; // 에러 발생 시 로딩 완료 처리
+      });
+    }
   }
 
-  void _deleteExpiry(String userId, String expiryId, int index) async {
+  void _deleteExpiry(String expiryId, int index) async {
     try {
-      await ExpiryService.deleteExpiryByUserIdAndExpiryId(userId, expiryId);
+      await ExpiryService.deleteExpiry(expiryId);
       setState(() {
-        cosmetics.removeAt(index); // 로컬 목록에서 해당 항목 제거
+        expiries.removeAt(index); // 로컬 목록에서 해당 항목 제거
       });
     } catch (e) {
       // 에러 처리
@@ -47,11 +84,7 @@ class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
     }
   }
 
-
   void _addCosmetic() async {
-    final result = await APIService.getUserProfile();
-    final userId = result.isSuccess ? result.value?.id ?? '-1' : '-1';  // 사용자 프로필을 가져오지 못하면 기본값 '-1'을 사용
-
     final Cosmetic? selectedCosmetic = await showDialog<Cosmetic>(
       context: context,
       builder: (context) => CosmeticSearchWidget(),
@@ -64,24 +97,43 @@ class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
       if (expiryInfo != null) {
         final bool isOpened = expiryInfo[0] as bool;
         final DateTime expiryDate = expiryInfo[1] as DateTime;
+        final DateTime? openedDate = expiryInfo[2] as DateTime?;
 
         final CosmeticExpiry newExpiry = CosmeticExpiry(
           productName: selectedCosmetic.name,
           expiryDate: expiryDate,
-          isExpiryRecognized: isOpened,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          userId: userId,
-          // 다른 필드들도 여기에 추가
+          isOpened: isOpened,
+          openedDate: openedDate,
+
+          // 다른 필드들 추가
         );
-        final CosmeticExpiry addedExpiry = await ExpiryService.createCosmeticExpiry(newExpiry);
+        final CosmeticExpiry addedExpiry =
+            await ExpiryService.createCosmeticExpiry(newExpiry);
         setState(() {
-          cosmetics.add(addedExpiry);
+          expiries.add(addedExpiry);
         });
       }
     }
   }
 
+  void _editExpiry(CosmeticExpiry expiry, int index) async {
+    final CosmeticExpiry? updatedExpiry = await showDialog<CosmeticExpiry>(
+      context: context,
+      builder: (context) => ExpiryEditDialog(expiry: expiry),
+    );
+
+    if (updatedExpiry != null) {
+      try {
+        final CosmeticExpiry updated =
+            await ExpiryService.updateExpiry(expiry.id!, updatedExpiry);
+        setState(() {
+          expiries[index] = updated;
+        });
+      } catch (e) {
+        print("Error updating expiry: $e");
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,11 +143,11 @@ class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
         elevation: 0,
         centerTitle: false,
         title: const Text(
-        "BeautyMinder",
-        style: TextStyle(color: Color(0xffd86a04)),
+          "BeautyMinder",
+          style: TextStyle(color: Color(0xffd86a04)),
         ),
         iconTheme: const IconThemeData(
-        color: Color(0xffd86a04),
+          color: Color(0xffd86a04),
         ),
         actions: [
           IconButton(
@@ -104,222 +156,122 @@ class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
           ),
         ],
       ),
-      body: GridView.builder(
-        padding: EdgeInsets.all(8),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // 한 줄에 표시할 아이템 수
-          crossAxisSpacing: 8, // 가로 간격
-          mainAxisSpacing: 8, // 세로 간격
-          childAspectRatio: 0.8, // 아이템의 가로 세로 비율
-        ),
-        itemCount: cosmetics.length,
-        itemBuilder: (context, index) {
-          final cosmetic = cosmetics[index];
-          final daysLeft = cosmetic.expiryDate.difference(DateTime.now()).inDays;
+      body: isLoading
+          ? Center(
+              child: SpinKitThreeInOut(
+                color: Color(0xffd86a04),
+                size: 50.0,
+                duration: Duration(seconds: 2),
+              ),
+            ) // 로딩 인디케이터 표시
+          : GridView.builder(
+              padding: EdgeInsets.all(8),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 0.8,
+              ),
+              itemCount: expiries.length,
+              itemBuilder: (context, index) {
+                final cosmetic = expiries[index];
+                final daysLeft =
+                    cosmetic.expiryDate.difference(DateTime.now()).inDays;
 
-          return Card(
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
-              alignment: Alignment.center,
-              children: [
-              Positioned(
-              top: 10,
-              child: cosmetic.imageUrl != null
-              ? Image.network(cosmetic.imageUrl!, width: 128, height: 128, fit: BoxFit.cover)
-              : Icon(Icons.image, size: 128), // 이미지가 없는 경우 아이콘 표시
-          ),
-          Positioned(
-          bottom: 30,
-          child: Text(
-          cosmetic.productName,
-          style: TextStyle(fontSize: 16),
-          ),
-          ),
-          Positioned(
-          bottom: 10,
-          child: Text(
-          'D-${daysLeft}',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          ),
-          Positioned(
-          right: 4,
-          top: 4,
-          child: IconButton(
-          icon: Icon(Icons.delete),
-          onPressed: () {
-          if (cosmetic.userId != null && cosmetic.id != null) {
-          _deleteExpiry(cosmetic.userId!, cosmetic.id!, index);
-          } else {
-          print("Invalid data");
-          }}
-          )
-          )])
-          );
-        },
-      ),
-      bottomNavigationBar: _underNavigation(),
-    );
-  }
+                DateTime now = DateTime.now();
+                DateTime expiryDate = cosmetic.expiryDate ?? DateTime.now();
+                Duration difference = expiryDate.difference(now);
+                bool isDatePassed = difference.isNegative;
 
-  Widget _underNavigation() {
-    return CommonBottomNavigationBar(
+                return Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // 이미지 표시
+                          cosmetic.imageUrl != null
+                              ? Image.network(cosmetic.imageUrl!,
+                                  width: 128, height: 128, fit: BoxFit.cover)
+                              : Image.asset('assets/images/noImg.jpg',
+                                  width: 128, height: 128, fit: BoxFit.cover),
+                          // 제품 이름
+                          Text(
+                            cosmetic.productName,
+                            style: TextStyle(fontSize: 16),
+                            textAlign: TextAlign.center,
+                          ),
+                          // 브랜드 이름
+                          Text('Brand: ${cosmetic.brandName ?? 'N/A'}',
+                              style: TextStyle(fontSize: 14)),
+                          // D-Day
+                          Text(
+                            isDatePassed
+                                ? 'D+${difference.inDays.abs() + 1}'
+                                : 'D-${difference.inDays}',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          // Text('D-${daysLeft}',
+                          //     style: TextStyle(
+                          //         fontSize: 20, fontWeight: FontWeight.bold)),
+                          // 만료일
+                          Text('유통기한: ${formatDate(cosmetic.expiryDate)}',
+                              style: TextStyle(fontSize: 14)),
+                          // 개봉 여부
+                          Text(
+                              '개봉여부: ${cosmetic.isOpened ? 'Yes' : 'No'}' +
+                                  (cosmetic.isOpened
+                                      ? ' \n개봉날짜: ${formatDate(cosmetic.openedDate)}'
+                                      : ''),
+                              style: TextStyle(fontSize: 14)),
+                          // 삭제 버튼
+                          IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () {
+                                if (cosmetic.id != null) {
+                                  _deleteExpiry(cosmetic.id!, index);
+                                } else {
+                                  print("Invalid data");
+                                }
+                              }),
+                          // 수정 버튼
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () => _editExpiry(cosmetic, index),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+      bottomNavigationBar: CommonBottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (int index) {
+        onTap: (int index) async {
           // 페이지 전환 로직 추가
           if (index == 0) {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => const RecPage()));
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => RecPage()));
+          } else if (index == 2) {
+            final userProfileResult = await APIService.getUserProfile();
+            Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => HomePage(user: userProfileResult.value)));
+          } else if (index == 3) {
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => CalendarPage()));
+          } else if (index == 4) {
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => const MyPage()));
           }
-          else if (index == 2) {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => const HomePage()));
-          }
-          else if (index == 3) {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => const TodoPage()));
-          }
-          else if (index == 4) {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) => const MyPage()));
-          }
-        }
-    );
-  }
-}
-
-class CosmeticSearchWidget extends StatefulWidget {
-  @override
-  _CosmeticSearchWidgetState createState() => _CosmeticSearchWidgetState();
-}
-
-class _CosmeticSearchWidgetState extends State<CosmeticSearchWidget> {
-  List<Cosmetic> cosmetics = [];
-  String query = '';
-
-  void _search() async {
-    if (query.isNotEmpty) {
-      try {
-        // SearchService를 사용하여 서버에서 화장품을 검색
-        cosmetics = await SearchService.searchCosmeticsByName(query);
-        setState(() {
-          // 검색 결과로 UI를 업데이트
-        });
-      } catch (e) {
-        print('Search error: $e');
-        // 필요하면 setState를 사용하여 UI에 에러 메시지를 표시
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Color(0xffffecda),
-        elevation: 0,
-        centerTitle: false,
-        title: Container(
-          height: 40,
-          child: TextField(
-            onChanged: (text) {
-              query = text;
-            },
-            onSubmitted: (text) {
-              _search();
-            },
-            decoration: InputDecoration(
-              hintText: '등록하실 화장품을 검색하세요',
-              hintStyle: TextStyle(
-                  fontSize: 15
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xffd86a04)), // 주황색으로 변경
-              ),
-            ),
-          ),
-        ),
-        iconTheme: const IconThemeData(
-          color: Color(0xffd86a04),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: _search,
-          ),
-        ],
-      ),
-      body: ListView.builder(
-        itemCount: cosmetics.length,
-        itemBuilder: (context, index) {
-          final cosmetic = cosmetics[index];
-          return ListTile(
-            title: Text(cosmetic.name),
-            onTap: () {
-              Navigator.of(context).pop(cosmetic);
-            },
-          );
         },
       ),
-    );
-  }
-}
-
-class ExpiryInputDialog extends StatefulWidget {
-  final Cosmetic cosmetic;
-
-  ExpiryInputDialog({required this.cosmetic});
-
-  @override
-  _ExpiryInputDialogState createState() => _ExpiryInputDialogState();
-}
-
-class _ExpiryInputDialogState extends State<ExpiryInputDialog> {
-  bool isOpened = false;
-  DateTime expiryDate = DateTime.now().add(Duration(days: 365));
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: expiryDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != expiryDate)
-      setState(() {
-        expiryDate = picked;
-      });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Enter expiry info for ${widget.cosmetic.name}'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SwitchListTile(
-            title: Text('Opened'),
-            value: isOpened,
-            onChanged: (bool value) {
-              setState(() {
-                isOpened = value;
-              });
-            },
-          ),
-          ListTile(
-            title: Text("${expiryDate.toLocal()}"),
-            trailing: Icon(Icons.calendar_today),
-            onTap: () {
-              _selectDate(context);
-            },
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop([isOpened, expiryDate]);
-          },
-          child: Text('Submit'),
-        ),
-      ],
     );
   }
 }

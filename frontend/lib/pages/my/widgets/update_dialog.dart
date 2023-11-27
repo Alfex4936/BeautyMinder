@@ -1,11 +1,11 @@
+import 'dart:developer';
+
 import 'package:beautyminder/dto/review_request_model.dart';
 import 'package:beautyminder/dto/review_response_model.dart';
 import 'package:beautyminder/services/review_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'dart:developer';
 
 class UpdateDialog extends StatefulWidget {
   UpdateDialog({
@@ -133,7 +133,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                               value: _localRating,
                               items: List.generate(
                                 5,
-                                    (index) => DropdownMenuItem(
+                                (index) => DropdownMenuItem(
                                   value: index + 1,
                                   child: Text('${index + 1} Stars'),
                                 ),
@@ -149,7 +149,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                             ElevatedButton(
                               style: ButtonStyle(
                                   backgroundColor:
-                                  MaterialStateProperty.all(Colors.orange)),
+                                      MaterialStateProperty.all(Colors.orange)),
                               onPressed: getImages,
                               child: Text('사진 선택'),
                             ),
@@ -240,7 +240,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
           widget.callback();
           // UI 업데이트
           int index =
-          reviews.indexWhere((review) => review.id == responseReview.id);
+              reviews.indexWhere((review) => review.id == responseReview.id);
           if (index != -1) {
             reviews[index] = responseReview;
           }
@@ -251,7 +251,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
             reviews.add(responseReview);
           } else {
             int index =
-            reviews.indexWhere((review) => review.id == responseReview.id);
+                reviews.indexWhere((review) => review.id == responseReview.id);
             if (index != -1) {
               reviews[index] = responseReview;
             }
@@ -270,10 +270,10 @@ class _UpdateDialogState extends State<UpdateDialog> {
 class UpdateDialogButton extends StatelessWidget {
   const UpdateDialogButton(
       {Key? key,
-        required this.onTap,
-        required this.text,
-        required this.backgroundColor,
-        required this.textColor})
+      required this.onTap,
+      required this.text,
+      required this.backgroundColor,
+      required this.textColor})
       : super(key: key);
   final Function() onTap;
   final String text;

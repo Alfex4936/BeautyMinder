@@ -1,26 +1,41 @@
-
-import 'package:beautyminder/services/auth_service.dart';
+import 'package:beautyminder/pages/baumann/baumann_test_start_page.dart';
+import 'package:beautyminder/pages/my/my_page.dart';
+import 'package:beautyminder/pages/pouch/expiry_page.dart';
+import 'package:beautyminder/pages/recommend/recommend_bloc_screen.dart';
+import 'package:beautyminder/pages/todo/todo_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
-import 'pages/home_page.dart';
-import 'pages/login_page.dart';
-import 'pages/register_page.dart';
-import 'services/shared_service.dart';
+import 'Bloc/RecommendPageBloc.dart';
+import 'Bloc/TodoPageBloc.dart';
+import 'pages/start/login_page.dart';
+import 'pages/start/register_page.dart';
 
-Widget _defaultHome = const LoginPage();
+// Widget _defaultHome = WelcomePage();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Get result of the login function.
-  bool _result = await SharedService.isLoggedIn();
-  if (_result) {
-    _defaultHome = const HomePage();
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
   }
 
-  setupAuthClient();
-
-  runApp(const MyApp());
+  runApp(MultiBlocProvider(
+      providers: [
+        BlocProvider<RecommendPageBloc>(
+          create: (context) => RecommendPageBloc(),
+        ),
+        BlocProvider<TodoPageBloc>(create: (create) => TodoPageBloc())
+      ],
+      child: MaterialApp(
+        title: 'BeautyMinder',
+        theme: ThemeData(
+          primaryColor: const Color(0xffffb876),
+        ),
+        home: MyApp(),
+      )));
 }
 
 class MyApp extends StatelessWidget {
@@ -30,16 +45,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'BeautyMinder',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primaryColor: const Color(0xffffb876),
       ),
-      //home: const LoginPage(),
+      // home: BaumannStartPage(),
+      home: const LoginPage(),
+      // home: const HomePage(),
+      // home: CosmeticReviewPage(),
+      // home: ProductDetailPage(),
       routes: {
-        '/': (context) => _defaultHome,
-        '/home': (context) => const HomePage(),
+        // '/': (context) => _defaultHome,
         '/login': (context) => const LoginPage(),
-        '/register': (context) => const RegisterPage(),
+        '/user/signup': (context) => const RegisterPage(),
+        '/recommend': (context) => const RecPage(),
+        '/pouch': (context) => CosmeticExpiryPage(),
+        // '/home': (context) => const HomePage(),
+        '/todo': (context) => const CalendarPage(),
+        '/my': (context) => const MyPage(),
+        // '/baumann/survey' : (context) => BaumannTestPage(),
+        '/baumann/test': (context) => BaumannStartPage(),
       },
     );
   }

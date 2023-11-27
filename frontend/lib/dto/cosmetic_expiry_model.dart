@@ -1,14 +1,15 @@
+import 'package:intl/intl.dart';
+
 class CosmeticExpiry {
   final String? id;
   final String productName;
   final String? brandName;
-  final DateTime expiryDate;
+  DateTime expiryDate;
   final bool isExpiryRecognized;
-  final String? imageUrl;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final String userId;
+  String? imageUrl;
   final String? cosmeticId;
+  bool isOpened;
+  DateTime? openedDate;
 
   CosmeticExpiry({
     this.id,
@@ -17,14 +18,10 @@ class CosmeticExpiry {
     required this.expiryDate,
     this.isExpiryRecognized = false,
     this.imageUrl,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.userId,
     this.cosmeticId,
+    this.isOpened = false,
+    this.openedDate,
   });
-
-
-
 
   factory CosmeticExpiry.fromJson(Map<String, dynamic> json) {
     return CosmeticExpiry(
@@ -34,25 +31,26 @@ class CosmeticExpiry {
       expiryDate: DateTime.parse(json['expiryDate'] as String),
       isExpiryRecognized: (json['isExpiryRecognized'] as bool?) ?? false,
       imageUrl: json['imageUrl'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-      userId: json['userId'] as String,
       cosmeticId: json['cosmeticId'] as String?,
+      isOpened: (json['opened'] as bool?) ?? false,
+      openedDate: json['openedDate'] != null
+          ? DateTime.parse(json['openedDate'] as String)
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
+    var formatter = DateFormat('yyyy-MM-dd');
     return {
       'id': id,
       'productName': productName,
       'brandName': brandName,
-      'expiryDate': expiryDate.toIso8601String(),
+      'expiryDate': formatter.format(expiryDate),
       'isExpiryRecognized': isExpiryRecognized,
       'imageUrl': imageUrl,
-      'createdAt': createdAt.toIso8601String(),
-      'updatedAt': updatedAt.toIso8601String(),
-      'userId': userId,
       'cosmeticId': cosmeticId,
+      'opened': isOpened,
+      'openedDate': openedDate != null ? formatter.format(openedDate!) : null,
     };
   }
 }

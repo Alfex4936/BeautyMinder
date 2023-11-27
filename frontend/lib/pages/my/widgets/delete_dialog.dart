@@ -17,6 +17,7 @@ class DeleteDialog extends StatelessWidget {
   final String? caption;
   final Function() onBarrierTap;
   final List<DeleteDialogButton> buttons;
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -111,10 +112,10 @@ class DeleteDialog extends StatelessWidget {
 class DeleteDialogButton extends StatelessWidget {
   const DeleteDialogButton(
       {Key? key,
-        required this.onTap,
-        required this.text,
-        required this.backgroundColor,
-        required this.textColor})
+      required this.onTap,
+      required this.text,
+      required this.backgroundColor,
+      required this.textColor})
       : super(key: key);
   final Function() onTap;
   final String text;

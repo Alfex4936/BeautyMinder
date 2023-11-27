@@ -1,4 +1,3 @@
-import 'package:beautyminder/dto/baumann_model.dart';
 import 'package:beautyminder/dto/user_model.dart';
 import 'package:beautyminder/services/shared_service.dart';
 import 'package:dio/dio.dart';
@@ -24,8 +23,7 @@ class HomeService {
 
   //POST 방식으로 JSON 데이터 전송하는 일반 함수
   static Future<Response> postJson(String url, Map<String, dynamic> body,
-      {Map<String, String>? headers}){
-
+      {Map<String, String>? headers}) {
     return client.post(
       url,
       options: _httpOptions('POST', headers),
@@ -34,25 +32,23 @@ class HomeService {
   }
 
   static Future<HomePageResult<User>> getUserInfo(String userId) async {
-
-    // 유저 정보 가지고 오기
+    // 로그인 상세 정보 가져오기
     final user = await SharedService.getUser();
     // AccessToken가지고오기
-    // final accessToken = await SharedService.getAccessToken();
-    final accessToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJiZWF1dHltaW5kZXIiLCJpYXQiOjE2OTk5NDQ2MzksImV4cCI6MTcwMDU0OTQzOSwic3ViIjoidG9rZW5AdGVzdCIsImlkIjoiNjU1MGFmZWYxYWI2ZDU4YjNmMTVmZTFjIn0.-tq20j-ZRmL9WRdBZEPrELjpxrbOJ0JUztzfGHCwLKM";
-    //refreshToken 가지고오기
-    // final refreshToken = await SharedService.getRefreshToken();
-    final refreshToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJiZWF1dHltaW5kZXIiLCJpYXQiOjE2OTk5NDQ2MzksImV4cCI6MTcwMTE1NDIzOSwic3ViIjoidG9rZW5AdGVzdCIsImlkIjoiNjU1MGFmZWYxYWI2ZDU4YjNmMTVmZTFjIn0.dAXFUJI2vpjiQKakrRC_UTqgpG_BD_Df4vOeQq46HWQ";
+    final accessToken = await SharedService.getAccessToken();
+    final refreshToken = await SharedService.getRefreshToken();
 
-    // user.id가 있으면 userId에 user.id를 저장 없으면 -1을 저장
     final userId = user?.id ?? '-1';
 
     // URL 생성
-    final url = Uri.http(Config.apiURL, Config.getUserInfo+userId).toString();
+    final url = Uri.http(Config.apiURL, Config.getUserInfo + userId).toString();
 
+    // 헤더 설정
     final headers = {
-      'Authorization': 'Bearer $accessToken',
-      'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer ${Config.acccessToken}',
+      'Cookie': 'XRT=${Config.refreshToken}',
+      // 'Authorization': 'Bearer $accessToken',
+      // 'Cookie': 'XRT=$refreshToken',
     };
 
     try {
@@ -75,7 +71,6 @@ class HomeService {
       return HomePageResult.failure("An error occurred: $e");
     }
   }
-
 }
 
 // 결과 클래스

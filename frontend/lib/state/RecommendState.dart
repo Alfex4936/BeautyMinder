@@ -2,7 +2,6 @@ import 'package:equatable/equatable.dart';
 
 import '../dto/cosmetic_model.dart';
 
-
 abstract class RecommendState extends Equatable {
   final String? category;
   final bool isError;
@@ -14,51 +13,51 @@ abstract class RecommendState extends Equatable {
     this.recCosmetics,
   });
 
-
-
   @override
   List<Object?> get props => [category, isError, recCosmetics];
 }
 
-
-class RecommendInitState extends RecommendState{
+class RecommendInitState extends RecommendState {
   const RecommendInitState({super.category, super.isError, super.recCosmetics});
 
   @override
   List<Object?> get props => [category, isError, recCosmetics];
 }
 
-class RecommendDownloadedState extends RecommendState{
-  const RecommendDownloadedState({super.isError, super.category, super.recCosmetics});
+class RecommendDownloadedState extends RecommendState {
+  const RecommendDownloadedState(
+      {super.isError, super.category, super.recCosmetics});
 
   @override
   List<Object?> get props => [isError, category, recCosmetics];
 }
 
-class RecommendLoadedState extends RecommendState{
-
-  const RecommendLoadedState({super.recCosmetics , super.category, super.isError});
+class RecommendLoadedState extends RecommendState {
+  const RecommendLoadedState(
+      {super.recCosmetics, super.category, super.isError});
 
   @override
   List<Object?> get props => [recCosmetics, category, isError];
 }
 
-class RecommendErrorState extends RecommendState{
-  const RecommendErrorState({super.recCosmetics ,super.isError});
+class RecommendErrorState extends RecommendState {
+  const RecommendErrorState({super.recCosmetics, super.isError});
 
   @override
-  List<Object?> get props => [recCosmetics ,isError];
+  List<Object?> get props => [recCosmetics, isError];
 }
 
-class RecommendCategoryChangeState extends RecommendState{
-  const RecommendCategoryChangeState({super.category, super.isError, super.recCosmetics});
+class RecommendCategoryChangeState extends RecommendState {
+  const RecommendCategoryChangeState(
+      {super.category, super.isError, super.recCosmetics});
 
   @override
   List<Object?> get props => [category, isError, recCosmetics];
 }
 
-class RecommendedCategoryChangeState extends RecommendState{
-  const RecommendedCategoryChangeState({super.category, super.isError, super.recCosmetics});
+class RecommendedCategoryChangeState extends RecommendState {
+  const RecommendedCategoryChangeState(
+      {super.category, super.isError, super.recCosmetics});
 
   @override
   List<Object?> get props => [category, isError, recCosmetics];

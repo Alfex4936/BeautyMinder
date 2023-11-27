@@ -1,11 +1,9 @@
-import 'dart:convert';
-
-import 'package:beautyminder/services/auth_service.dart';
-import 'package:dio/dio.dart'; // DIO 패키지를 이용해 HTTP 통신
+import 'package:beautyminder/dto/baumann_model.dart';
+import 'package:beautyminder/dto/baumann_result_model.dart';
+import 'package:beautyminder/services/shared_service.dart';
+import 'package:dio/dio.dart';
 
 import '../../config.dart';
-import '../dto/baumann_model.dart';
-import 'shared_service.dart';
 
 class BaumannService {
   // Dio 객체 생성
@@ -24,8 +22,8 @@ class BaumannService {
     );
   }
 
-  // POST 방식으로 JSON 데이터 전송하는 일반 함수
-  static Future<Response> _postJson(String url, Map<String, dynamic> body,
+  //POST 방식으로 JSON 데이터 전송하는 일반 함수
+  static Future<Response> postJson(String url, Map<String, dynamic> body,
       {Map<String, String>? headers}) {
     return client.post(
       url,
@@ -34,94 +32,92 @@ class BaumannService {
     );
   }
 
-  static Future<Result<String>> sendUserResponses(Map<String, dynamic> responses) async {
-    final user = await SharedService.getUser();
-    final accessToken = await SharedService.getAccessToken();
-    final refreshToken = await SharedService.getRefreshToken();
-    final userId = user?.id ?? '-1';
-
-    final url = Uri.http(Config.apiURL, Config.baumannTestAPI);
-
-    final headers = {
-      'Authorization': 'Bearer $accessToken',
-      'Cookie': 'XRT=$refreshToken',
-      'Content-Type': 'application/json',
-    };
+  static Future<BaumResult<SurveyWrapper>> getBaumannSurveys() async {
+    // URL 생성
+    final url = Uri.http(Config.apiURL, Config.baumannSurveyAPI).toString();
 
     try {
-      final response = await _postJson(url.toString(), responses, headers: headers);
-
-      print("response: ${response.data} ${response.statusCode}");
-      print("token: $accessToken | $refreshToken");
+      // GET 요청
+      final response = await client.get(
+        url,
+        // options: _httpOptions('GET', headers),
+      );
 
       if (response.statusCode == 200) {
-        // 성공적으로 백엔드에 전송됨
-        return Result.success("User responses sent successfully");
+        // 사용자 정보 파싱
+        final user =
+            SurveyWrapper.fromJson(response.data as Map<String, dynamic>);
+        print(user);
+        return BaumResult.success(user);
       }
-
-      return Result.failure("Failed to send user responses");
+      return BaumResult.failure("Failed to get user profile");
     } catch (e) {
-      return Result.failure("An error occurred: $e");
+      return BaumResult.failure("An error occurred: $e");
     }
   }
 
-  // Get All Surveys
-  static Future<Result<List<Baumann>>> getAllSurveys() async {
+  static Future<BaumResult<List<BaumannResult>>> getBaumannHistory() async {
+    // 로그인 상세 정보 가져오기
     final user = await SharedService.getUser();
+    // AccessToken가지고오기
     final accessToken = await SharedService.getAccessToken();
     final refreshToken = await SharedService.getRefreshToken();
+
     final userId = user?.id ?? '-1';
 
-    // Create the URI with the query parameter
-    final url =
-    Uri.http(Config.apiURL, Config.baumannSurveyAPI, {'userId': userId}).toString();
+    // URL 생성
+    final url = Uri.http(Config.apiURL, Config.baumannHistoryAPI).toString();
+    print("This is BaumannService : $url");
 
+    // 헤더 설정
     final headers = {
-      'Authorization': 'Bearer $accessToken',
-      'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer ${Config.acccessToken}',
+      'Cookie': 'XRT=${Config.refreshToken}',
+      // 'Authorization': 'Bearer $accessToken',
+      // 'Cookie': 'XRT=$refreshToken',
     };
 
     try {
-      final response = await authClient.get(
+      print("1");
+      // GET 요청
+      final response = await client.get(
         url,
         options: _httpOptions('GET', headers),
       );
-
-      print("response: ${response.data} ${response.statusCode}");
-      print("token: $accessToken | $refreshToken");
+      print("2");
 
       if (response.statusCode == 200) {
-        Map<String, dynamic> decodedResponse;
-        if (response.data is String) {
-          decodedResponse = jsonDecode(response.data);
-        } else if (response.data is Map) {
-          decodedResponse = response.data;
-        } else {
-          return Result.failure("Unexpected response data type");
-        }
+        print("3");
+        print("${response.data}");
 
-        print("Baumann response: $decodedResponse");
-        if (decodedResponse.containsKey('surveys')) {
-          List<dynamic> surveyList = decodedResponse['surveys'];
-          List<Baumann> surveys =
-          surveyList.map((data) => Baumann.fromJson(data)).toList();
-          print(surveys);
-          return Result.success(surveys);
-        }
-        return Result.failure("Failed to get surveys: No surveys key in response");
+        // 사용자 정보 파싱
+        // final result = BaumannResult.fromJson(response.data as Map<String, dynamic>);
+        final List<dynamic> jsonData = response.data as List<dynamic>;
+        final List<BaumannResult> result = jsonData
+            .map((dynamic item) =>
+                BaumannResult.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        print("This is Baumann Service(getHistory) : $result");
+
+        return BaumResult<List<BaumannResult>>.success(result);
       }
-      return Result.failure("Failed to get surveys");
+      return BaumResult<List<BaumannResult>>.failure(
+          "Failed to get baumann history");
     } catch (e) {
-      return Result.failure("An error occurred: $e");
+      print("An error occurred: $e");
+      return BaumResult<List<BaumannResult>>.failure("An error occurred: $e");
     }
   }
 }
 
 // 결과 클래스
-class Result<T> {
+class BaumResult<T> {
   final T? value;
   final String? error;
 
-  Result.success(this.value) : error = null; // 성공
-  Result.failure(this.error) : value = null; // 실패
+  BaumResult.success(this.value) : error = null; // 성공
+  BaumResult.failure(this.error) : value = null; // 실패
+
+  bool get isSuccess => value != null;
 }

@@ -17,6 +17,7 @@ class DefaultDialog extends StatelessWidget {
   final String? caption;
   final Function() onBarrierTap;
   final List<DefaultDialogButton> buttons;
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(

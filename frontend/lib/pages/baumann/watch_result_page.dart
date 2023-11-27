@@ -1,10 +1,5 @@
-import 'dart:convert';
-
-import 'package:beautyminder/dto/baumann_model.dart';
 import 'package:beautyminder/dto/baumann_result_model.dart';
 import 'package:beautyminder/pages/home/home_page.dart';
-import 'package:dio/src/response.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kg_charts/kg_charts.dart';
 
@@ -21,7 +16,6 @@ class WatchResultPage extends StatefulWidget {
 }
 
 class _WatchResultPageState extends State<WatchResultPage> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,7 +25,6 @@ class _WatchResultPageState extends State<WatchResultPage> {
       ),
     );
   }
-
 
   Widget baumannResultUI() {
     return Container(
@@ -53,7 +46,8 @@ class _WatchResultPageState extends State<WatchResultPage> {
               padding: EdgeInsets.all(20),
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10), // 모서리가 둥근 네모난 박스로 만들기
+                  borderRadius: BorderRadius.circular(10),
+                  // 모서리가 둥근 네모난 박스로 만들기
                   color: Colors.grey[200], // 박스의 배경색 설정
                 ),
                 padding: EdgeInsets.all(10), // 박스의 안쪽 여백 설정
@@ -94,12 +88,9 @@ class _WatchResultPageState extends State<WatchResultPage> {
     );
   }
 
-
-
   Widget _spiderChart() {
     final baumannScores = widget.resultData?.baumannScores;
-    if(baumannScores == null)
-    {
+    if (baumannScores == null) {
       return Text("결과를 보여줄 수 없습니다.");
     }
 
@@ -107,7 +98,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
       child: RadarWidget(
         radarMap: RadarMapModel(
           legend: [
-            LegendModel('각 타입 별 점수',const Color(0XFF0EBD8D)),
+            LegendModel('각 타입 별 점수', const Color(0XFF0EBD8D)),
           ],
           indicator: [
             IndicatorModel("색소침착도", 57),
@@ -117,15 +108,13 @@ class _WatchResultPageState extends State<WatchResultPage> {
             IndicatorModel("민감도", 64),
           ],
           data: [
-            MapDataModel(
-                [
-                  widget.resultData?.baumannScores['pigmentation'],
-                  widget.resultData?.baumannScores['hydration'],
-                  widget.resultData?.baumannScores['elasticity'],
-                  widget.resultData?.baumannScores['moistureRetention'],
-                  widget.resultData?.baumannScores['sensitivity']
-                ]
-            ),
+            MapDataModel([
+              widget.resultData?.baumannScores['pigmentation'],
+              widget.resultData?.baumannScores['hydration'],
+              widget.resultData?.baumannScores['elasticity'],
+              widget.resultData?.baumannScores['moistureRetention'],
+              widget.resultData?.baumannScores['sensitivity']
+            ]),
           ],
           radius: 120,
           duration: 2000,
@@ -133,78 +122,70 @@ class _WatchResultPageState extends State<WatchResultPage> {
           maxWidth: 50,
           line: LineModel(4),
         ),
-        textStyle: const TextStyle(color: Colors.black,fontSize: 14),
+        textStyle: const TextStyle(color: Colors.black, fontSize: 14),
         isNeedDrawLegend: true,
-        lineText: (p, length) =>  "${(p * 100 ~/ length)}%",
-        dilogText: (IndicatorModel indicatorModel, List<LegendModel> legendModels, List<double> mapDataModels) {
+        lineText: (p, length) => "${(p * 100 ~/ length)}%",
+        dilogText: (IndicatorModel indicatorModel,
+            List<LegendModel> legendModels, List<double> mapDataModels) {
           StringBuffer text = StringBuffer("");
-          for(int i=0; i<mapDataModels.length; i++){
-            text.write("${legendModels[i].name} : ${mapDataModels[i].toString()}");
-            if(i != mapDataModels.length-1){
+          for (int i = 0; i < mapDataModels.length; i++) {
+            text.write(
+                "${legendModels[i].name} : ${mapDataModels[i].toString()}");
+            if (i != mapDataModels.length - 1) {
               text.write("\n");
             }
           }
           return text.toString();
         },
-        outLineText: (data, max)=> "${(data * 100 ~/ max).toStringAsFixed(2)}%",
+        outLineText: (data, max) =>
+            "${(data * 100 ~/ max).toStringAsFixed(2)}%",
       ),
     );
-
   }
 
-
-
   Widget _judgePigmentationReult() {
-    if(widget.resultData?.baumannScores['pigmentation']/57*100 >= 75) {
+    if (widget.resultData?.baumannScores['pigmentation'] / 57 * 100 >= 75) {
       return Text('색소침착도 : 좋음');
-    }
-    else {
+    } else {
       return Text('색소침착도 : 보통');
     }
   }
 
-
   Widget _judgeHydrationReult() {
-    if(widget.resultData?.baumannScores['hydration']/44*100 >= 75) {
+    if (widget.resultData?.baumannScores['hydration'] / 44 * 100 >= 75) {
       return Text('유수분 밸런스 : 좋음');
-    }
-    else {
+    } else {
       return Text('유수분 밸런스 : 보통');
     }
   }
 
-
   Widget _judgeElasticityReult() {
-    if(widget.resultData?.baumannScores['elasticity']/85*100 >= 75) {
+    if (widget.resultData?.baumannScores['elasticity'] / 85 * 100 >= 75) {
       return Text('탄력 : 좋음');
-    }
-    else {
+    } else {
       return Text('탄력 : 보통');
     }
   }
 
   Widget _judgeMoistureRetentionReult() {
-    if(widget.resultData?.baumannScores['moistureRetention'] >= 65) {
+    if (widget.resultData?.baumannScores['moistureRetention'] >= 65) {
       return Text('수분 보유력 : 좋음');
-    }
-    else {
+    } else {
       return Text('수분 보유력 : 보통');
     }
   }
 
   Widget _judgeSensiticityReult() {
-    if(widget.resultData?.baumannScores['sensitivity']/64*100 >= 75) {
+    if (widget.resultData?.baumannScores['sensitivity'] / 64 * 100 >= 75) {
       return Text('민감도 : 좋음');
-    }
-    else {
+    } else {
       return Text('민감도 : 보통');
     }
   }
 
   Widget _descriptionType() {
-
     //1.DSPT
-    if (widget.resultData?.baumannType == 'DSPT'){
+    if (widget.resultData?.baumannType == 'DSPT') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -219,7 +200,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //2.DSNT
-    else if(widget.resultData?.baumannType == 'DSNT') {
+    else if (widget.resultData?.baumannType == 'DSNT') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -234,7 +215,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //3.DSPW
-    else if (widget.resultData?.baumannType == 'DSPW'){
+    else if (widget.resultData?.baumannType == 'DSPW') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -249,7 +230,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //4.DSNW
-    else if (widget.resultData?.baumannType == 'DSNW'){
+    else if (widget.resultData?.baumannType == 'DSNW') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -264,7 +245,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //5.OSPT
-    else if (widget.resultData?.baumannType == 'OSPT'){
+    else if (widget.resultData?.baumannType == 'OSPT') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -279,7 +260,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //6.OSNT
-    else if (widget.resultData?.baumannType == 'OSNT'){
+    else if (widget.resultData?.baumannType == 'OSNT') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -294,7 +275,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //7.OSPW
-    else if (widget.resultData?.baumannType == 'OSPW'){
+    else if (widget.resultData?.baumannType == 'OSPW') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -309,7 +290,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //8.OSNW
-    else if (widget.resultData?.baumannType == 'OSNW'){
+    else if (widget.resultData?.baumannType == 'OSNW') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -339,7 +320,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //10.ORNT
-    else if (widget.resultData?.baumannType == 'ORNT'){
+    else if (widget.resultData?.baumannType == 'ORNT') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -354,7 +335,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //11.ORPW
-    else if (widget.resultData?.baumannType == 'ORPW'){
+    else if (widget.resultData?.baumannType == 'ORPW') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -369,7 +350,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //12.ORNW
-    else if (widget.resultData?.baumannType == 'ORNW'){
+    else if (widget.resultData?.baumannType == 'ORNW') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -384,7 +365,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //13.DRPT
-    else if (widget.resultData?.baumannType == 'DRPT'){
+    else if (widget.resultData?.baumannType == 'DRPT') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -399,7 +380,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //14.DRNT
-    else if (widget.resultData?.baumannType == 'DRNT'){
+    else if (widget.resultData?.baumannType == 'DRNT') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -414,7 +395,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //15.DRPW
-    else if (widget.resultData?.baumannType == 'DRPW'){
+    else if (widget.resultData?.baumannType == 'DRPW') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -429,7 +410,7 @@ class _WatchResultPageState extends State<WatchResultPage> {
     }
 
     //16.DRNW
-    else if (widget.resultData?.baumannType == 'DRNW'){
+    else if (widget.resultData?.baumannType == 'DRNW') {
       return Container(
         padding: EdgeInsets.all(20),
         child: Text(
@@ -462,15 +443,18 @@ class _WatchResultPageState extends State<WatchResultPage> {
   Widget _navigateToHomeButton() {
     return Padding(
       padding: EdgeInsets.all(20),
-      child:       Container(
+      child: Container(
         width: double.infinity,
-        child:       ElevatedButton(
+        child: ElevatedButton(
           onPressed: () async {
             final userProfileResult = await APIService.getUserProfile();
             // 버튼을 클릭했을 때 홈페이지로 이동하는 함수 호출
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => HomePage(user: userProfileResult.value,)),
+              MaterialPageRoute(
+                  builder: (context) => HomePage(
+                        user: userProfileResult.value,
+                      )),
             );
           },
           style: ElevatedButton.styleFrom(
@@ -488,5 +472,4 @@ class _WatchResultPageState extends State<WatchResultPage> {
       ),
     );
   }
-
 }

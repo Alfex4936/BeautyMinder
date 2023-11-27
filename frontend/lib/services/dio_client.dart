@@ -2,13 +2,11 @@
 
 import 'package:dio/dio.dart';
 
-import '../config.dart'; // DIO 패키지를 이용해 HTTP 통신
-
 class DioClient {
   static final Dio client = Dio(
     // Make this static
     BaseOptions(
-      baseUrl: Config.apiURL,
+      // baseUrl: Config.apiURL,
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
     ),

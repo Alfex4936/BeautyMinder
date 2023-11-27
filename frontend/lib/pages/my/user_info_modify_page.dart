@@ -6,6 +6,8 @@ import 'package:beautyminder/pages/my/widgets/pop_up.dart';
 import 'package:beautyminder/services/api_service.dart';
 import 'package:beautyminder/services/shared_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../dto/user_model.dart';
 import '../../widget/commonAppBar.dart';
@@ -25,6 +27,28 @@ class _UserInfoModifyPageState extends State<UserInfoModifyPage> {
   TextEditingController passwordController = TextEditingController();
   TextEditingController passwordConfirmController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
+  String? image;
+
+  Future<void> onImageChanged(String? imagePath) async {
+    final updatedUser = User(
+        id: user!.id,
+        email: user!.email,
+        password: user!.password,
+        nickname: user!.nickname,
+        profileImage: imagePath,
+        createdAt: user!.createdAt,
+        authorities: user!.authorities,
+        phoneNumber: user!.phoneNumber,
+        baumann: user?.baumann,
+        baumannScores: user?.baumannScores);
+
+    await SharedService.updateUser(updatedUser);
+
+    setState(() {
+      user = updatedUser;
+      print(image);
+    });
+  }
 
   @override
   void initState() {
@@ -37,7 +61,7 @@ class _UserInfoModifyPageState extends State<UserInfoModifyPage> {
     try {
       final info = await SharedService.loginDetails();
       setState(() {
-        user = info!.user;
+        user = info?.user;
         isLoading = false;
       });
     } catch (e) {
@@ -47,11 +71,15 @@ class _UserInfoModifyPageState extends State<UserInfoModifyPage> {
 
   @override
   Widget build(BuildContext context) {
+    //print("fdsfdsf : $image");
+    //print("dsadsadas : ${user!.profileImage}");
     return Scaffold(
         appBar: CommonAppBar(),
         body: isLoading
-            ? Center(
-                child: Text('로딩 중'),
+            ? SpinKitThreeInOut(
+                color: Color(0xffd86a04),
+                size: 50.0,
+                duration: Duration(seconds: 2),
               )
             : Stack(
                 children: [
@@ -64,6 +92,7 @@ class _UserInfoModifyPageState extends State<UserInfoModifyPage> {
                           UserInfoProfile(
                             nickname: user!.nickname ?? user!.email,
                             profileImage: user!.profileImage ?? '',
+                            onTap: _pickImage, // 수정: _pickImage 함수를 onTap으로 전달
                           ),
                           SizedBox(height: 20),
                           MyDivider(),
@@ -88,7 +117,7 @@ class _UserInfoModifyPageState extends State<UserInfoModifyPage> {
                         ]),
                       )),
                   Positioned(
-                    bottom: 10, // 원하는 위치에 배치
+                    bottom: 50, // 원하는 위치에 배치
                     left: 10, // 원하는 위치에 배치
                     right: 10, // 원하는 위치에 배치
                     child: Padding(
@@ -122,10 +151,15 @@ class _UserInfoModifyPageState extends State<UserInfoModifyPage> {
                                   context: context,
                                 );
                                 if (ok) {
-                                  APIService.sendEditInfo(UpdateRequestModel(
+                                  if (image != null) {
+                                    APIService.sendEditInfo(UpdateRequestModel(
                                       nickname: nicknameController.text,
                                       password: passwordController.text,
-                                      phone: phoneController.text));
+                                      phone: phoneController.text,
+                                      image: image,
+                                      // image: image ?? XFile(''),
+                                    ));
+                                  }
                                 }
                               },
                               child: const Text('수정'),
@@ -137,6 +171,61 @@ class _UserInfoModifyPageState extends State<UserInfoModifyPage> {
                   ),
                 ],
               ));
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        image = pickedFile.path;
+      });
+
+      // Call the editProfileImgInfo method with the UpdateRequestModel
+      final newImageUrl = await APIService.editProfileImgInfo(image!);
+
+      onImageChanged(newImageUrl);
+    }
+  }
+}
+
+class UserInfoProfile extends StatelessWidget {
+  final String nickname;
+  final String? profileImage;
+  final VoidCallback? onTap;
+
+  UserInfoProfile({
+    Key? key,
+    required this.nickname,
+    required this.profileImage,
+    this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          profileImage == null
+              ? Icon(
+                  Icons.camera_alt,
+                  size: 50,
+                  color: Colors.grey,
+                )
+              : CircleAvatar(
+                  radius: 50,
+                  backgroundImage: NetworkImage(profileImage!),
+                ),
+          SizedBox(height: 10),
+          Text(
+            nickname,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
   }
 }
 
