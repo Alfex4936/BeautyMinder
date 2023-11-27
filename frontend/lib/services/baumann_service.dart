@@ -34,6 +34,37 @@ class BaumannService {
     );
   }
 
+  static Future<Result<String>> sendUserResponses(Map<String, dynamic> responses) async {
+    final user = await SharedService.getUser();
+    final accessToken = await SharedService.getAccessToken();
+    final refreshToken = await SharedService.getRefreshToken();
+    final userId = user?.id ?? '-1';
+
+    final url = Uri.http(Config.apiURL, Config.baumannTestAPI);
+
+    final headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await _postJson(url.toString(), responses, headers: headers);
+
+      print("response: ${response.data} ${response.statusCode}");
+      print("token: $accessToken | $refreshToken");
+
+      if (response.statusCode == 200) {
+        // 성공적으로 백엔드에 전송됨
+        return Result.success("User responses sent successfully");
+      }
+
+      return Result.failure("Failed to send user responses");
+    } catch (e) {
+      return Result.failure("An error occurred: $e");
+    }
+  }
+
   // Get All Surveys
   static Future<Result<List<Baumann>>> getAllSurveys() async {
     final user = await SharedService.getUser();

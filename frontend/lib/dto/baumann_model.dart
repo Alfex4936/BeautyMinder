@@ -1,55 +1,29 @@
-// import 'package:frontend/dto/user_model.dart';
-import 'user_model.dart';
-
 class Baumann {
   Baumann({
-    this.id,
-    required this.date,
-    required this.morningTasks,
-    required this.dinnerTasks,
-    required this.user,
-    this.createdAt,
+    required this.questions,
   });
 
-  late final String? id;
-  late final DateTime date;
-  late final List<String> morningTasks;
-  late final List<String> dinnerTasks;
-  late final User user;
-  late final DateTime? createdAt;
+  late final Map<String, dynamic> questions;
 
   @override
   String toString() {
-    return '''
-Todo {
-  id: $id,
-  date: $date,
-  morningTasks: $morningTasks,
-  dinnerTasks: $dinnerTasks,
-  user: $user,
-  createdAt: $createdAt
-}''';
+    return 'Baumann { questions: $questions }';
   }
 
   factory Baumann.fromJson(Map<String, dynamic> json) {
     return Baumann(
-      id: json['id'],
-      date: DateTime.parse(json['date']),
-      morningTasks: List<String>.from(json['morningTasks']),
-      dinnerTasks: List<String>.from(json['dinnerTasks']),
-      user: User.fromJson(json['user']),
-      createdAt: DateTime.parse(json['createdAt']),
+      questions: Map<String, dynamic>.from(json),
     );
   }
 
+  //백으로 전송
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'date': date.toIso8601String(),
-      'morningTasks': morningTasks,
-      'dinnerTasks': dinnerTasks,
-      'user': user.toJson(), // Assuming you have a toJson in User model
-      'createdAt': createdAt?.toIso8601String(),
+    final Map<String, dynamic> json = {
+      'reponses': {},
     };
+    questions.forEach((key, value) {
+      json['responses'][key]=value['option'];
+    });
+    return json;
   }
 }
