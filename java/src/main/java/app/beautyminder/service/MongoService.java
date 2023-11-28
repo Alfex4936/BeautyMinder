@@ -4,6 +4,7 @@ import app.beautyminder.domain.CosmeticExpiry;
 import app.beautyminder.domain.Review;
 import app.beautyminder.domain.Todo;
 import app.beautyminder.domain.User;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -18,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -36,14 +38,13 @@ public class MongoService {
         Provides fine-grained control over queries and updates.
         Useful for complex queries, operations, or aggregations not covered by repository abstraction.
     */
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate;
 
-    public MongoService(MongoTemplate mongoTemplate) {
-        this.mongoTemplate = mongoTemplate;
+    @PostConstruct
+    public void initClass() {
         // Initialize the map with banned fields for each class
-        bannedFieldsPerClass.put(Todo.class, Set.of("user"));
-        bannedFieldsPerClass.put(User.class, Set.of("password", "email"));
+        bannedFieldsPerClass.put(Todo.class, Set.of("user", "createdAt"));
+        bannedFieldsPerClass.put(User.class, Set.of("password", "email", "createdAt"));
 //        bannedFieldsPerClass.put(Review.class, Set.of("isFiltered", "nlpAnalysis"));
         bannedFieldsPerClass.put(CosmeticExpiry.class, Set.of("id", "createdAt"));
     }
@@ -59,40 +60,52 @@ public class MongoService {
 
     public <T> Optional<T> updateFields(String id, Map<String, Object> updates, Class<T> entityClass) {
         var query = new Query(Criteria.where("id").is(id));
-        var stringBuilder = new StringBuilder();
-
-        var bannedFields = bannedFieldsPerClass.getOrDefault(entityClass, Set.of());
-
-        if (mongoTemplate.exists(query, entityClass)) {
-            var update = new Update();
-            updates.entrySet().stream()
-                    .filter(entry -> !bannedFields.contains(entry.getKey()))
-                    .filter(entry -> isValidField(entityClass, entry.getKey()))
-                    .forEach(entry -> {
-                        if (entry.getKey().equals("profileImage") && !(entry.getValue() instanceof String && ((String) entry.getValue()).startsWith("http"))) {
-                            // skip this entry
-                            // do nothing
-                        } else if (entry.getKey().equals("phoneNumber") && !isValidKoreanPhoneNumber((String) entry.getValue())) {
-                            // skip this entry if it's not a valid Korean phone number
-                        } else {
-                            stringBuilder.append(entry.getKey()).append(",");
-                            update.set(entry.getKey(), entry.getValue());
-                        }
-                    });
-
-            mongoTemplate.updateFirst(query, update, entityClass);
-            log.info("BEMINDER: {} has been updated: {}", entityClass.getSimpleName(), stringBuilder);
-            return Optional.ofNullable(mongoTemplate.findOne(query, entityClass));
-        } else {
+        if (!mongoTemplate.exists(query, entityClass)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, entityClass.getSimpleName() + " not found: " + id);
         }
+
+        var update = createUpdateOperation(updates, entityClass);
+        mongoTemplate.updateFirst(query, update, entityClass);
+        logUpdatedFields(entityClass, update);
+
+        return Optional.ofNullable(mongoTemplate.findOne(query, entityClass));
+    }
+
+    private <T> Update createUpdateOperation(Map<String, Object> updates, Class<T> entityClass) {
+        var bannedFields = bannedFieldsPerClass.getOrDefault(entityClass, Set.of());
+        var update = new Update();
+
+        updates.entrySet().stream()
+                .filter(entry -> !bannedFields.contains(entry.getKey()))
+                .filter(entry -> isValidField(entityClass, entry.getKey()))
+                .filter(this::isValidUpdate)
+                .forEach(entry -> update.set(entry.getKey(), entry.getValue()));
+
+        return update;
+    }
+
+    private boolean isValidUpdate(Map.Entry<String, Object> entry) {
+        return switch (entry.getKey()) {
+            case "profileImage" -> isValidProfileImage((String) entry.getValue());
+            case "phoneNumber" -> isValidKoreanPhoneNumber((String) entry.getValue());
+            default -> true;
+        };
+    }
+
+    private boolean isValidProfileImage(String value) {
+        return value != null && value.startsWith("http");
+    }
+
+    private <T> void logUpdatedFields(Class<T> entityClass, Update update) {
+        var updatedFields = String.join(", ", update.getUpdateObject().keySet());
+        log.info("BEMINDER: {} has been updated: {}", entityClass.getSimpleName(), updatedFields);
     }
 
     public <T> boolean existsWithReference(Class<T> entityClass, String entityId, String referenceFieldName, String referenceId) {
         Query query = new Query(Criteria.where("_id").is(new ObjectId(entityId))
                 .and(referenceFieldName + ".$id").is(new ObjectId(referenceId)));
         query.fields().position("program", 1);
-        T application = mongoTemplate.findOne(query, entityClass);
+//        T application = mongoTemplate.findOne(query, entityClass);
 //        log.error("existsWithReference: {}", application);
 
         return mongoTemplate.exists(query, entityClass);

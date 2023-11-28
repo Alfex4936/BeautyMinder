@@ -47,7 +47,7 @@ public class GPTService {
     @Value("${chatgpt.multi.model}")
     private String gptVersion;
 
-    @Scheduled(cron = "0 0 7 ? * MON", zone = "Asia/Seoul") // Every Monday at 7:00 am
+    // @Scheduled(cron = "0 0 7 ? * MON", zone = "Asia/Seoul") // Every Monday at 7:00 am
     public void summarizeReviews() {
 //        System.out.println("====== " + systemRole);
         var allCosmetics = cosmeticRepository.findAll();

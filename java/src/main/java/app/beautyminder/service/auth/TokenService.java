@@ -127,9 +127,11 @@ public class TokenService {
         passcodeTokenRepository.deleteByEmail(email);
     }
 
+
     @Scheduled(cron = "0 0 2 * * WED", zone = "Asia/Seoul") // Delete all expired tokens at wednesday 2am
     public void deleteAllExpiredTokensOften() {
-        passwordResetTokenRepository.deleteByExpiryDateBefore(new Date());
+        passwordResetTokenRepository.deleteByExpiryDateBefore(LocalDateTime.now());
+        passcodeTokenRepository.deleteByExpiryDateBefore(LocalDateTime.now());
     }
 }
 

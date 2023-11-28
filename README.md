@@ -124,3 +124,7 @@ $$
 > 은전한닢 + N-gram 
 
 ![image](https://github.com/LeeZEun/beautyMinder/assets/2356749/b80069c3-7b96-4c80-a2c3-8600d258819a)
+
+
+# Email verification
+![email](https://github.com/beminder/BeautyMinder/assets/2356749/5c674c89-769f-420d-8190-af488e3425fa)

@@ -3,6 +3,7 @@ package app.beautyminder.repository;
 import app.beautyminder.domain.PasswordResetToken;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -13,5 +14,5 @@ public interface PasswordResetTokenRepository extends MongoRepository<PasswordRe
 
     void deleteByEmail(String email);
 
-    void deleteByExpiryDateBefore(Date currentDate);
+    void deleteByExpiryDateBefore(LocalDateTime expiryDate);
 }

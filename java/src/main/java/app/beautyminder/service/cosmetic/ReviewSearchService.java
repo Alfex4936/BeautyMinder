@@ -38,7 +38,7 @@ public class ReviewSearchService {
     private final ObjectMapper objectMapper;
 
     //    @PostConstruct
-    @Scheduled(cron = "0 0 2 * * ?", zone = "Asia/Seoul") // everyday 2am
+    @Scheduled(cron = "0 0 2 * * SAT", zone = "Asia/Seoul") // Every Saturday at 2 AM
     public void indexReviews() {
         List<Review> reviews = reviewRepository.findAll();  // Fetch all reviews from MongoDB
         List<EsReview> esReviews = reviews.stream()

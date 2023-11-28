@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.context.Context;
@@ -34,11 +35,9 @@ public class EmailService {
     private JavaMailSender emailSender;
 
     @Autowired
-    private LocalFileService localFileService;
-
-    @Autowired
     private SpringTemplateEngine templateEngine;
 
+    @Async
     public void sendVerificationEmail(String to, String token) {
         String subject = "[BeautyMinder] 이메일 인증";
 
@@ -50,7 +49,7 @@ public class EmailService {
 
 //        String htmlContent = localFileService.readHtmlTemplate("templates/passcode.html");
 //        htmlContent = htmlContent.replace("${token}", token);
-        log.info("BEMINDER: content: {}", htmlContent);
+//        log.info("BEMINDER: content: {}", htmlContent);
 
         try {
             MimeMessage message = emailSender.createMimeMessage();
@@ -67,6 +66,7 @@ public class EmailService {
         }
     }
 
+    @Async
     public void sendPasswordResetEmail(String to, String token) {
         String subject = "[BeautyMinder] 비밀번호 초기화";
         String resetUrl = server + "/user/reset-password?token=" + token;
@@ -78,7 +78,7 @@ public class EmailService {
     public void sendSimpleMessage(String to, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(FROM_ADDRESS);
-//        message.setTo(to);
+        message.setTo(to);
         message.setTo(FROM_ADDRESS);
         message.setSubject(subject);
         message.setText(text);
