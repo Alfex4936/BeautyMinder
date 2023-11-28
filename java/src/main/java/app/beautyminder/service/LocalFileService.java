@@ -4,13 +4,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PreDestroy;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @AllArgsConstructor
 @Service
 public class LocalFileService {
@@ -76,6 +81,17 @@ public class LocalFileService {
         try (FileWriter file = new FileWriter(filePath)) {
             file.write(jsonObject.toString());
             file.flush();
+        }
+    }
+
+    public String readHtmlTemplate(String filePath) {
+        try {
+            ClassPathResource classPathResource = new ClassPathResource(filePath);
+            byte[] byteArray = StreamUtils.copyToByteArray(classPathResource.getInputStream());
+            return new String(byteArray, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.error("Error reading HTML template", e);
+            return null;
         }
     }
 

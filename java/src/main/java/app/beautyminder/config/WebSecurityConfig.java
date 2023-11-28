@@ -113,14 +113,13 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/*").permitAll() // preflight request: ex) POST -> OPTIONS -> POST
                 .requestMatchers(antMatcher("/")).permitAll().requestMatchers(antMatcher("/api/**")).permitAll()
 
-//                .requestMatchers(antMatcher("/expiry/**")).permitAll()
-//                .requestMatchers(antMatcher("/es-index/**")).permitAll()
-//                .requestMatchers(antMatcher("/todo/**")).permitAll()
-                .requestMatchers(antMatcher("/gpt/review/**")).permitAll().requestMatchers(antMatcher("/redis/**")).permitAll().requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll().requestMatchers(antMatcher("/cosmetic/click/**")).permitAll()
-//                .requestMatchers(antMatcher("/search/**")).permitAll()
-//                .requestMatchers(antMatcher("/data-view/**")).permitAll()
-                .requestMatchers(antMatcher("/baumann/survey")).permitAll().requestMatchers(antMatcher("/search/test")).permitAll()
-//                .requestMatchers(antMatcher("/review/**")).permitAll()
+                .requestMatchers(antMatcher("/gpt/review/**")).permitAll()
+                .requestMatchers(antMatcher("/redis/**")).permitAll()
+                .requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll()
+                .requestMatchers(antMatcher("/cosmetic/click/**")).permitAll()
+                .requestMatchers(antMatcher("/baumann/survey")).permitAll()
+                .requestMatchers(antMatcher("/search/test")).permitAll()
+                .requestMatchers(antMatcher("/user/email-verification/**")).permitAll()
 
                 .requestMatchers(antMatcher("/login")).permitAll().requestMatchers(antMatcher("/login?error")).permitAll()
 

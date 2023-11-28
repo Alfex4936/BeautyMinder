@@ -114,12 +114,12 @@
     });
 
     function enterRoom(roomId) {
-        const token = localStorage.getItem('jwtToken');
-        if (!token) {
-            alert('No token found, please log in again.');
-            window.location.href = '/chat/login';
-            return;
-        }
+        // const token = localStorage.getItem('jwtToken');
+        // if (!token) {
+        //     alert('No token found, please log in again.');
+        //     window.location.href = '/chat/login';
+        //     return;
+        // }
 
         window.location.href = '/chat/enter?roomId=' + encodeURIComponent(roomId);
     }
@@ -134,7 +134,7 @@
                     throw new Error('Logout failed');
                 }
                 // Clear JWT token from local storage
-                localStorage.removeItem('jwtToken');
+                // localStorage.removeItem('jwtToken');
                 // Redirect to the home page or login page
                 window.location.href = '/chat/login';
             })

@@ -1,5 +1,6 @@
 package app.beautyminder.service.auth;
 
+import app.beautyminder.domain.PasscodeToken;
 import app.beautyminder.domain.PasswordResetToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.PasswordResetResponse;
@@ -127,8 +128,8 @@ public class UserService {
     }
 
     // 이메일로 조회
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("해당 사용자를 찾을 수 없습니다."));
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     // 닉네임으로 조회
@@ -209,12 +210,18 @@ public class UserService {
 
     }
 
+    public void requestPassCode(String email) {
+        PasscodeToken token = tokenService.createPasscode(email);
+        emailService.sendVerificationEmail(email, token.getToken());
+    }
+
     public void requestPasswordReset(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         PasswordResetToken token = tokenService.createPasswordResetToken(user);
         emailService.sendPasswordResetEmail(user.getEmail(), token.getToken());
     }
+
 
     public PasswordResetResponse requestPasswordResetByNumber(String phoneNumber) {
         User user = userRepository.findByPhoneNumber(phoneNumber).orElseThrow(() -> new UsernameNotFoundException("User not found"));

@@ -302,13 +302,14 @@
     function quit() {
         const confirmExit = confirm("정말로 채팅방을 나가시겠습니까?");
         if (!confirmExit) {
-            return;
+            return false;
         }
         const roomId = [[${room.roomId}]];
         const quitMsg = {"type": "QUIT", "roomId": roomId, "sender": nickname, "message": "Bye"};
         stompClient.send("/app/chat.quit/" + roomId, {}, JSON.stringify(quitMsg));
         stompClient.disconnect(headers = {"TEST": "HEY"});
         location.href = "/chat/list";
+        return true;
     }
 
     function createMessageElement(chat) {

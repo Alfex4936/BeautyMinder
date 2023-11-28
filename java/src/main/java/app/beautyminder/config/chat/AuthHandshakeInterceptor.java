@@ -30,6 +30,7 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
     public static String getAccessToken(ServerHttpRequest request) {
         HttpHeaders headers = request.getHeaders();
         List<String> authorizationHeader = headers.get(HEADER_AUTHORIZATION);
+        log.info("BEMINDER: TOKENS: {}", authorizationHeader);
 
 
         if (authorizationHeader != null && !authorizationHeader.isEmpty()) {

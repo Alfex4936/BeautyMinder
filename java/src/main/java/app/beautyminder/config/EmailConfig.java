@@ -34,6 +34,8 @@ public class EmailConfig {
         Properties properties = new Properties();
         properties.setProperty("mail.smtp.auth", "true");
         properties.setProperty("mail.smtp.starttls.enable", "true");
+        properties.setProperty("mail.smtp.allow8bitmime", "true");
+        properties.setProperty("mail.smtps.allow8bitmime", "true");
         return properties;
     }
 }

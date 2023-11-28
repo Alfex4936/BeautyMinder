@@ -76,10 +76,47 @@ public class UserController {
     @Value("${server.default.admin}")
     private String defaultAdminProfilePic;
 
+
+    @Operation(summary = "Request Email verification", description = "이메일 인증 요청입니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User signup details"), tags = {"User Operations"}, responses = {@ApiResponse(responseCode = "200", description = "사용자가 생성됨", content = @Content(schema = @Schema(implementation = SignUpResponse.class))), @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = SignUpResponse.class)))})
+    @PostMapping("/email-verification/request")
+    public ResponseEntity<?> requestVerificationToken(@RequestParam String email) {
+        // Check if email already exists in the system
+        if (userService.findByEmail(email).isPresent()) {
+            return ResponseEntity.badRequest().body("Email already in use.");
+        }
+
+        userService.requestPassCode(email);
+
+        return ResponseEntity.ok("Verification email sent.");
+    }
+
+    @Operation(summary = "Verify Email", description = "이메일 인증 확인입니다.")
+    @PostMapping("/email-verification/verify")
+    // Here if the token is valid, it sets verified.
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        // Validate the token
+        boolean isValid = tokenService.validateVerificationToken(token);
+
+        if (!isValid) {
+            // Handle invalid or expired token
+            return ResponseEntity.badRequest().body("Invalid or expired token.");
+        }
+
+        // Token is valid
+        return ResponseEntity.ok("Email verified successfully.");
+    }
+
     // Standard user sign-up
     @Operation(summary = "Standard User Signup", description = "표준 사용자 등록을 처리합니다.", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User signup details"), tags = {"User Operations"}, responses = {@ApiResponse(responseCode = "200", description = "사용자가 생성됨", content = @Content(schema = @Schema(implementation = SignUpResponse.class))), @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = SignUpResponse.class)))})
     @PostMapping("/signup")
     public ResponseEntity<SignUpResponse> signUp(@Valid @org.springframework.web.bind.annotation.RequestBody AddUserRequest request) {
+        // Check if email is verified
+        if (!tokenService.isEmailVerified(request.getEmail())) {
+            return ResponseEntity.badRequest().body(new SignUpResponse("Email not verified.", null));
+        }
+
+        tokenService.removePassCodeFor(request.getEmail());
+
         try {
             String userId = userService.saveUser(request).getId();
             User user = userService.findById(userId);

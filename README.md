@@ -2,7 +2,7 @@
 
 BeautyMinder is the culmination of our capstone design class, commenced in September 2023.
 
-A cosmetic recommendation app, meticulously tuned to individual skin types as determined through the Baumann skin type assessment.
+A comprehensive cosmetics management app, meticulously tuned to individual skin types as determined through the Baumann skin type assessment.
 
 # Team Members 👥
 | Name                                                          | Role           | Major                     |
