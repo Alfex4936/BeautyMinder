@@ -13,9 +13,10 @@ spring-boot-logs.conf
 ec2/
 loadTest/.env
 openapi.json
-
 # Log file
 *.log
+api-ref/run.ps1
+run.ps1
 
 # BlueJ files
 *.ctxt

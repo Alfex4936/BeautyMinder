@@ -61,8 +61,8 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-    public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(14);
-    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofHours(3);
+    public static final Duration REFRESH_TOKEN_DURATION = Duration.ofDays(30);
+    public static final Duration ACCESS_TOKEN_DURATION = Duration.ofDays(30);
     public static final String REFRESH_TOKEN_COOKIE_NAME = "XRT";
 
     private final TokenProvider tokenProvider;
@@ -104,7 +104,7 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 //        MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector).servletPath("/path");
         http.csrf(AbstractHttpConfigurer::disable);
-        http.cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource()));
+
         http.anonymous(AbstractHttpConfigurer::disable);
 //                http.httpBasic(AbstractHttpConfigurer::disable);
 
@@ -117,7 +117,6 @@ public class WebSecurityConfig {
                 .requestMatchers(antMatcher("/redis/**")).permitAll()
                 .requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll()
                 .requestMatchers(antMatcher("/cosmetic/click/**")).permitAll()
-                .requestMatchers(antMatcher("/baumann/survey")).permitAll()
                 .requestMatchers(antMatcher("/search/test")).permitAll()
                 .requestMatchers(antMatcher("/user/email-verification/**")).permitAll()
 

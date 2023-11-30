@@ -8,6 +8,7 @@ import app.beautyminder.service.LocalFileService;
 import app.beautyminder.service.auth.UserService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +27,7 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -59,6 +59,7 @@ class BaumannApiControllerTest {
     private TokenProvider tokenProvider;
     private String userId;
     private String accessToken;
+    private String baumannHistoryId;
 
     @BeforeEach
     public void mockMvcSetUp() {
@@ -84,7 +85,8 @@ class BaumannApiControllerTest {
         String url = "/baumann/survey";
 
         // when
-        MvcResult mvcResult = mockMvc.perform(get(url))
+        MvcResult mvcResult = mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
                 // then
                 .andExpect(status().is2xxSuccessful()).andReturn();
 
@@ -128,13 +130,32 @@ class BaumannApiControllerTest {
         String url = "/baumann/history";
 
         // when
-        mockMvc.perform(get(url)
+        MvcResult mvcResult = mockMvc.perform(get(url)
                         .header("Authorization", "Bearer " + accessToken))
 
                 // then
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$[*].userId", everyItem(is(userId))))
-                .andExpect(jsonPath("$[*].baumannType", everyItem(is("OSNT"))));
+                .andExpect(jsonPath("$[*].baumannType", everyItem(is("OSNT"))))
+                .andReturn();
+
+        // Extracting the id of the first item
+        baumannHistoryId = JsonPath.read(mvcResult.getResponse().getContentAsString(), "$[0].id");
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("Test Baumann History Delete")
+    public void testDeleteHistory() throws Exception {
+        // given
+        String url = "/baumann/delete/" + baumannHistoryId;
+
+        // when
+        mockMvc.perform(delete(url)
+                        .header("Authorization", "Bearer " + accessToken))
+
+                // then
+                .andExpect(status().is2xxSuccessful());
     }
 
     @AfterEach

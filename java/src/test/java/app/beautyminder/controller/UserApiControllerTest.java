@@ -4,6 +4,7 @@ import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.User;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.UserRepository;
+import app.beautyminder.service.auth.TokenService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
@@ -57,11 +58,14 @@ class UserApiControllerTest {
     private RefreshTokenRepository refreshTokenRepository;
     @Autowired
     private TokenProvider tokenProvider;
+    @Autowired
+    private TokenService tokenService;
 
     @Autowired
     private WebApplicationContext context;
     private String accessToken;
     private String refreshToken;
+    private String passCodeToken;
 
     @AfterAll
     public static void finalCleanUp() {
@@ -77,6 +81,46 @@ class UserApiControllerTest {
     }
 
     @Order(1)
+    @DisplayName("Test User Registration (request)")
+    @Test
+    public void testSignUpRequest() throws Exception {
+        // given
+        String url = "/user/email-verification/request?email=" + userEmail;
+
+        // when
+        MvcResult result = mockMvc.perform(post(url))
+
+                // then
+                .andExpect(status().is2xxSuccessful())
+                .andDo(print())
+                .andReturn();
+
+        // Convert the response content to a Map
+        String jsonResponse = result.getResponse().getContentAsString();
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> responseMap = objectMapper.readValue(jsonResponse, new TypeReference<>() {
+        });
+
+        // Get the password from the response map using the appropriate nested keys
+        passCodeToken = (String) responseMap.get("token");
+    }
+
+    @Order(2)
+    @DisplayName("Test User Registration (verify)")
+    @Test
+    public void testSignUpVerification() throws Exception {
+        // given
+        String url = "/user/email-verification/verify?token=" + passCodeToken;
+
+        // when
+        mockMvc.perform(post(url))
+
+                // then - nothing much happening
+                .andExpect(status().is2xxSuccessful());
+    }
+
+
+    @Order(3)
     @DisplayName("Test User Registration")
     @Test
     public void testSignup() throws Exception {
@@ -108,7 +152,7 @@ class UserApiControllerTest {
         assertNotEquals("1234", password, "The password should not be '1234'");
     }
 
-    @Order(2)
+    @Order(4)
     @DisplayName("Request Forgot password via email")
     @Test
     public void testForgotEmail() throws Exception {
@@ -134,7 +178,7 @@ class UserApiControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @Order(3)
+    @Order(5)
     @DisplayName("Test Login")
     @Test
     public void testLogin() throws Exception {
@@ -171,7 +215,7 @@ class UserApiControllerTest {
         assertTrue(userRepository.findById(userId).isPresent(), "User ID from token does not exist in repository");
     }
 
-    @Order(4)
+    @Order(6)
     @DisplayName("Delete a user")
     @Test
     public void testDeleteUser() throws Exception {

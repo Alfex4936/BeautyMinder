@@ -36,6 +36,7 @@ import java.util.stream.IntStream;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/baumann")
+@PreAuthorize("hasRole('ROLE_USER')")
 public class BaumannController {
 
     private static final String BAUMANN_JSON_PATH = "classpath:baumann.json";
@@ -81,7 +82,7 @@ public class BaumannController {
 
     @Operation(
             summary = "Get Baumann Skin Survey",
-            description = "바우만 피부 설문 얻기",
+            description = "바우만 피부 설문 얻기 [USER 권한 필요]",
             tags = {"Baumann Operations"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "바우만 피부 설문지 결과", content = @Content(
@@ -174,7 +175,6 @@ public class BaumannController {
                     @ApiResponse(responseCode = "400", description = "설문지 답변 부족")
             }
     )
-    @PreAuthorize("hasRole('ROLE_USER')")
     @PostMapping("/test")
     public ResponseEntity<BaumannTypeDTO> getBaumann(@Parameter(hidden = true) @AuthenticatedUser User user, @Valid @RequestBody BaumannSurveyAnswerDTO baumannSurveyAnswerDTO) {
         var responses = baumannSurveyAnswerDTO.getResponses();
@@ -222,11 +222,31 @@ public class BaumannController {
                     )))
             }
     )
-    @PreAuthorize("hasRole('ROLE_USER')")
     @GetMapping("/history")
     public ResponseEntity<List<BaumannTest>> getHistory(@Parameter(hidden = true) @AuthenticatedUser User user) {
         List<BaumannTest> history = baumannTestService.findByUserId(user.getId());
         return ResponseEntity.ok(history);
     }
 
+    @Operation(
+            summary = "Delete a baumann test",
+            description = "바우만 결과 삭제하기 [User 권한 필요]",
+            tags = {"Baumann Operations"},
+            parameters = { @Parameter(name="historyId", description = "바우만 테스트 DB 아이디")},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "내용 없음", content = @Content(
+                            schema = @Schema(implementation = String.class)))
+            }
+    )
+    @DeleteMapping("/delete/{historyId}")
+    public ResponseEntity<?> deleteHistory(@PathVariable String historyId, @AuthenticatedUser User user) {
+        boolean noHistory = baumannTestService.deleteByIdAndUserId(historyId, user.getId());
+
+        if (noHistory) {
+            var updates = Map.of("baumann", "", "baumannScores", Map.of());
+            mongoService.updateFields(user.getId(), updates, User.class);
+        }
+
+        return ResponseEntity.ok("Deleted " + historyId);
+    }
 }

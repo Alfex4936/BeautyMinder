@@ -41,7 +41,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private static final Pattern UNPROTECTED_API =
             Pattern.compile("^/(test|cosmetic/hit|cosmetic/click|ws|user/email-verification)(/.*)?$");
     private static final Pattern TEST_PROTECTED_API =
-            Pattern.compile("^/(chat|actuator|expiry|admin|gpt/review/summarize|es-index|data-view|todo|review|baumann/test|baumann/history|recommend|search|user|redis/eval|redis/batch|redis/product)(/.*)?$");
+            Pattern.compile("^/(chat|actuator|expiry|admin|gpt/review/summarize|es-index|data-view|todo|review|baumann|recommend|search|user|redis/eval|redis/batch|redis/product)(/.*)?$");
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;

@@ -69,11 +69,37 @@ public class EmailService {
     @Async
     public void sendPasswordResetEmail(String to, String token) {
         String subject = "[BeautyMinder] 비밀번호 초기화";
-        String resetUrl = server + "/user/reset-password?token=" + token;
-        String text = "초기화하려면 다음 링크를 가주세요: " + resetUrl;
 
-        sendSimpleMessage(to, subject, text);
+        // HTML content
+        String resetUrl = server + "/user/reset-password?token=" + token;
+        Context context = new Context();
+        context.setVariable("link", resetUrl);
+
+        String htmlContent = templateEngine.process("reset-password-email", context);
+
+        try {
+            MimeMessage message = emailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_NO, StandardCharsets.UTF_8.name());
+
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true); // Set to 'true' to send HTML
+
+            emailSender.send(message);
+        } catch (MessagingException e) {
+            log.error(e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "failed to send an email.");
+        }
     }
+//
+//    @Async
+//    public void sendPasswordResetEmail(String to, String token) {
+//        String subject = "[BeautyMinder] 비밀번호 초기화";
+//        String resetUrl = server + "/user/reset-password?token=" + token;
+//        String text = "초기화하려면 다음 링크를 가주세요: " + resetUrl;
+//
+//        sendSimpleMessage(to, subject, text);
+//    }
 
     public void sendSimpleMessage(String to, String subject, String text) {
         SimpleMailMessage message = new SimpleMailMessage();

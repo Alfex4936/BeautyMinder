@@ -9,4 +9,9 @@ copy google-beautyminder.json build/libs/
 copy Dockerfile.python python/
 
 # This runs 'docker-compose -f ELK.yml up -d' command
-docker-compose -f ELK.yml up --build -d
+$userChoice = Read-Host "Do you want to run the docker? (y/n)"
+if ($userChoice -eq "y") {
+    docker-compose -f ELK.yml up --build -d
+} else {
+    docker-compose -f ELK.yml up --build --no-start
+}

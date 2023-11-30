@@ -210,9 +210,10 @@ public class UserService {
 
     }
 
-    public void requestPassCode(String email) {
+    public PasscodeToken requestPassCode(String email) {
         PasscodeToken token = tokenService.createPasscode(email);
         emailService.sendVerificationEmail(email, token.getToken());
+        return token;
     }
 
     public void requestPasswordReset(String email) {
@@ -245,4 +246,26 @@ public class UserService {
         passwordResetTokenRepository.delete(resetToken);
     }
 
+    public void updatePassword(String userId, String currentPassword, String newPassword) {
+        userRepository.findById(userId).ifPresentOrElse(
+                user -> {
+                    // Check if user's current password matches the one stored in the database
+                    BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+                    if (!bCryptPasswordEncoder.matches(currentPassword, user.getPassword())) {
+                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password is incorrect.");
+                    } else if (bCryptPasswordEncoder.matches(newPassword, user.getPassword())) {
+                        // If new password is the same as current password
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password cannot be the same as current password.");
+                    }
+
+                    // Update the password
+                    user.setPassword(bCryptPasswordEncoder.encode(newPassword));
+                    userRepository.save(user);
+                },
+                () -> {
+                    // If there's no user associated with that ID, throw an exception
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No user exists with the given ID.");
+                }
+        );
+    }
 }

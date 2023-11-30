@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -87,7 +88,11 @@ public class FileStorageService {
     }
 
     public void deleteFile(String fileName) {
-        amazonS3.deleteObject(bucket, fileName);
+        String key = fileName.startsWith("http://") || fileName.startsWith("https://")
+                ? URI.create(fileName).getPath().substring(1) // Extract key from URL
+                : fileName; // Use as key directly
+
+        amazonS3.deleteObject(bucket, key);
     }
 
     private void validateImageFileType(MultipartFile file) {

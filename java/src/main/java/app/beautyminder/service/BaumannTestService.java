@@ -31,4 +31,10 @@ public class BaumannTestService {
     public List<BaumannTest> findByUserId(String userId) {
         return baumannTestRepository.findByUserIdOrderByDateAsc(userId);
     }
+
+    public boolean deleteByIdAndUserId(String id, String userId) {
+        baumannTestRepository.deleteByIdAndUserId(id, userId);
+
+        return findByUserId(userId).isEmpty();
+    }
 }

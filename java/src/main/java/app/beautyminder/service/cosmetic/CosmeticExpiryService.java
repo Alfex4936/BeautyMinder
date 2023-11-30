@@ -51,8 +51,8 @@ public class CosmeticExpiryService {
         }
 
         builder.productName(cosmeticExpiryDTO.getProductName());
-        builder.isExpiryRecognized(cosmeticExpiryDTO.isExpiryRecognized());
-        builder.isOpened(cosmeticExpiryDTO.isOpened());
+        builder.expiryRecognized(cosmeticExpiryDTO.isExpiryRecognized());
+        builder.opened(cosmeticExpiryDTO.isOpened());
 
 
         // Set the user ID from the User object

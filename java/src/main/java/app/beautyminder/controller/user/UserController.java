@@ -6,10 +6,7 @@ import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.PasswordResetResponse;
 import app.beautyminder.dto.sms.SmsResponseDTO;
-import app.beautyminder.dto.user.AddUserRequest;
-import app.beautyminder.dto.user.ForgotPasswordRequest;
-import app.beautyminder.dto.user.ResetPasswordRequest;
-import app.beautyminder.dto.user.SignUpResponse;
+import app.beautyminder.dto.user.*;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.service.FileStorageService;
@@ -85,9 +82,9 @@ public class UserController {
             return ResponseEntity.badRequest().body("Email already in use.");
         }
 
-        userService.requestPassCode(email);
+        var token = userService.requestPassCode(email);
 
-        return ResponseEntity.ok("Verification email sent.");
+        return ResponseEntity.ok(token);
     }
 
     @Operation(summary = "Verify Email", description = "이메일 인증 확인입니다.")
@@ -360,5 +357,20 @@ public class UserController {
                 return ResponseEntity.badRequest().body(e.getMessage());
             }
         })).orElseGet(() -> ResponseEntity.badRequest().body("Token and password are required"));
+    }
+
+    @Operation(summary = "Update user password", description = "사용자의 비밀번호를 업데이트합니다. [USER 권한 필요]",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Password update dto"),
+            tags = {"User Operations"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "업데이트 성공", content = @Content(schema = @Schema(implementation = UpdatePasswordRequest.class))),
+                    @ApiResponse(responseCode = "401", description = "비밀번호 불일치", content = @Content(schema = @Schema(implementation = String.class))),
+                    @ApiResponse(responseCode = "404", description = "사용자 못찾음", content = @Content(schema = @Schema(implementation = String.class)))
+            })
+    @PostMapping("/update-password")
+    public ResponseEntity<String> resetPassword(@RequestBody UpdatePasswordRequest request, @Parameter(hidden = true) @AuthenticatedUser User user) {
+        userService.updatePassword(user.getId(), request.currentPassword(), request.newPassword());
+
+        return ResponseEntity.ok("Password successfully updated!");
     }
 }

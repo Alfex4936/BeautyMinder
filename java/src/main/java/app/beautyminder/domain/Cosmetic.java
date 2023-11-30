@@ -65,17 +65,21 @@ public class Cosmetic {
         if (this.reviewCount == 0) {
             this.reviewCount = 1; // To handle the case of the first review
         }
-        this.averageRating = (double) (this.totalRating / this.reviewCount);
-        this.averageRating = (double) (Math.round(this.averageRating * 100.0) / 100.0f);  // Round to 2 decimal places
+
+        // Ensure floating-point division
+        this.averageRating = (double) this.totalRating / this.reviewCount;
+        this.averageRating = Math.round(this.averageRating * 100.0) / 100.0;  // Round to 2 decimal places
     }
+
 
     public void removeRating(int ratingToRemove) {
         this.totalRating -= ratingToRemove;
         this.reviewCount--;
 
         if (this.reviewCount > 0) {
-            this.averageRating = (double) (this.totalRating / this.reviewCount);
-            this.averageRating = (double) (Math.round(this.averageRating * 100.0) / 100.0f);  // Round to 2 decimal places
+            // Ensure floating-point division
+            this.averageRating = (double) this.totalRating / this.reviewCount;
+            this.averageRating = Math.round(this.averageRating * 100.0) / 100.0;  // Round to 2 decimal places
         } else {
             // Reset averageRating if there are no more reviews
             this.averageRating = 0.0;
