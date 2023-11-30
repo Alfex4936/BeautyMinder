@@ -33,7 +33,7 @@ A comprehensive cosmetics management app, meticulously tuned to individual skin 
 | **DevOps**           | [JUnit5](https://junit.org/junit5/), [Locust](https://locust.io/), [GitHub Actions](https://github.com/features/actions)                                                        |
 
 # System Architecture 🏗️
-![SA](https://github.com/beminder/BeautyMinder/assets/2356749/71bbf6e8-dadf-4ba3-ba08-d1faacc4bde5)
+![sa](https://github.com/beminder/BeautyMinder/assets/2356749/dec95e25-5b29-4a6e-a962-274c845f263b)
 
 # Baumann Skin Type Survey
 ![types](https://cdn.shopify.com/s/files/1/0740/5984/1838/files/img_1_-_16-baumann-skin-types_800x.png?v=1689709313)
