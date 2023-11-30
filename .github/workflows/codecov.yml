@@ -14,6 +14,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: java
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
@@ -30,19 +33,15 @@ jobs:
           echo "${{ secrets.DOCKER_SPRING }}" | base64 --decode > spring.env
           echo "${{ secrets.DOCKER_REDIS }}" | base64 --decode > redis.env
           echo "${{ secrets.DOCKER_GOOGLE }}" | base64 --decode > google-beautyminder.json
-        working-directory: java
 
       - name: Correct permission
         run: chmod +x gradlew
-        working-directory: java
 
       - name: Build with Gradle
         run: ./gradlew build -x test
-        working-directory: java
 
       - name: Run JacocoTest
         run: LOGSTASH_HOST=${{ secrets.EC_HOST }} ./gradlew clean test jacocoTestReport
-        working-directory: java
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -50,4 +49,3 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: build/reports/jacoco/test/jacocoTestReport.xml
           fail_ci_if_error: true
-        working-directory: java
