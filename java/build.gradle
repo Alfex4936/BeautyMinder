@@ -24,6 +24,20 @@ jacocoTestReport {
         csv.required = false
         html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
     }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    // List of patterns to exclude
+                    'app/beautyminder/aop/**',
+                    'app/beautyminder/config/**',
+                    'app/beautyminder/error/**',
+                    'app/beautyminder/domain/**',
+                    'app/beautyminder/dto/**',
+                    'app/beautyminder/repository/**',
+            ])
+        }))
+    }
 }
 
 bootJar {
