@@ -1,7 +1,8 @@
-package app.beautyminder.controller;
+package app.beautyminder.controller.user;
 
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.User;
+import app.beautyminder.dto.user.UpdatePasswordRequest;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.UserRepository;
 import app.beautyminder.service.auth.TokenService;
@@ -15,26 +16,30 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.util.AssertionErrors.assertNotEquals;
 import static org.springframework.test.util.AssertionErrors.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -216,6 +221,170 @@ class UserApiControllerTest {
     }
 
     @Order(6)
+    @DisplayName("Test /user/me")
+    @Test
+    public void testGetProfile() throws Exception {
+        // given
+        String url = "/user/me";
+        Optional<User> optUser = userRepository.findByEmail(userEmail);
+        if (optUser.isEmpty()) {
+            throw new Exception("Non existent user");
+        }
+        User user = optUser.get();
+
+        // when
+        ResultActions result = mockMvc.perform(get(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(user.getId()));
+    }
+
+    @Order(7)
+    @Test
+    @DisplayName("Test PATCH /user/update")
+    public void testUpdateProfile() throws Exception {
+        // given
+        String url = "/user/update";
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("phoneNumber", "01041369546");
+
+        String requestBody = objectMapper.writeValueAsString(updates);
+
+        // when
+        ResultActions result = mockMvc.perform(patch(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody));
+
+        // then
+        result.andExpect(status().isOk()).andExpect(jsonPath("$.phoneNumber").value("01041369546"));
+    }
+
+    @Order(8)
+    @Test
+    @DisplayName("Test POST /user/favorites/{cosmeticId}")
+    public void testAddToUserFavorite() throws Exception {
+        // given
+        String cosmeticId = "652cdc2d2bf53d0109d1e210";
+        String url = "/user/favorites/" + cosmeticId;
+
+        // when
+        ResultActions result = mockMvc.perform(post(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk());
+    }
+
+    @Order(9)
+    @Test
+    @DisplayName("Test DELETE /user/favorites/{cosmeticId}")
+    public void testRemoveFromUserFavorite() throws Exception {
+        // given
+        String cosmeticId = "652cdc2d2bf53d0109d1e210";
+        String url = "/user/favorites/" + cosmeticId;
+
+        // when
+        ResultActions result = mockMvc.perform(delete(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk());
+    }
+
+    @Order(10)
+    @Test
+    @DisplayName("Test DELETE /user/favorites/{cosmeticId}")
+    public void testGetFavorites() throws Exception {
+        // given
+        String url = "/user/favorites";
+
+        // when
+        ResultActions result = mockMvc.perform(get(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk());
+    }
+
+    @Order(11)
+    @Test
+    @DisplayName("Test GET /user/reviews")
+    public void testGetUserReviews() throws Exception {
+        // given
+        String url = "/user/reviews";
+
+        // when
+        ResultActions result = mockMvc.perform(get(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk());
+    }
+
+    @Order(12)
+    @Test
+    @DisplayName("Test POST /user/upload")
+    public void testUploadProfileImage() throws Exception {
+        // given
+        String url = "/user/upload";
+        File imageFile = new File("src/test/resources/ajou.png");
+        MockMultipartFile image1 = new MockMultipartFile("image",
+                "ajou2.png",
+                "image/png",
+                Files.readAllBytes(imageFile.toPath()));
+        // when
+        ResultActions result = mockMvc.perform(MockMvcRequestBuilders.multipart(url)
+                .file(image1)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.MULTIPART_FORM_DATA_VALUE));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(content().string(containsString(".png"))); // Expect the URL of the uploaded image
+    }
+
+    @Order(13)
+    @Test
+    @DisplayName("Test GET /user/search-history")
+    public void testGetKeywordHistory() throws Exception {
+        // given
+        String url = "/user/search-history";
+
+        // when
+        ResultActions result = mockMvc.perform(get(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray()); // Validate that the response body is an array
+    }
+
+    @Order(15)
+    @DisplayName("Logout a user")
+    @Test
+    public void testLogout() throws Exception {
+        // given
+        String url = "/user/logout";
+
+        // when
+        mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+
+                // then
+                .andExpect(status().isOk());
+
+    }
+
+    @Order(16)
     @DisplayName("Delete a user")
     @Test
     public void testDeleteUser() throws Exception {

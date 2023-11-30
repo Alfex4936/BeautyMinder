@@ -52,57 +52,47 @@ public class UserService {
 
     // 일반 사용자 저장
     public User saveUser(AddUserRequest dto) throws ResponseStatusException {
-        // 이메일 중복 체크
+        // Email duplicate check
         checkDuplicatedUser(dto.getEmail(), dto.getPhoneNumber());
 
-        // 사용자 생성
-        var user = User.builder().email(dto.getEmail()).password(bCryptPasswordEncoder.encode(dto.getPassword())).build();  // build the user first
+        // User creation
+        var user = buildUserFromRequest(dto, defaultUserProfilePic);
+        user.addAuthority("ROLE_USER");
+
+        return userRepository.save(user);
+    }
+
+    // 관리자 저장
+    public User saveAdmin(AddUserRequest dto) {
+        // Email duplicate check
+        checkDuplicatedUser(dto.getEmail(), dto.getPhoneNumber());
+
+        // Admin creation
+        var admin = buildUserFromRequest(dto, defaultAdminProfilePic);
+        admin.addAuthority("ROLE_ADMIN");
+
+        return userRepository.save(admin);
+    }
+
+    private User buildUserFromRequest(AddUserRequest dto, String defaultProfilePic) {
+        var user = User.builder()
+                .email(dto.getEmail())
+                .password(bCryptPasswordEncoder.encode(dto.getPassword()))
+                .build();
+
+        if (dto.getNickname() != null) {
+            user.setNickname(dto.getNickname());
+        }
+        user.setProfileImage(dto.getProfileImage() != null ? dto.getProfileImage() : defaultProfilePic);
+        if (dto.getPhoneNumber() != null) {
+            user.setPhoneNumber(dto.getPhoneNumber().replace("-", ""));
+        }
 
         if (user.getCosmeticIds() == null) {
             user.setCosmeticIds(new HashSet<>());
         }
 
-        // Add nickname, profileImage, phoneNumber only if they are not null
-        if (dto.getNickname() != null) {
-            user.setNickname(dto.getNickname());
-        }
-        if (dto.getProfileImage() != null) {
-            user.setProfileImage(dto.getProfileImage());
-        } else {
-            user.setProfileImage(defaultUserProfilePic);
-        }
-        if (dto.getPhoneNumber() != null) {
-            user.setPhoneNumber(dto.getPhoneNumber().replace("-", ""));
-        }
-
-        // 기본 권한 설정 ("ROLE_USER")
-        user.addAuthority("ROLE_USER");
-        return userRepository.save(user);
-    }
-
-    // 관리자 저장
-    public String saveAdmin(AddUserRequest dto) {
-        // 이메일 중복 체크
-        checkDuplicatedUser(dto.getEmail(), dto.getPhoneNumber());
-
-        // 관리자 생성
-        var admin = User.builder().email(dto.getEmail()).password(bCryptPasswordEncoder.encode(dto.getPassword())).build();
-
-        if (dto.getNickname() != null) {
-            admin.setNickname(dto.getNickname());
-        }
-        if (dto.getProfileImage() != null) {
-            admin.setProfileImage(dto.getProfileImage());
-        } else {
-            admin.setProfileImage(defaultAdminProfilePic);
-        }
-        if (dto.getPhoneNumber() != null) {
-            admin.setPhoneNumber(dto.getPhoneNumber().replace("-", ""));
-        }
-
-        // 관리자 권한 추가
-        admin.addAuthority("ROLE_ADMIN");
-        return userRepository.save(admin).getId();
+        return user;
     }
 
     private void checkDuplicatedUser(String email, String phoneNumber) {

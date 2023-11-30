@@ -43,8 +43,8 @@ public class MongoService {
     @PostConstruct
     public void initClass() {
         // Initialize the map with banned fields for each class
-        bannedFieldsPerClass.put(Todo.class, Set.of("user", "createdAt"));
-        bannedFieldsPerClass.put(User.class, Set.of("password", "email", "createdAt"));
+        bannedFieldsPerClass.put(Todo.class, Set.of("id", "user", "createdAt"));
+        bannedFieldsPerClass.put(User.class, Set.of("id", "password", "email", "createdAt"));
 //        bannedFieldsPerClass.put(Review.class, Set.of("isFiltered", "nlpAnalysis"));
         bannedFieldsPerClass.put(CosmeticExpiry.class, Set.of("id", "createdAt"));
     }
@@ -59,12 +59,16 @@ public class MongoService {
     }
 
     public <T> Optional<T> updateFields(String id, Map<String, Object> updates, Class<T> entityClass) {
-        var query = new Query(Criteria.where("id").is(id));
+        var query = new Query(Criteria.where("_id").is(new ObjectId(id)));
         if (!mongoTemplate.exists(query, entityClass)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, entityClass.getSimpleName() + " not found: " + id);
         }
 
         var update = createUpdateOperation(updates, entityClass);
+        if (update.getUpdateObject().isEmpty()) {
+            return Optional.ofNullable(mongoTemplate.findOne(query, entityClass));
+        }
+
         mongoTemplate.updateFirst(query, update, entityClass);
         logUpdatedFields(entityClass, update);
 
@@ -112,7 +116,7 @@ public class MongoService {
     }
 
     public <T> boolean touch(Class<T> entitiyClass, String id, String field) {
-        Query query = new Query(Criteria.where("id").is(id));
+        Query query = new Query(Criteria.where("_id").is(id));
         Update update = new Update().currentDate(field);
         var updateResult = mongoTemplate.updateFirst(query, update, entitiyClass);
 

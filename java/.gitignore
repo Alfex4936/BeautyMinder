@@ -16,7 +16,6 @@ openapi.json
 # Log file
 *.log
 api-ref/run.ps1
-run.ps1
 
 # BlueJ files
 *.ctxt
@@ -37,6 +36,7 @@ run.ps1
 hs_err_pid*
 
 application-secret.yml
+application-secret-github.yml
 
 .gradle
 build

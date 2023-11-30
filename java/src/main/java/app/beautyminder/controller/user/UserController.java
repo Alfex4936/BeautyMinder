@@ -128,7 +128,7 @@ public class UserController {
     @PostMapping("/signup-admin")
     public ResponseEntity<SignUpResponse> signUpAdmin(@RequestBody AddUserRequest request) {
         try {
-            String userId = userService.saveAdmin(request);
+            String userId = userService.saveAdmin(request).getId();
             User user = userService.findById(userId);
             return ResponseEntity.ok(new SignUpResponse("A user is created", user));
         } catch (IllegalArgumentException e) {
@@ -189,10 +189,6 @@ public class UserController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
-
-//        return mongoService.updateFields(userId, updates, User.class)
-//                .map(user -> new ResponseEntity<User>(user, HttpStatus.OK))
-//                .orElseGet(() -> new ResponseEntity<String>("User not found", HttpStatus.BAD_REQUEST));
     }
 
     @Operation(summary = "Add to User Favorite", description = "사용자의 즐겨찾기에 화장품을 추가합니다. [USER 권한 필요]", tags = {"User Profile Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품의 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = User.class))), @ApiResponse(responseCode = "404", description = "사용자 또는 화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))})
