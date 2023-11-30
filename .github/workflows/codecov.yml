@@ -1,0 +1,53 @@
+name: Verify Test Cases with Codecov
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "java/**/*.java"
+      - "java/**/build.gradle*"
+      - "java/**/settings.gradle*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "corretto"
+
+      - name: Setup secrets
+        run: |
+          echo "${{ secrets.APPLICATION_YML }}" | base64 --decode > src/main/resources/application-secret.yml
+          echo "${{ secrets.DOCKER_PYTHON }}" | base64 --decode > python.env
+          echo "${{ secrets.DOCKER_SPRING }}" | base64 --decode > spring.env
+          echo "${{ secrets.DOCKER_REDIS }}" | base64 --decode > redis.env
+          echo "${{ secrets.DOCKER_GOOGLE }}" | base64 --decode > google-beautyminder.json
+        working-directory: java
+
+      - name: Correct permission
+        run: chmod +x gradlew
+        working-directory: java
+
+      - name: Build with Gradle
+        run: ./gradlew build -x test
+        working-directory: java
+
+      - name: Run JacocoTest
+        run: LOGSTASH_HOST=${{ secrets.EC_HOST }} ./gradlew clean test jacocoTestReport
+        working-directory: java
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/reports/jacoco/test/jacocoTestReport.xml
+          fail_ci_if_error: true
+        working-directory: java

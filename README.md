@@ -1,5 +1,9 @@
 # BeautyMinder 💄✨
 
+---
+
+[![codecov](https://codecov.io/gh/beminder/BeautyMinder/graph/badge.svg?token=XJ79PXGWBC)](https://codecov.io/gh/beminder/BeautyMinder)
+
 BeautyMinder is the culmination of our capstone design class, commenced in September 2023.
 
 A comprehensive cosmetics management app, meticulously tuned to individual skin types as determined through the Baumann skin type assessment.
@@ -33,6 +37,7 @@ A comprehensive cosmetics management app, meticulously tuned to individual skin 
 | **DevOps**           | [JUnit5](https://junit.org/junit5/), [Locust](https://locust.io/), [GitHub Actions](https://github.com/features/actions)                                                        |
 
 # System Architecture 🏗️
+![Group 10](https://github.com/beminder/BeautyMinder/assets/2356749/ba7cbe30-a516-40aa-96e6-06656bc47068)
 ![sa](https://github.com/beminder/BeautyMinder/assets/2356749/dec95e25-5b29-4a6e-a962-274c845f263b)
 
 # Baumann Skin Type Survey
