@@ -12,8 +12,10 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.server.ResponseStatusException;
 
+// USED WHEN NO JWT TOKEN FILTER
+
 @AllArgsConstructor
-@Component
+//@Component
 public class UserIdValidationResolver implements HandlerMethodArgumentResolver {
 
     private final UserService userService;

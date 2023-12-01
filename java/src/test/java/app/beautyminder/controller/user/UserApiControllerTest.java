@@ -2,7 +2,6 @@ package app.beautyminder.controller.user;
 
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.User;
-import app.beautyminder.dto.user.UpdatePasswordRequest;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.UserRepository;
 import app.beautyminder.service.auth.TokenService;
@@ -12,11 +11,11 @@ import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
@@ -48,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ActiveProfiles({"awsBasic", "test"})
 class UserApiControllerTest {
 
     private final String userEmail = "usertest@email";
@@ -299,7 +299,7 @@ class UserApiControllerTest {
 
     @Order(10)
     @Test
-    @DisplayName("Test DELETE /user/favorites/{cosmeticId}")
+    @DisplayName("Test GET /user/favorites")
     public void testGetFavorites() throws Exception {
         // given
         String url = "/user/favorites";

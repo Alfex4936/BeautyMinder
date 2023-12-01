@@ -37,6 +37,7 @@ hs_err_pid*
 
 application-secret.yml
 application-secret-github.yml
+logback-test.xml
 
 .gradle
 build

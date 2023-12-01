@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
+@ActiveProfiles({"awsBasic", "test"})
 public class RankApiControllerTest {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();

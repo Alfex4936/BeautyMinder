@@ -3,17 +3,16 @@ package app.beautyminder.controller;
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.AddUserRequest;
-import app.beautyminder.service.auth.TokenService;
 import app.beautyminder.service.auth.UserService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -37,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@ActiveProfiles({"awsBasic", "test"})
 class TodoApiControllerTest {
 
     private static final String TEST_USER_EMAIL = "usertest@gmail.com";
@@ -79,6 +79,8 @@ class TodoApiControllerTest {
             	"taskIdsToDelete": ["%s"]
             }
             """;
+    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofMinutes(3);
+    private static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(1);
     @Autowired
     private MockMvc mockMvc;
     @Autowired
@@ -89,14 +91,9 @@ class TodoApiControllerTest {
     private UserService userService;
     @Autowired
     private TokenProvider tokenProvider;
-
     private String userId;
     private String todoId;
     private List<String> taskIds;
-
-    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofMinutes(3);
-    private static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(1);
-
     private String accessToken;
     private String refreshToken;
 
