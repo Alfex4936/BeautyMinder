@@ -7,6 +7,7 @@ on:
       - "java/**/*.java"
       - "java/**/build.gradle*"
       - "java/**/settings.gradle*"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -48,9 +49,9 @@ jobs:
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
           docker compose -f ELK.yml up --build -d
-          copy Dockerfile.spring build/libs/
-          copy google-beautyminder.json build/libs/
-          copy Dockerfile.python python/
+          cp Dockerfile.spring build/libs/
+          cp google-beautyminder.json build/libs/
+          cp Dockerfile.python python/
 
       - name: Push Docker Images to Registry
         run: |
