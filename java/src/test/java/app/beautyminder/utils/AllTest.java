@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -85,6 +86,43 @@ class AllTest {
     }
 
     @Test
+    public void serialize_ShouldSerializeObject() {
+        String serializableObject = "Test String";
+        String serialized = CookieUtil.serialize(serializableObject);
+
+        assertNotNull(serialized);
+        // Further checks can be made if you know the expected format of the serialized string
+    }
+
+
+    @Test
+    public void deserialize_ShouldDeserializeToCorrectObjectType() {
+        String testString = "Test String";
+        String serialized = CookieUtil.serialize(testString);
+
+        Cookie cookie = new Cookie("test", serialized);
+        String deserialized = CookieUtil.deserialize(cookie, String.class);
+
+        assertEquals(testString, deserialized);
+    }
+
+
+    @Test
+    public void addSecureCookie_ShouldAddSecureCookieCorrectly() {
+        HttpServletResponse mockResponse = mock(HttpServletResponse.class);
+        CookieUtil.addSecureCookie(mockResponse, "secureCookie", "secureValue", 3600, true, "Strict");
+
+        ArgumentCaptor<String> headerNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> headerValueCaptor = ArgumentCaptor.forClass(String.class);
+        verify(mockResponse).addHeader(headerNameCaptor.capture(), headerValueCaptor.capture());
+
+        String expectedHeaderValue = "secureCookie=secureValue; Max-Age=3600; Path=/; HttpOnly; Secure; SameSite=Strict";
+        assertEquals("Set-Cookie", headerNameCaptor.getValue());
+        assertEquals(expectedHeaderValue, headerValueCaptor.getValue());
+    }
+
+
+    @Test
     public void enqueueKeywordAndDequeueAllKeywords_ShouldWorkCorrectly() {
         EventQueue eventQueue = new EventQueue();
         KeywordEvent keywordEvent = new KeywordEvent("keyword");
@@ -138,16 +176,16 @@ class AllTest {
         verify(mockUserService).findById("123");
     }
 
-//    @Test()
-//    public void resolveArgument_InvalidUserId_ShouldThrowException() {
-//        UserService mockUserService = mock(UserService.class);
-//        UserIdValidationResolver resolver = new UserIdValidationResolver(mockUserService);
-//
-//        NativeWebRequest mockWebRequest = mock(NativeWebRequest.class);
-//        when(mockWebRequest.getParameter("userId")).thenReturn("-1");
-//
-//        resolver.resolveArgument(null, null, mockWebRequest, null);
-//    }
+    @Test
+    public void resolveArgument_InvalidUserId_ShouldThrowException() {
+        UserService mockUserService = mock(UserService.class);
+        UserIdValidationResolver resolver = new UserIdValidationResolver(mockUserService);
+
+        NativeWebRequest mockWebRequest = mock(NativeWebRequest.class);
+        when(mockWebRequest.getParameter("userId")).thenReturn("-1");
+
+        Assertions.assertThrows(ResponseStatusException.class, () -> resolver.resolveArgument(null, null, mockWebRequest, null));
+    }
 
     @AfterEach
     public void cleanUp() {

@@ -4,16 +4,16 @@ on:
   push:
     branches: [main]
     paths:
-      - "java/**/*.java"
-      - "java/**/build.gradle*"
-      - "java/**/settings.gradle*"
+      - "java/src/test/**/*"
+      # - "java/**/build.gradle*"
+      # - "java/**/settings.gradle*"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  jacoco_codecov:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -36,6 +36,8 @@ jobs:
           echo "${{ secrets.DOCKER_SPRING }}" | base64 --decode > spring.env
           echo "${{ secrets.DOCKER_REDIS }}" | base64 --decode > redis.env
           echo "${{ secrets.DOCKER_GOOGLE }}" | base64 --decode > google-beautyminder.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=${GITHUB_WORKSPACE}/google-beautyminder.json" >> "$GITHUB_ENV"
+          echo "LOGSTASH_HOST=${{ secrets.EC_HOST }}" >> "$GITHUB_ENV"
 
       - name: Correct permission
         run: chmod +x gradlew
@@ -44,7 +46,7 @@ jobs:
         run: ./gradlew build -x test
 
       - name: Run JacocoTest
-        run: LOGSTASH_HOST=${{ secrets.EC_HOST }} ./gradlew clean test jacocoTestReport
+        run: ./gradlew clean test jacocoTestReport
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

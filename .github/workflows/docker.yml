@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - "java/**/*.java"
-      - "java/**/build.gradle*"
-      - "java/**/settings.gradle*"
+      - "java/src/main/**/*"
+      # - "java/**/build.gradle*"
+      # - "java/**/settings.gradle*"
   workflow_dispatch:
 
 permissions:

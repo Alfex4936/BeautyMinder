@@ -38,6 +38,8 @@ jacocoTestReport {
                     'app/beautyminder/controller/chat/**',
                     'app/beautyminder/controller/html/**',
                     'app/beautyminder/controller/test/**',
+                    'app/beautyminder/service/LocalFileService.java',
+                    'app/beautyminder/service/RecommendService.java',
                     'app/beautyminder/BeautyMinderApplication.java',
             ])
         }))

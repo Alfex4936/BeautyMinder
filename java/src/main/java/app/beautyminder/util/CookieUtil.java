@@ -49,7 +49,7 @@ public class CookieUtil {
     }
 
     // Production
-    public void addSecureCookie(HttpServletResponse response, String name, String value, int maxAge, boolean isSecure, String sameSite) {
+    public static void addSecureCookie(HttpServletResponse response, String name, String value, int maxAge, boolean isSecure, String sameSite) {
         StringBuilder cookieValue = new StringBuilder(name).append("=").append(value)
                 .append("; Max-Age=").append(maxAge)
                 .append("; Path=/")
