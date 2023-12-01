@@ -35,6 +35,10 @@ jacocoTestReport {
                     'app/beautyminder/domain/**',
                     'app/beautyminder/dto/**',
                     'app/beautyminder/repository/**',
+                    'app/beautyminder/controller/chat/**',
+                    'app/beautyminder/controller/html/**',
+                    'app/beautyminder/controller/test/**',
+                    'app/beautyminder/BeautyMinderApplication.java',
             ])
         }))
     }
