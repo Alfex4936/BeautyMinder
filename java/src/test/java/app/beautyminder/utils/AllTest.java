@@ -1,6 +1,7 @@
 package app.beautyminder.utils;
 
 import app.beautyminder.dto.Event;
+import app.beautyminder.dto.KeywordEvent;
 import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.util.CookieUtil;
@@ -22,10 +23,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.request.NativeWebRequest;
 
+import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -84,15 +85,43 @@ class AllTest {
     }
 
     @Test
-    public void enqueueAndDequeueAll_ShouldWorkCorrectly() {
+    public void enqueueKeywordAndDequeueAllKeywords_ShouldWorkCorrectly() {
         EventQueue eventQueue = new EventQueue();
-        Event event = new Event("652cdc2d2bf53d0109d1e210", CosmeticRankService.ActionType.CLICK);
+        KeywordEvent keywordEvent = new KeywordEvent("keyword");
 
-        eventQueue.enqueue(event);
+        eventQueue.enqueueKeyword(keywordEvent);
+        List<KeywordEvent> dequeuedKeywordEvents = eventQueue.dequeueAllKeywords();
+
+        assertEquals(1, dequeuedKeywordEvents.size());
+        assertSame(keywordEvent, dequeuedKeywordEvents.get(0));
+    }
+
+    @Test
+    public void enqueueAllAndDequeueAll_ShouldWorkCorrectly() {
+        EventQueue eventQueue = new EventQueue();
+        Event event1 = new Event("id1", CosmeticRankService.ActionType.CLICK);
+        Event event2 = new Event("id2", CosmeticRankService.ActionType.CLICK);
+        List<Event> events = Arrays.asList(event1, event2);
+
+        eventQueue.enqueueAll(events);
         List<Event> dequeuedEvents = eventQueue.dequeueAll();
 
-        assertEquals(1, dequeuedEvents.size());
-        assertSame(event, dequeuedEvents.get(0));
+        assertEquals(2, dequeuedEvents.size());
+        assertTrue(dequeuedEvents.containsAll(events));
+    }
+
+    @Test
+    public void enqueueAllKeywordsAndDequeueAllKeywords_ShouldWorkCorrectly() {
+        EventQueue eventQueue = new EventQueue();
+        KeywordEvent keywordEvent1 = new KeywordEvent("keyword1");
+        KeywordEvent keywordEvent2 = new KeywordEvent("keyword2");
+        List<KeywordEvent> keywordEvents = Arrays.asList(keywordEvent1, keywordEvent2);
+
+        eventQueue.enqueueAllKeywords(keywordEvents);
+        List<KeywordEvent> dequeuedKeywordEvents = eventQueue.dequeueAllKeywords();
+
+        assertEquals(2, dequeuedKeywordEvents.size());
+        assertTrue(dequeuedKeywordEvents.containsAll(keywordEvents));
     }
 
     @Test
