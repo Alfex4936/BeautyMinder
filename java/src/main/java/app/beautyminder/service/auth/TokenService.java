@@ -5,6 +5,7 @@ import app.beautyminder.domain.PasswordResetToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.repository.PasscodeTokenRepository;
 import app.beautyminder.repository.PasswordResetTokenRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -128,6 +129,7 @@ public class TokenService {
     }
 
 
+    @PostConstruct
     @Scheduled(cron = "0 0 2 * * WED", zone = "Asia/Seoul") // Delete all expired tokens at wednesday 2am
     public void deleteAllExpiredTokensOften() {
         passwordResetTokenRepository.deleteByExpiryDateBefore(LocalDateTime.now());

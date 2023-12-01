@@ -3,6 +3,7 @@ package app.beautyminder.service.auth;
 import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.repository.RefreshTokenRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,12 +30,6 @@ public class RefreshTokenService {
                 .map(RefreshToken::getUser);
     }
 
-    public void deleteAllExpiredTokens(LocalDateTime now) {
-        List<RefreshToken> expiredTokens = refreshTokenRepository.findAllExpiredTokens(now);
-        log.info("Refresh token cleaning: {}", expiredTokens);
-        refreshTokenRepository.deleteAll(expiredTokens);
-    }
-
     public void updateRefreshTokenByUserId(String userId, String newToken) {
         List<RefreshToken> tokens = refreshTokenRepository.findAllByUserId(userId);
         for (RefreshToken token : tokens) {
@@ -44,9 +39,9 @@ public class RefreshTokenService {
     }
 
 
+    @PostConstruct
     @Scheduled(cron = "0 0 2 * * WED", zone = "Asia/Seoul") // Delete all expired tokens at wednesday 2am
     public void deleteAllExpiredTokensOften() {
-        LocalDateTime now = LocalDateTime.now();
-        this.deleteAllExpiredTokens(now);
+        refreshTokenRepository.deleteByExpiresAtBefore(LocalDateTime.now());
     }
 }

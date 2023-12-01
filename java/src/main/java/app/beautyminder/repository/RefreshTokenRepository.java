@@ -25,4 +25,6 @@ public interface RefreshTokenRepository extends MongoRepository<RefreshToken, St
     void deleteByUserId(ObjectId userId);
 
     void deleteByRefreshToken(String refreshToken);
+
+    void deleteByExpiresAtBefore(LocalDateTime now);
 }
