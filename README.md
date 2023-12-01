@@ -132,6 +132,8 @@ $$
 
 ![image](https://github.com/LeeZEun/beautyMinder/assets/2356749/b80069c3-7b96-4c80-a2c3-8600d258819a)
 
+# OCR (using Google Vision)
+https://github.com/beminder/BeautyMinder/assets/2356749/585bbfd4-1767-479a-99fb-fc40734a3c47
 
 # Email verification
 ![email](https://github.com/beminder/BeautyMinder/assets/2356749/5c674c89-769f-420d-8190-af488e3425fa)
