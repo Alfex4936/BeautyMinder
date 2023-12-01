@@ -47,21 +47,14 @@ class AdminApiControllerTest {
     protected ObjectMapper objectMapper;
 
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private UserService userService;
 
     @Autowired
-    private RefreshTokenRepository refreshTokenRepository;
-    @Autowired
     private TokenProvider tokenProvider;
-    @Autowired
-    private TokenService tokenService;
 
     @Autowired
     private WebApplicationContext context;
     private String accessToken;
-    private String refreshToken;
     private String userId;
 
     @BeforeEach

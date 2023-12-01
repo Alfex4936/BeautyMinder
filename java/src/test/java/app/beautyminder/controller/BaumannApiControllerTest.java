@@ -43,7 +43,6 @@ class BaumannApiControllerTest {
 
     private static final String TEST_USER_EMAIL = "usertest@gmail.com";
     private static final String TEST_USER_PASSWORD = "test";
-    private static final Duration REFRESH_TOKEN_DURATION = Duration.ofMinutes(3);
     private static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(1);
     @Autowired
     private MockMvc mockMvc;

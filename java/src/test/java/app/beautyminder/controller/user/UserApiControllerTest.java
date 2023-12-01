@@ -63,8 +63,6 @@ class UserApiControllerTest {
     private RefreshTokenRepository refreshTokenRepository;
     @Autowired
     private TokenProvider tokenProvider;
-    @Autowired
-    private TokenService tokenService;
 
     @Autowired
     private WebApplicationContext context;
