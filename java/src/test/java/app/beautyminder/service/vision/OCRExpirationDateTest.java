@@ -55,6 +55,15 @@ class OCRExpirationDateTest {
     }
 
     @Test
+    public void extractExpirationDate_NoPattern() {
+        String textWithDate = "1234-5678-90";
+
+        Optional<String> extractedDate = ExpirationDateExtractor.extractExpirationDate(textWithDate);
+
+        assertTrue(extractedDate.isEmpty());
+    }
+
+    @Test
     public void extractExpirationDate_ShouldExtractDateForPerfectPatterns() {
         String textWithDate = "EXP 2023-05-20"; // Use various strings that match PERFECT_DATE_PATTERN
 

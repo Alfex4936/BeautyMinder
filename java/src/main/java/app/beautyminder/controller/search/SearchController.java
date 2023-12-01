@@ -54,8 +54,12 @@ public class SearchController {
     @Operation(summary = "Search Cosmetics by Name", description = "이름으로 화장품을 검색합니다. [USER 권한 필요]", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/cosmetic")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<List<Cosmetic>> searchByName(@RequestParam String name, @Parameter(hidden = true) @AuthenticatedUser User user) {
+    public ResponseEntity<?> searchByName(@RequestParam String name, @Parameter(hidden = true) @AuthenticatedUser User user) {
         String trimmedName = (name != null) ? name.trim() : "";
+        if (trimmedName.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not allowed empty keyword.");
+        }
+
         List<Cosmetic> results = cosmeticSearchService.searchByName(trimmedName);
 
         if (!results.isEmpty()) {
@@ -89,8 +93,12 @@ public class SearchController {
     @Operation(summary = "Search Cosmetics by Category", description = "카테고리로 화장품을 검색합니다. [USER 권한 필요]", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/category")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<List<Cosmetic>> searchByCategory(@RequestParam String category, @Parameter(hidden = true) @AuthenticatedUser User user) {
+    public ResponseEntity<?> searchByCategory(@RequestParam String category, @Parameter(hidden = true) @AuthenticatedUser User user) {
         String trimmedName = (category != null) ? category.trim() : "";
+        if (trimmedName.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not allowed empty keyword.");
+        }
+
         List<Cosmetic> results = cosmeticSearchService.searchByCategory(trimmedName);
         if (!results.isEmpty()) {
             updateUserSearchHistory(user, trimmedName);
@@ -104,8 +112,12 @@ public class SearchController {
     @Operation(summary = "Search Cosmetics by Keyword", description = "키워드로 화장품을 검색합니다. [USER 권한 필요]", tags = {"Search Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Successful operation", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class)))), @ApiResponse(responseCode = "400", description = "Invalid parameters")})
     @GetMapping("/keyword")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<List<Cosmetic>> searchByKeyword(@RequestParam String keyword, @Parameter(hidden = true) @AuthenticatedUser User user) {
+    public ResponseEntity<?> searchByKeyword(@RequestParam String keyword, @Parameter(hidden = true) @AuthenticatedUser User user) {
         String trimmedName = (keyword != null) ? keyword.trim() : "";
+        if (trimmedName.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not allowed empty keyword.");
+        }
+
         List<Cosmetic> results = cosmeticSearchService.searchByKeyword(trimmedName);
         if (!results.isEmpty()) {
             updateUserSearchHistory(user, trimmedName);
@@ -179,7 +191,7 @@ public class SearchController {
 
     @Async
     public void updateUserSearchHistory(User user, String searchQuery) {
-        if (!searchQuery.isEmpty()) {
+        if (searchQuery.isEmpty()) {
             return;
         }
 
