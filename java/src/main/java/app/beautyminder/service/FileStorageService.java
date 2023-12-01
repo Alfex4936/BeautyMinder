@@ -59,7 +59,7 @@ public class FileStorageService {
         }
     }
 
-    private void uploadThumbnail(MultipartFile file, String fileName) throws IOException {
+    public String uploadThumbnail(MultipartFile file, String fileName) throws IOException {
         // Create and store the thumbnail
         BufferedImage thumbnail = createThumbnail(file);
         ByteArrayOutputStream thumbnailOutputStream = new ByteArrayOutputStream();
@@ -72,12 +72,17 @@ public class FileStorageService {
         thumbnailMetadata.setContentType(file.getContentType());
         thumbnailMetadata.setContentLength(thumbnailBytes.length);
         amazonS3.putObject(new PutObjectRequest(bucket, thumbnailName, thumbnailInputStream, thumbnailMetadata));
-
+        URL fileUrl = amazonS3.getUrl(bucket, thumbnailName);
+        return fileUrl.toString();
     }
 
     public Resource loadFile(String storedFileName) {
+        String key = storedFileName.startsWith("http://") || storedFileName.startsWith("https://")
+                ? URI.create(storedFileName).getPath().substring(1) // Extract key from URL
+                : storedFileName; // Use as key directly
+
         try {
-            S3Object s3Object = amazonS3.getObject(new GetObjectRequest(bucket, storedFileName));
+            S3Object s3Object = amazonS3.getObject(new GetObjectRequest(bucket, key));
             try (S3ObjectInputStream objectInputStream = s3Object.getObjectContent()) {
                 byte[] bytes = IOUtils.toByteArray(objectInputStream);
                 return new ByteArrayResource(bytes);

@@ -184,11 +184,11 @@ class SearchApiControllerTest {
 
     @AfterAll
     public void cleanUpAll() {
-//        try {
-//            // Final cleanup logic to run after all tests
-//            userService.deleteUserAndRelatedData(userId);
-//        } catch (Exception e) {
-//            System.err.println("Cleanup failed: " + e.getMessage());
-//        }
+        try {
+            // Final cleanup logic to run after all tests
+            userService.deleteUserAndRelatedData(userId);
+        } catch (Exception e) {
+            System.err.println("Cleanup failed: " + e.getMessage());
+        }
     }
 }
