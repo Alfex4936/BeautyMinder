@@ -47,11 +47,11 @@ jobs:
 
       - name: Docker Image Build and Local Deployment
         run: |
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker compose -f ELK.yml up --build -d
           cp Dockerfile.spring build/libs/
           cp google-beautyminder.json build/libs/
           cp Dockerfile.python python/
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker compose -f ELK.yml up --build -d
 
       - name: Push Docker Images to Registry
         run: |
