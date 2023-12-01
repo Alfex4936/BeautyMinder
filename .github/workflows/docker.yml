@@ -55,8 +55,9 @@ jobs:
 
       - name: Push Docker Images to Registry
         run: |
-          docker tag beautyminder_mongo-spring-boot ${{ secrets.DOCKER_USERNAME }}/beautyminder-spring:latest
-          docker tag beautyminder_mongo-python-fastapi ${{ secrets.DOCKER_USERNAME }}/beautyminder-fastapi:latest
+          docker ps
+          docker tag java-spring-boot ${{ secrets.DOCKER_USERNAME }}/beautyminder-spring:latest
+          docker tag java-python-fastapi ${{ secrets.DOCKER_USERNAME }}/beautyminder-fastapi:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/beautyminder-spring:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/beautyminder-fastapi:latest
 
