@@ -29,6 +29,8 @@ jobs:
       - name: Setup secrets
         run: |
           echo "${{ secrets.APPLICATION_YML }}" | base64 --decode > src/main/resources/application-secret.yml
+          echo "${{ secrets.APPLICATION_TEST_YML }}" | base64 --decode > src/main/resources/application-secret-github.yml
+          echo "${{ secrets.LOGBACK_TEST }}" | base64 --decode > src/test/resources/logback-test.xml
           echo "${{ secrets.DOCKER_PYTHON }}" | base64 --decode > python.env
           echo "${{ secrets.DOCKER_SPRING }}" | base64 --decode > spring.env
           echo "${{ secrets.DOCKER_REDIS }}" | base64 --decode > redis.env
