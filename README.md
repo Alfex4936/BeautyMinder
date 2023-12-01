@@ -1,8 +1,10 @@
 # BeautyMinder 💄✨
 
----
-
 [![codecov](https://codecov.io/gh/beminder/BeautyMinder/graph/badge.svg?token=XJ79PXGWBC)](https://codecov.io/gh/beminder/BeautyMinder)
+![OpenAI API Documentation](https://github.com/beminder/BeautyMinder/actions/workflows/api-doc.yml/badge.svg)
+![CodeCov](https://github.com/beminder/BeautyMinder/actions/workflows/codecov.yml/badge.svg)
+![Docker Deployment to EC2](https://github.com/beminder/BeautyMinder/actions/workflows/docker.yml/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 BeautyMinder is the culmination of our capstone design class, commenced in September 2023.
 
