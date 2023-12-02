@@ -1,37 +1,22 @@
 package app.beautyminder.service;
 
-import app.beautyminder.domain.Cosmetic;
-import app.beautyminder.domain.GPTReview;
-import app.beautyminder.domain.Review;
-import app.beautyminder.repository.CosmeticRepository;
-import app.beautyminder.repository.GPTReviewRepository;
-import app.beautyminder.repository.ReviewRepository;
-import app.beautyminder.service.cosmetic.GPTService;
-import app.beautyminder.service.review.ReviewService;
 import app.beautyminder.service.vision.VisionService;
 import com.google.cloud.vision.v1.*;
-import io.github.flashvayne.chatgpt.dto.chat.MultiChatRequest;
-import io.github.flashvayne.chatgpt.service.ChatgptService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.mockito.Mockito;
 import org.springframework.mock.web.MockMultipartFile;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.time.LocalDate;
 import java.util.Base64;
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Slf4j
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

@@ -1,48 +1,31 @@
 package app.beautyminder.service;
 
-import app.beautyminder.domain.*;
+import app.beautyminder.domain.PasswordResetToken;
+import app.beautyminder.domain.User;
 import app.beautyminder.dto.PasswordResetResponse;
 import app.beautyminder.dto.sms.SmsResponseDTO;
-import app.beautyminder.repository.CosmeticRepository;
-import app.beautyminder.repository.GPTReviewRepository;
-import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.service.auth.SmsService;
-import app.beautyminder.service.cosmetic.GPTService;
-import app.beautyminder.service.review.ReviewService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.flashvayne.chatgpt.dto.chat.MultiChatRequest;
-import io.github.flashvayne.chatgpt.service.ChatgptService;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @Slf4j
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

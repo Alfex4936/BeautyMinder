@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -36,25 +35,18 @@ class SmsApiTest {
 
     private static final String TEST_ADMIN_EMAIL = "sms@test";
     private static final String TEST_ADMIN_PASSWORD = "test";
-
+    private final String TEST_REAL_NUMBER = "01064647887";
     @Autowired
     protected MockMvc mockMvc;
     @Autowired
     protected ObjectMapper objectMapper;
-
     @Autowired
     private UserService userService;
-
     @Autowired
     private WebApplicationContext context;
-
     @MockBean
     private SmsService smsService;
-
     private String userId;
-
-    private final String TEST_REAL_NUMBER = "01064647887";
-
     private User user;
 
     @BeforeEach

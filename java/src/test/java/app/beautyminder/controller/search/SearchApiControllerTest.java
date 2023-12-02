@@ -2,12 +2,9 @@ package app.beautyminder.controller.search;
 
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.User;
-import app.beautyminder.dto.ReviewStatusUpdateRequest;
-import app.beautyminder.dto.chat.ChatKickDTO;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.service.auth.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.micrometer.core.instrument.search.Search;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +19,8 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.time.Duration;
 
-import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
@@ -110,16 +105,16 @@ class SearchApiControllerTest {
         String url = "/search/category";
 
         mockMvc.perform(get(url)
-                .param("category", "스킨케어")
-                .header("Authorization", "Bearer " + accessToken)
-                .contentType(MediaType.APPLICATION_JSON))
+                        .param("category", "스킨케어")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
                 // then
                 .andExpect(status().isOk());
 
         mockMvc.perform(get(url)
-                .param("category", "")
-                .header("Authorization", "Bearer " + accessToken)
-                .contentType(MediaType.APPLICATION_JSON))
+                        .param("category", "")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
                 // then
                 .andExpect(status().isBadRequest());
     }
@@ -176,7 +171,7 @@ class SearchApiControllerTest {
                 // then
                 .andExpect(status().isBadRequest());
     }
-    
+
     @AfterEach
     public void cleanUp() {
         // Clean up logic to run after each test if needed

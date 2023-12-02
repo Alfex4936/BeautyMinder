@@ -1,14 +1,11 @@
 package app.beautyminder.controller.search;
 
 import app.beautyminder.config.jwt.TokenProvider;
-import app.beautyminder.controller.user.TokenController;
 import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.repository.RefreshTokenRepository;
-import app.beautyminder.service.auth.RefreshTokenService;
 import app.beautyminder.service.auth.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;

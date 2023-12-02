@@ -1,20 +1,8 @@
 package app.beautyminder.service.vision;
 
-import app.beautyminder.dto.Event;
-import app.beautyminder.dto.KeywordEvent;
-import app.beautyminder.service.auth.UserService;
-import app.beautyminder.service.cosmetic.CosmeticRankService;
-import app.beautyminder.service.vision.ExpirationDateExtractor;
-import app.beautyminder.util.CookieUtil;
-import app.beautyminder.util.EventQueue;
-import app.beautyminder.util.UserIdValidationResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,15 +10,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
 @Slf4j

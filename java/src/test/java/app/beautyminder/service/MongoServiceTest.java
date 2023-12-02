@@ -1,10 +1,7 @@
 package app.beautyminder.service;
 
 import app.beautyminder.domain.Review;
-import app.beautyminder.domain.Todo;
-import app.beautyminder.domain.TodoTask;
 import app.beautyminder.domain.User;
-import app.beautyminder.dto.todo.AddTodoRequest;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.service.auth.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,21 +10,14 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.time.LocalDate;
 import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
