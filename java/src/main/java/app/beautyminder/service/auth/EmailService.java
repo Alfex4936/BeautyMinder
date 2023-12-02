@@ -28,7 +28,7 @@ public class EmailService {
 
     private String FROM_ADDRESS;
 
-    @Value("${server.address-text}")
+    @Value("${server.ngrok-text}")
     private String server;
 
     @Autowired

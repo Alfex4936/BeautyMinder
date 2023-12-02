@@ -165,6 +165,73 @@ class AdminApiControllerTest {
         result.andExpect(status().isOk());
     }
 
+    @Test
+    @DisplayName("Test Force batch redis")
+    public void testSendBatch_redis() throws Exception {
+        // given
+        String url = "/redis/batch";
+
+        // when
+        ResultActions result = mockMvc.perform(get(url)
+                .header("Authorization", "Bearer " + accessToken));
+
+        // then
+        result.andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Test Force saving top 10 keywords")
+    public void testSaveTop10_keywords() throws Exception {
+        // given
+        String url = "/redis/eval";
+
+        // when
+        ResultActions result = mockMvc.perform(get(url)
+                .header("Authorization", "Bearer " + accessToken));
+
+        // then
+        result.andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Test GET top 10 cosmetics")
+    public void testGetTop10_products() throws Exception {
+        // given
+        String url = "/redis/top/cosmetics";
+
+        // when
+        ResultActions result = mockMvc.perform(get(url));
+
+        // then
+        result.andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Test GET top 10 keywords")
+    public void testGetTop10_keywords() throws Exception {
+        // given
+        String url = "/redis/top/keywords";
+
+        // when
+        ResultActions result = mockMvc.perform(get(url));
+
+        // then
+        result.andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Test Force saving top 10 products")
+    public void testSaveTop10_products() throws Exception {
+        // given
+        String url = "/redis/product/eval";
+
+        // when
+        ResultActions result = mockMvc.perform(get(url)
+                .header("Authorization", "Bearer " + accessToken));
+
+        // then
+        result.andExpect(status().isOk());
+    }
 
     @AfterEach
     public void cleanUp() {
