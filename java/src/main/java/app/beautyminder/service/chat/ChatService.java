@@ -17,10 +17,9 @@ import java.util.stream.IntStream;
 public class ChatService {
 
     private final Map<String, ChatRoom> chatRooms = new LinkedHashMap<>();
-    private final SimpMessageSendingOperations messagingTemplate;
 
     @PostConstruct
-    private void initPermanentRooms() {
+    public void initPermanentRooms() {
         // List of Baumann skin types or any other predefined room names
         var baumannTypes = List.of(
                 "OSNT (번들민감)", "OSNW (주름민감)", "OSPT (색소민감)", "OSPW (복합고민)",
@@ -65,17 +64,11 @@ public class ChatService {
         return chatRooms.get(roomId);
     }
 
-    public ChatRoom createRoom(String name) {
-        String randomId = UUID.randomUUID().toString();
-        ChatRoom chatRoom = ChatRoom.builder().roomId(randomId).name(name).build();
-        chatRooms.put(randomId, chatRoom);
-        return chatRoom;
-    }
-
     public void updateRoomActivity(String roomId) {
         ChatRoom room = chatRooms.get(roomId);
         if (room != null) {
             room.updateLastActiveTime();
+//            chatRooms.putIfAbsent(roomId, room);
         }
     }
 
@@ -108,15 +101,14 @@ public class ChatService {
         }
     }
 
-    public List<ChatMessage> getRoomMessages(String roomId) {
-        ChatRoom room = chatRooms.get(roomId);
-        if (room != null) {
-            return room.getMessages();
-        }
-        return Collections.emptyList();
-    }
-
-//    @Scheduled(fixedDelay = 60000) // Runs every 60 seconds, adjust as needed
+//    public ChatRoom createRoom(String name) {
+//        String randomId = UUID.randomUUID().toString();
+//        ChatRoom chatRoom = ChatRoom.builder().roomId(randomId).name(name).build();
+//        chatRooms.put(randomId, chatRoom);
+//        return chatRoom;
+//    }
+//
+//    @Scheduled(fixedDelay = 60000) // Runs every 60 seconds
 //    public void cleanupInactiveRooms() {
 //        LocalDateTime now = LocalDateTime.now();
 //        chatRooms.entrySet().removeIf(entry -> {
