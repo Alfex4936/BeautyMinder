@@ -1,18 +1,20 @@
 package app.beautyminder.controller.user;
 
-import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.User;
-import app.beautyminder.dto.ReviewStatusUpdateRequest;
-import app.beautyminder.dto.chat.ChatKickDTO;
+import app.beautyminder.dto.PasswordResetResponse;
+import app.beautyminder.dto.sms.SmsResponseDTO;
 import app.beautyminder.dto.user.AddUserRequest;
+import app.beautyminder.service.auth.SmsService;
 import app.beautyminder.service.auth.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,12 +22,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.time.Duration;
-
-import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @SpringBootTest
@@ -48,10 +47,15 @@ class SmsApiTest {
 
     @Autowired
     private WebApplicationContext context;
+
+    @MockBean
+    private SmsService smsService;
+
     private String userId;
 
-    @Value("${naver.cloud.sms.sender-phone}")
-    private String TEST_REAL_NUMBER;
+    private final String TEST_REAL_NUMBER = "01064647887";
+
+    private User user;
 
     @BeforeEach
     public void mockMvcSetUp() {
@@ -65,23 +69,30 @@ class SmsApiTest {
         addUserRequest.setPassword(TEST_ADMIN_PASSWORD);
         addUserRequest.setPhoneNumber(TEST_REAL_NUMBER);
 
-        User user = userService.saveAdmin(addUserRequest);
+        user = userService.saveAdmin(addUserRequest);
         userId = user.getId();
     }
 
     @Test
-//    @WithMockUser(roles = "ADMIN")
     @DisplayName("Test GET /user/sms/send")
     public void testSendSMS_Success() throws Exception {
+        // Create a mock SmsResponseDTO
+        SmsResponseDTO mockSmsResponseDTO = new SmsResponseDTO();
+
+        // Mock the behavior of the SMS sending service
+        Mockito.when(smsService.sendSms(Mockito.any())).thenReturn(mockSmsResponseDTO);
+
         // given
         String url = "/user/sms/send/" + TEST_REAL_NUMBER;
 
         // when
-        ResultActions result = mockMvc.perform(get(url)
-                .contentType(MediaType.APPLICATION_JSON));
+        ResultActions result = mockMvc.perform(get(url).contentType(MediaType.APPLICATION_JSON));
 
         // then
         result.andExpect(status().isOk());
+
+        // Verify that the SMS service was called with any PasswordResetResponse
+        Mockito.verify(smsService).sendSms(Mockito.any(PasswordResetResponse.class));
     }
 
     @Test

@@ -7,6 +7,7 @@ import app.beautyminder.dto.sms.SmsResponseDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,14 +34,21 @@ import java.util.ArrayList;
 @Service
 public class SmsService {
     private final ObjectMapper objectMapper;
+    private final RestTemplate restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory());
+
+    @Setter
     @Value("${naver.cloud.access-key}")
     private String accessKey;
+    @Setter
     @Value("${naver.cloud.secret-key}")
     private String secretKey;
+    @Setter
     @Value("${naver.cloud.sms.openai-key}")
     private String serviceId;
+    @Setter
     @Value("${naver.cloud.sms.sender-phone}")
     private String phone;
+    @Setter
     @Value("${server.ngrok-text}")
     private String server;
 
@@ -54,7 +62,7 @@ public class SmsService {
 
         var message = method + space + url + newLine + timestamp + newLine + accessKey;
 
-        var signingKey = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        var signingKey = new SecretKeySpec(this.secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         var mac = Mac.getInstance("HmacSHA256");
         mac.init(signingKey);
 
@@ -90,9 +98,6 @@ public class SmsService {
 
         String body = objectMapper.writeValueAsString(request);
         HttpEntity<String> httpBody = new HttpEntity<>(body, headers);
-
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 
         return restTemplate.postForObject(new URI("https://sens.apigw.ntruss.com/sms/v2/services/" + serviceId + "/messages"), httpBody, SmsResponseDTO.class);
     }

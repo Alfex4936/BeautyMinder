@@ -35,9 +35,14 @@ public class Cosmetic {
     private LocalDateTime createdAt;
     private LocalDate purchasedDate;
     private String category;
+
+    @Builder.Default
     private Double averageRating = 0.0; // ex) 3.14
+    @Builder.Default
     private int reviewCount = 0;
+    @Builder.Default
     private int totalRating = 0;
+    @Builder.Default
     private int favCount = 0;
 
     @Builder.Default

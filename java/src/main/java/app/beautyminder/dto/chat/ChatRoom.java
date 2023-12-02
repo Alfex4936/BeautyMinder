@@ -18,7 +18,6 @@ public class ChatRoom {
     private final String description;
     private final Set<WebSocketSession> sessions = new HashSet<>();
 
-    @Builder.Default
     private final List<ChatMessage> messages = new ArrayList<>();
 
     @Setter

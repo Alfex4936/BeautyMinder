@@ -26,7 +26,9 @@ public class CosmeticExpiry {
     private String brandName; // 화장품 브랜드 이름
     private String expiryDate; // 유통기한. OCR로 인식되거나 사용자가 선택할 수 있음. ex) 2023-12-31
 
+    @Builder.Default
     private boolean expiryRecognized = false; // OCR로 유통기한이 정상적으로 인식되었는지 여부
+
     @Nullable
     private String imageUrl; // 화장품 이미지 또는 유통기한이 표시된 부분의 사진 URL
 
