@@ -36,7 +36,7 @@ jobs:
           echo "${{ secrets.DOCKER_SPRING }}" | base64 --decode > spring.env
           echo "${{ secrets.DOCKER_REDIS }}" | base64 --decode > redis.env
           echo "${{ secrets.DOCKER_GOOGLE }}" | base64 --decode > google-beautyminder.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=${GITHUB_WORKSPACE}/google-beautyminder.json" >> "$GITHUB_ENV"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=${GITHUB_WORKSPACE}/java/google-beautyminder.json" >> "$GITHUB_ENV"
           echo "LOGSTASH_HOST=${{ secrets.EC_HOST }}" >> "$GITHUB_ENV"
 
       - name: Correct permission
