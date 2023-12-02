@@ -41,7 +41,7 @@ public class SmsService {
     private String serviceId;
     @Value("${naver.cloud.sms.sender-phone}")
     private String phone;
-    @Value("${server.address-text}")
+    @Value("${server.ngrok-text}")
     private String server;
 
     public String makeSignature(Long time) throws NoSuchAlgorithmException, InvalidKeyException {
@@ -73,14 +73,14 @@ public class SmsService {
         headers.set("x-ncp-apigw-signature-v2", makeSignature(time));
 
         var resetUrl = server + "/user/reset-password?token=" + tUser.getToken().getToken();
-        var content = tUser.getUser().getEmail() + ") to reset: " + resetUrl;
+        var content = tUser.getUser().getEmail() + ") to reset pw: " + resetUrl;
 
         var messages = new ArrayList<MessageDTO>();
         var messageDto = MessageDTO.builder().to(tUser.getUser().getPhoneNumber()).content(content).build();
         messages.add(messageDto);
 
         SmsRequestDTO request = SmsRequestDTO.builder()
-                .type("SMS")
+                .type("LMS")
                 .contentType("COMM")
                 .countryCode("82")
                 .from(phone)

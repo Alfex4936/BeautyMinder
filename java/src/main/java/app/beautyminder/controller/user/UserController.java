@@ -173,6 +173,7 @@ public class UserController {
     // org.springframework.web.bind.annotation.
     // Can take any field in User class
     @PatchMapping("/update")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<?> updateProfile(@Parameter(hidden = true) @AuthenticatedUser User user, @RequestBody Map<String, Object> updates) {
         // 전화번호 미리 체크
         if (updates.containsKey("phoneNumber")) {
@@ -193,6 +194,7 @@ public class UserController {
 
     @Operation(summary = "Add to User Favorite", description = "사용자의 즐겨찾기에 화장품을 추가합니다. [USER 권한 필요]", tags = {"User Profile Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품의 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = User.class))), @ApiResponse(responseCode = "404", description = "사용자 또는 화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))})
     @PostMapping("/favorites/{cosmeticId}")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<User> addToUserFavorite(@Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable String cosmeticId) {
         return cosmeticRepository.findById(cosmeticId)
                 .map(cosmetic -> {
@@ -216,6 +218,7 @@ public class UserController {
 
     @Operation(summary = "Delete a favourite of User", description = "사용자의 즐겨찾기에 화장품을 삭제합니다. [USER 권한 필요]", tags = {"User Profile Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품의 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = User.class))), @ApiResponse(responseCode = "404", description = "사용자 또는 화장품을 찾을 수 없음", content = @Content(schema = @Schema(implementation = String.class)))})
     @DeleteMapping("/favorites/{cosmeticId}")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<User> removeFromUserFavorite(@Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable String cosmeticId) {
         return cosmeticRepository.findById(cosmeticId)
                 .map(cosmetic -> {
@@ -238,6 +241,7 @@ public class UserController {
 
     @Operation(summary = "Get favorites of User", description = "사용자의 즐겨찾기를 전부 불러옵니다. [USER 권한 필요]", tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Cosmetic.class))))})
     @GetMapping("/favorites")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<List<Cosmetic>> getFavorites(@Parameter(hidden = true) @AuthenticatedUser User user) {
         try {
             // Fetch the actual Cosmetic objects by their IDs
@@ -253,6 +257,7 @@ public class UserController {
 
     })
     @GetMapping("/reviews")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<List<Review>> getUserReviews(@Parameter(hidden = true) @AuthenticatedUser User user) {
         try {
             // Fetch all the reviews made by the user
@@ -266,6 +271,7 @@ public class UserController {
 
     @Operation(summary = "Upload Profile Image", description = "유저 프로필 사진 업로드하기 (자동으로 프사가 바뀜) [USER 권한 필요]", tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "Image uploaded successfully", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = String.class), examples = @ExampleObject(name = "Image URL", value = "\"http://example.com/image.jpg\"", summary = "URL of the uploaded image"))), @ApiResponse(responseCode = "400", description = "Invalid user ID or image data"), @ApiResponse(responseCode = "500", description = "Internal server error")})
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ROLE_USER')")
     public String uploadProfileImage(@Parameter(hidden = true) @AuthenticatedUser User user,
 
                                      @Parameter(description = "Profile image file to upload", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE, examples = @ExampleObject(name = "file", summary = "A 'binary' file"))) @RequestParam("image") MultipartFile image) {
@@ -286,6 +292,7 @@ public class UserController {
 
     @Operation(summary = "Get user's search history", description = "유저 검색 기록 얻기 [USER 권한 필요]", tags = {"User Operations"})
     @GetMapping(value = "/search-history")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<?> getKeywordHistory(@Parameter(hidden = true) @AuthenticatedUser User user) {
         return ResponseEntity.status(HttpStatus.OK).body(user.getKeywordHistory());
     }

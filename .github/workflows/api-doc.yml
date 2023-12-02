@@ -1,48 +1,47 @@
 name: Generate API Documentation
 
 on:
-  schedule:
-    # Runs at 00:00 every Monday
-    - cron: '0 0 * * 1'
+  # schedule:
+  # Runs at 00:00 every Monday
+  # - cron: "0 0 * * 1"
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-    - uses: actions/checkout@v4
-      # with:
-      # ref: seokwon  # Specify the branch here
-    
-    - name: Install curl (for nektos/act local CI testing)
-      if: ${{ env.ACT }}
-      run: apt-get update && apt-get install build-essential curl pkg-config openssl -y
+      - uses: actions/checkout@v4
+        # with:
+        # ref: seokwon  # Specify the branch here
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Install curl (for nektos/act local CI testing)
+        if: ${{ env.ACT }}
+        run: apt-get update && apt-get install build-essential curl pkg-config openssl -y
 
-    - name: Generate Swagger JSON
-      run: curl -o openapi.json ${{ secrets.API_ADDRESS }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
 
-    - name: Generate Swagger HTML
-      run: npx @redocly/cli@latest build-docs openapi.json -o ./java/api-ref/index.html
+      - name: Generate Swagger JSON
+        run: curl -o openapi.json ${{ secrets.API_ADDRESS }}
 
-    - name: Prepare documentation file
-      run: mv ./java/api-ref/index.html ./java/api-ref/API-$(date +\%Y\%m\%d).html
+      - name: Generate Swagger HTML
+        run: npx @redocly/cli@latest build-docs openapi.json -o ./java/api-ref/index.html
 
-    - name: List contents of api-ref directory
-      if: ${{ env.ACT }}
-      run: ls -l ./java/api-ref/
-      
-    - name: Commit and Push documentation
-      if: ${{ !env.ACT }}
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add ./java/api-ref/API-*.html
-        git commit -m "📚 API doc $(date +'%Y-%m-%d')" || echo "No changes to commit"
-        git push origin main
+      - name: Prepare documentation file
+        run: mv ./java/api-ref/index.html ./java/api-ref/API-$(date +\%Y\%m\%d).html
 
+      - name: List contents of api-ref directory
+        if: ${{ env.ACT }}
+        run: ls -l ./java/api-ref/
+
+      - name: Commit and Push documentation
+        if: ${{ !env.ACT }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add ./java/api-ref/API-*.html
+          git commit -m "📚 API doc $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push origin main

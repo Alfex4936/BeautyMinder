@@ -53,6 +53,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             @NotNull HttpServletResponse response,
             @NotNull FilterChain filterChain) throws ServletException, IOException {
+        response.setHeader("ngrok-skip-browser-warning", "true"); // add ngrok header for all
+
         if (!isProtectedRoute(request.getRequestURI())) { // early return
             log.debug("Accessing unprotected route! " + request.getRequestURI());
             filterChain.doFilter(request, response);
