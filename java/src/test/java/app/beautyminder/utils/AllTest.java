@@ -91,7 +91,6 @@ class AllTest {
         String serialized = CookieUtil.serialize(serializableObject);
 
         assertNotNull(serialized);
-        // Further checks can be made if you know the expected format of the serialized string
     }
 
 
@@ -189,7 +188,7 @@ class AllTest {
 
     @AfterEach
     public void cleanUp() {
-        // Clea  up logic to run after each test if needed
+
     }
 
     @AfterAll

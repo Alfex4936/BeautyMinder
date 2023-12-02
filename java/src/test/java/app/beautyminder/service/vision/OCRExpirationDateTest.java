@@ -104,7 +104,7 @@ class OCRExpirationDateTest {
 
     @AfterEach
     public void cleanUp() {
-        // Clea  up logic to run after each test if needed
+        // Clean-up logic to run after each test if needed
     }
 
     @AfterAll

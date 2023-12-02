@@ -30,7 +30,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @ActiveProfiles({"awsBasic", "test"})
 class FileStorageServiceTest {
 
-    private final String folderPath = "profle/";
+    private final String folderPath = "profile/";
     @Autowired
     protected MockMvc mockMvc;
     @Autowired
@@ -54,7 +54,7 @@ class FileStorageServiceTest {
 
     @Test
     public void testStoreFile_Success() throws IOException {
-        File imageFile = new File("src/test/resources/ajou.png"); // Ensure file path is correct
+        File imageFile = new File("src/test/resources/ajou.png");
         MockMultipartFile image1 = new MockMultipartFile("images",
                 "ajou.png",
                 "image/png",
@@ -92,7 +92,7 @@ class FileStorageServiceTest {
 
     @Test
     public void testUploadThumbnail_Success() throws IOException {
-        File imageFile = new File("src/test/resources/ajou.png"); // Ensure file path is correct
+        File imageFile = new File("src/test/resources/ajou.png");
         MockMultipartFile image1 = new MockMultipartFile("images",
                 "ajou.png",
                 "image/png",
@@ -111,7 +111,7 @@ class FileStorageServiceTest {
 
     @AfterEach
     public void cleanUp() {
-        // Clea  up logic to run after each test if needed
+        // Clean-up logic to run after each test if needed
     }
 
     @AfterAll

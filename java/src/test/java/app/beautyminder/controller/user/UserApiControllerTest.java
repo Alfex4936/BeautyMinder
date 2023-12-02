@@ -403,7 +403,6 @@ class UserApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("a user is deleted successfully"));
 
-        // Further verification: Check that the user and related data are actually deleted
         assertFalse(userRepository.existsById(user.getId()));
         assertFalse(refreshTokenRepository.findByUserId(user.getId()).isPresent());
     }

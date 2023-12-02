@@ -143,7 +143,6 @@ class AdminApiControllerTest {
 
         // then
         result.andExpect(status().isOk());
-        // Add additional assertions based on how your application handles this request
     }
 
 
