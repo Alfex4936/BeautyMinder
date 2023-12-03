@@ -1,3 +1,5 @@
+<div align="center">
+  
 # BeautyMinder 💄✨
 
 [![codecov](https://codecov.io/gh/beminder/BeautyMinder/graph/badge.svg?token=XJ79PXGWBC)](https://codecov.io/gh/beminder/BeautyMinder)
@@ -6,23 +8,48 @@
 ![Docker Deployment to EC2](https://github.com/beminder/BeautyMinder/actions/workflows/docker.yml/badge.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-BeautyMinder is the culmination of our capstone design class, commenced in September 2023.
+</div>
+
+## Overview 🌟
+
+### 🇺🇸 English
+
+**BeautyMinder** is the culmination of our capstone design class, commenced in September 2023.
 
 A comprehensive cosmetics management app, meticulously tuned to individual skin types as determined through the Baumann skin type assessment.
 
-# Team Members 👥
-| Name                                                          | Role           | Major                     |
-|---------------------------------------------------------------|----------------|---------------------------|
-| **Jieun Lee** ([LeeZEun](https://github.com/LeeZEun))         | Frontend        | Software Engineering      |
-| **Suji Bae** ([Bae-suji](https://github.com/Bae-suji))        | Frontend         | Software Engineering      |
-| **Yoon Wook Cho** ([yoonwook](https://github.com/yoonwook))   | Frontend         | Software Engineering      |
-| **Heesang Kwak** ([KWAKMANBO](https://github.com/KWAKMANBO))  | Frontend         | Software Engineering      |
-| **Seok Won Choi** ([Alfex4936](https://github.com/Alfex4936)) | Backend          | Software Engineering      |
+It integrates advanced technologies such as Flutter, AWS EC2, MongoDB, and Redis to provide a seamless and personalized user experience.
 
-# Technology Stack 🛠️
+---
+
+### 🇰🇷 한국어
+
+**BeautyMinder**는 2023년 9~12월, 3달간 제작된 캡스톤 디자인 수업의 결과물입니다.
+
+Baumann 피부 유형 평가를 기반으로 한 개별 피부 유형에 맞춘 종합적인 화장품 관리 애플리케이션입니다.
+
+Flutter, Docker, ELK, Redis 등의 기술을 통합하여 사용자에게 맞춤형 경험을 제공합니다.
+
+## Key Features 🎉
+
+### 1. **Cosmetic Management**
+   - **Expiry Tracking (유통기한 관리)**: Automate management of product lifecycles with integrated expiration date monitoring.
+   - **OCR Integration**: Streamline product registration using Optical Character Recognition for effortless management.
+   - **Alerts & Reminders (유통기한 만료 알림)**: Receive alerts for impending product expirations and routine reminders, enhancing personal skincare discipline.
+   - **Skincare Diary (루틴 기능)**: Document and track your skincare journey with timeline and album features, observing tangible skin transformations.
+
+### 2. **Baumann Skin Type-Based Product Recommendations**
+   - **Discover Your Skin Type (바우만 타입 분석)**: Discover your unique skin type through the Baumann skin type assessment.
+   - **Customized Recommendations (바우만 타입에 따른 추천)**: Receive tailored product suggestions aligned with your specific skin type needs.
+
+### 3. **Information Discovery**
+   - **Summarized Reviews via GPT (GPT 리뷰 요약)**: Gain insights with AI-powered summaries of comprehensive product reviews.
+   - **Websocket Integration (바우만 실시간 채팅)**: Engage in active discussions with peers sharing similar Baumann skin types for communal knowledge exchange.
+
+## Technology Stack 🛠️
 
 > [!IMPORTANT]
-> Spring Boot v3.1.3, ELK
+> Flutter, Spring Boot v3.1
 
 | Area                 | Technology                                                                                                                                                                      |
 |----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -38,11 +65,11 @@ A comprehensive cosmetics management app, meticulously tuned to individual skin 
 | **Notification Svcs** | [Naver Cloud SMS API](https://api.ncloud-docs.com/docs/ai-application-service-sens-smsv2), SMTP Protocol                                                                        |
 | **DevOps**           | [JUnit5](https://junit.org/junit5/), [Locust](https://locust.io/), [GitHub Actions](https://github.com/features/actions)                                                        |
 
-# System Architecture 🏗️
+## System Architecture 🏗️
 ![Group 10](https://github.com/beminder/BeautyMinder/assets/2356749/ba7cbe30-a516-40aa-96e6-06656bc47068)
 ![sa](https://github.com/beminder/BeautyMinder/assets/2356749/dec95e25-5b29-4a6e-a962-274c845f263b)
 
-# Baumann Skin Type Survey
+## Baumann Skin Type Survey
 ![types](https://cdn.shopify.com/s/files/1/0740/5984/1838/files/img_1_-_16-baumann-skin-types_800x.png?v=1689709313)
 
 1. **Individual Question Score Calculation:**
@@ -125,15 +152,28 @@ $$
 \text{{Final Skin Type}} = \text{{Skin Type from A}} + \text{{Skin Type from B}} + \text{{Skin Type from C}} + \text{{Skin Type from D}}
 $$
 
-# Elasticsearch
+## Elasticsearch
 
 > [!IMPORTANT]
 > 은전한닢 + N-gram 
 
 ![image](https://github.com/LeeZEun/beautyMinder/assets/2356749/b80069c3-7b96-4c80-a2c3-8600d258819a)
 
-# OCR (using Google Vision)
+## OCR (using Google Vision)
 https://github.com/beminder/BeautyMinder/assets/2356749/585bbfd4-1767-479a-99fb-fc40734a3c47
 
-# Email verification
+## Email verification
 ![email](https://github.com/beminder/BeautyMinder/assets/2356749/5c674c89-769f-420d-8190-af488e3425fa)
+
+## Team Members 👥
+| Name                                                          | Role           | Major                     |
+|---------------------------------------------------------------|----------------|---------------------------|
+| **Jieun Lee** ([LeeZEun](https://github.com/LeeZEun))         | Frontend        | Software Engineering      |
+| **Suji Bae** ([Bae-suji](https://github.com/Bae-suji))        | Frontend         | Software Engineering      |
+| **Yoon Wook Cho** ([yoonwook](https://github.com/yoonwook))   | Frontend         | Software Engineering      |
+| **Heesang Kwak** ([KWAKMANBO](https://github.com/KWAKMANBO))  | Frontend         | Software Engineering      |
+| **Seok Won Choi** ([Alfex4936](https://github.com/Alfex4936)) | Backend          | Software Engineering      |
+
+## License
+
+This project is licensed under the [**MIT license**](https://github.com/beminder/BeautyMinder/blob/main/LICENSE). Feel free to edit and distribute this template as you like.
