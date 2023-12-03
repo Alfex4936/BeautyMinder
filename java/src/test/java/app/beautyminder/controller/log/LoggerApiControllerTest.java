@@ -4,6 +4,9 @@ import app.beautyminder.service.LogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,12 +19,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -81,6 +84,16 @@ public class LoggerApiControllerTest {
                 .andExpect(jsonPath("$[1]").value("Error parsing log entry")); // The "invalid log entry" causes JsonProcessingException
     }
 
+    @Test
+    public void testGetSpringLogJSON_IOExceptionFromOpensearchClient() throws Exception {
+        // Simulate IOException when opensearchClient.search is called
+        when(logService.getTodaysLogs()).thenThrow(IOException.class);
+
+        // Perform the request and expect an internal server error due to IOException
+        mockMvc.perform(get("/log/spring"))
+                .andExpect(status().isInternalServerError());
+    }
+
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -92,6 +105,14 @@ public class LoggerApiControllerTest {
                 .andExpect(status().isInternalServerError());
     }
 
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    public void testDropLogDocuments() throws Exception {
+        doNothing().when(logService).deleteAllDocuments(anyString());
+
+        mockMvc.perform(delete("/log/spring/delete"))
+                .andExpect(status().isOk());
+    }
     @AfterEach
     public void cleanUp() {
         // Clean up logic to run after each test if needed

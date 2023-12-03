@@ -56,9 +56,13 @@ public class CosmeticRankServiceTest {
     @Test
     public void testProcessEvents() {
         // Setup
-        Event clickEvent = new Event("cosmeticId1", CosmeticRankService.ActionType.CLICK);
-        Event hitEvent = new Event("cosmeticId2", CosmeticRankService.ActionType.HIT);
-        Event favEvent = new Event("cosmeticId3", CosmeticRankService.ActionType.FAV);
+        Event clickEvent = new Event("652cdc2d2bf53d0109d1e210", CosmeticRankService.ActionType.CLICK);
+        Event hitEvent = new Event("652cdc2d2bf53d0109d1e211", CosmeticRankService.ActionType.HIT);
+        Event favEvent = new Event("652cdc2d2bf53d0109d1e212", CosmeticRankService.ActionType.FAV);
+
+        cosmeticRankService.collectClickEvent("652cdc2d2bf53d0109d1e210");
+        cosmeticRankService.collectHitEvent("652cdc2d2bf53d0109d1e211");
+        cosmeticRankService.collectFavEvent("652cdc2d2bf53d0109d1e212");
 
         when(eventQueue.dequeueAll()).thenReturn(List.of(clickEvent, hitEvent, favEvent));
         when(hashOperations.entries(any())).thenReturn(new HashMap<>()); // Mocking Redis HashOperations entries
@@ -67,6 +71,7 @@ public class CosmeticRankServiceTest {
 
         // Verify
         verify(eventQueue).dequeueAll();
+        verify(redisTemplate, times(6)).opsForHash();
     }
 
     @Test
