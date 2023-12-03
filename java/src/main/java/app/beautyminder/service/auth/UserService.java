@@ -239,8 +239,6 @@ public class UserService {
     public void updatePassword(String userId, String currentPassword, String newPassword) {
         userRepository.findById(userId).ifPresentOrElse(
                 user -> {
-                    // Check if user's current password matches the one stored in the database
-                    BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
                     if (!bCryptPasswordEncoder.matches(currentPassword, user.getPassword())) {
                         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password is incorrect.");
                     } else if (bCryptPasswordEncoder.matches(newPassword, user.getPassword())) {
