@@ -156,11 +156,7 @@ public class UserController {
     @Operation(summary = "Get user profile", description = "사용자 프로필 가져오기 [USER 권한 필요]", tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "유저 데이터 성공적으로 불러옴", content = @Content(schema = @Schema(implementation = User.class))), @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = User.class)))})
     @GetMapping("/me")
     public ResponseEntity<User> getProfile(@Parameter(hidden = true) @AuthenticatedUser User user) {
-        try {
-            return ResponseEntity.ok(user);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(user);
     }
 
     @Operation(summary = "Update user profile", description = "사용자 프로필 업데이트 [USER 권한 필요]", requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(schema = @Schema(implementation = Map.class), examples = @ExampleObject(name = "typicalResponses", value = """
@@ -243,14 +239,10 @@ public class UserController {
     @GetMapping("/favorites")
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<List<Cosmetic>> getFavorites(@Parameter(hidden = true) @AuthenticatedUser User user) {
-        try {
-            // Fetch the actual Cosmetic objects by their IDs
-            List<Cosmetic> cosmetics = cosmeticRepository.findAllById(user.getCosmeticIds());
+        // Fetch the actual Cosmetic objects by their IDs
+        List<Cosmetic> cosmetics = cosmeticRepository.findAllById(user.getCosmeticIds());
 
-            return ResponseEntity.ok(cosmetics);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(cosmetics);
     }
 
     @Operation(summary = "Get reviews of User", description = "사용자의 리뷰를 전부 불러옵니다. [USER 권한 필요]", tags = {"User Profile Operations"}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Review.class)))),
@@ -298,15 +290,17 @@ public class UserController {
     }
 
     /* LOST PASSWORD ----------------------------  */
+
+    // fail here
+    @GetMapping("/sms/send/")
+    public ResponseEntity<String> sendSms() {
+        return ResponseEntity.badRequest().body("Phone number is required");
+    }
+
     @Operation(summary = "Send SMS for password reset", description = "비밀번호 재설정을 위한 SMS 전송 (- 제외한 번호)", tags = {"Password Reset Operations"}, responses = {@ApiResponse(responseCode = "200", description = "SMS 전송 완료", content = @Content(schema = @Schema(implementation = String.class))), @ApiResponse(responseCode = "400", description = "잘못된 요청", content = @Content(schema = @Schema(implementation = String.class)))})
     // FORGOT PASSWORD
     @GetMapping("/sms/send/{phoneNumber}")
     public ResponseEntity<String> sendSms(@PathVariable String phoneNumber) throws JsonProcessingException, RestClientException, URISyntaxException, InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException {
-        // TODO: check user's phone number and change content
-        if (phoneNumber == null || phoneNumber.isEmpty()) {
-            return ResponseEntity.badRequest().body("Phone number is required");
-        }
-
         try {
             PasswordResetResponse tUser = userService.requestPasswordResetByNumber(phoneNumber);
             SmsResponseDTO response = smsService.sendSms(tUser);

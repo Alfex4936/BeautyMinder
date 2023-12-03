@@ -2,6 +2,8 @@ package app.beautyminder.controller.user;
 
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.User;
+import app.beautyminder.dto.user.ResetPasswordRequest;
+import app.beautyminder.dto.user.UpdatePasswordRequest;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -121,6 +123,53 @@ class UserApiControllerTest {
                 .andExpect(status().is2xxSuccessful());
     }
 
+    @Order(3)
+    @DisplayName("Test User Registration (verify) Fail")
+    @Test
+    public void testSignUpVerification_Fail() throws Exception {
+        // given
+        String url = "/user/email-verification/verify?token=" + passCodeToken + "1";
+
+        // when
+        mockMvc.perform(post(url))
+
+                // then - nothing much happening
+                .andExpect(status().isBadRequest());
+    }
+
+    @Order(2)
+    @DisplayName("Test User Registration Request Fail")
+    @Test
+    public void testSignUpRequest_FailByExistingUser() throws Exception {
+        // given
+        String url = "/user/email-verification/request?email=web@com";
+
+        // when
+        mockMvc.perform(post(url))
+
+                // then - nothing much happening
+                .andExpect(status().isBadRequest());
+    }
+
+    @Order(3)
+    @DisplayName("Test User Registration not verified Fail")
+    @Test
+    public void testSignUp_ShouldFailByNotVerified() throws Exception {
+        // given
+        String url = "/user/signup";
+        var map = new HashMap<>(Map.of("email", userEmail + "a"));
+        map.put("password", "1234");
+
+        String requestBody = objectMapper.writeValueAsString(map);  // Convert map to JSON string
+
+
+        // when
+        mockMvc.perform(post(url)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                // then
+                .andExpect(status().isBadRequest());
+    }
 
     @Order(3)
     @DisplayName("Test User Registration")
@@ -262,6 +311,27 @@ class UserApiControllerTest {
 
     @Order(8)
     @Test
+    @DisplayName("Test PATCH /user/update FAIL")
+    public void testUpdateProfile_ShouldFailDuplicatedNumber() throws Exception {
+        // given
+        String url = "/user/update";
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("phoneNumber", "01012345678");
+
+        String requestBody = objectMapper.writeValueAsString(updates);
+
+        // when
+        ResultActions result = mockMvc.perform(patch(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody));
+
+        // then
+        result.andExpect(status().isNotAcceptable());
+    }
+
+    @Order(8)
+    @Test
     @DisplayName("Test POST /user/favorites/{cosmeticId}")
     public void testAddToUserFavorite() throws Exception {
         // given
@@ -363,6 +433,43 @@ class UserApiControllerTest {
         // then
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray()); // Validate that the response body is an array
+    }
+
+    @Order(13)
+    @Test
+    @DisplayName("Test POST /update-password")
+    public void testUpdatePassword() throws Exception {
+        // given
+        String url = "/user/update-password";
+        UpdatePasswordRequest  request = new UpdatePasswordRequest("1234", "newPassword"); // invalid token
+        String requestBody = objectMapper.writeValueAsString(request);
+
+        // when
+        ResultActions result = mockMvc.perform(post(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody));
+
+        // then
+        result.andExpect(status().is2xxSuccessful());
+    }
+
+    @Order(14)
+    @Test
+    @DisplayName("Test POST /reset-password Bad Request")
+    public void testResetPasswordBadRequest() throws Exception {
+        // given
+        String url = "/user/reset-password";
+        ResetPasswordRequest request = new ResetPasswordRequest("", "newPassword"); // invalid token
+        String requestBody = objectMapper.writeValueAsString(request);
+
+        // when
+        ResultActions result = mockMvc.perform(post(url)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody));
+
+        // then
+        result.andExpect(status().isBadRequest());
     }
 
     @Order(15)
