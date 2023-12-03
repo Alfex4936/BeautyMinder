@@ -288,7 +288,10 @@ public class CosmeticRankService {
 
     // This will replace any character that is not a Korean letter or a number with an empty string
     public String sanitizeKeyword(String keyword) {
-        return Optional.ofNullable(keyword).map(k -> k.toLowerCase().trim()).map(trimmed -> trimmed.replaceAll("[^\\p{IsHangul}\\p{IsDigit}\\p{IsAlphabetic}]+", "").trim()).orElse("");
+        return Optional.ofNullable(keyword)
+                .map(k -> k.toLowerCase().trim())
+                .map(trimmed -> trimmed.replaceAll("[^\\p{IsHangul}\\p{IsDigit}\\p{IsAlphabetic} ]+", "").trim())
+                .orElse("");
     }
 
     private void updateRedisMetrics(String cosmeticId, CosmeticMetricData data) {

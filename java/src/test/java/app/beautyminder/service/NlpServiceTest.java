@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -42,7 +43,26 @@ public class NlpServiceTest {
     public void setUp() {
         MockitoAnnotations.openMocks(this);
         // Set up the processQueue field using reflection it's private
-         ReflectionTestUtils.setField(nlpService, "processQueue", new HashSet<>());
+        ReflectionTestUtils.setField(nlpService, "processQueue", new HashSet<>());
+    }
+
+    @Test
+    public void testProcessFailedReviews() throws JsonProcessingException {
+        Set<String> processQueue = new HashSet<>();
+        processQueue.add("reviewId1");
+        processQueue.add("reviewId2");
+        ReflectionTestUtils.setField(nlpService, "processQueue", processQueue);
+
+        // Setup
+        var review = Review.builder().build();
+        when(reviewRepository.findById(anyString())).thenReturn(Optional.of(review));
+        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("Test exception") {});
+
+        // Execute
+        nlpService.processFailedReviews();
+
+        // Verify
+        verify(mongoService, never()).updateFields(anyString(), anyMap(), any());
     }
 
     @Test
@@ -50,7 +70,8 @@ public class NlpServiceTest {
         // Setup for exception scenario
         var review = Review.builder().build();
         when(reviewRepository.findById(anyString())).thenReturn(Optional.of(review));
-        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("Test exception") {});
+        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("Test exception") {
+        });
 
         // Execute
         nlpService.processFailedReviews();
