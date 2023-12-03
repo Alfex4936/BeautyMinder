@@ -31,8 +31,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -179,6 +178,66 @@ class ReviewApiControllerTest {
                 // then
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().string("Review deleted successfully"));
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("Test Get All reviews")
+    public void testGetAllReviews_Success() throws Exception {
+        // given
+        String url = "/review/" + "652cdc2d2bf53d0109d1e210";
+
+        // when
+        mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+
+                // then
+                .andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    @Order(5)
+    @DisplayName("Test Get All reviews Fail")
+    public void testGetAllReviews_Fail() throws Exception {
+        // given
+        String url = "/review/" + "652cdc2d2bf53d0109d1e21Z";
+
+        // when
+        mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+
+                // then
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("Test Load image Success")
+    public void testLoadImage_Success() throws Exception {
+        // given
+        String url = "/review/image?filename=" + "default/default_user_profile.png";
+
+        // when
+        mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+
+                // then
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("Test Load image Fail")
+    public void testLoadImage_Fail() throws Exception {
+        // given
+        String url = "/review/image?filename=" + "default_user_profile.png"; // wrong key
+
+        // when
+        mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+
+                // then
+                .andExpect(status().isInternalServerError());
     }
 
     @AfterEach
