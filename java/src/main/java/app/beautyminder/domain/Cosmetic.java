@@ -23,6 +23,7 @@ public class Cosmetic {
     private String name;
     private String brand;
 
+    @Builder.Default
     @Setter
     private List<String> images = new ArrayList<>();
 

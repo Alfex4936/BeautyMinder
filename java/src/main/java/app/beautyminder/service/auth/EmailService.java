@@ -1,13 +1,10 @@
 package app.beautyminder.service.auth;
 
-import app.beautyminder.service.LocalFileService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.opensearch.common.recycler.Recycler;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -22,20 +19,20 @@ import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class EmailService {
 
+    private final JavaMailSender emailSender;
+    private final SpringTemplateEngine templateEngine;
     @Value("${spring.mail.username}")
 
     private String FROM_ADDRESS;
-
     @Value("${server.ngrok-text}")
     private String server;
 
-    @Autowired
-    private JavaMailSender emailSender;
-
-    @Autowired
-    private SpringTemplateEngine templateEngine;
+    public MimeMessageHelper createMimeMessageHelper(MimeMessage message) throws MessagingException {
+        return new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_NO, StandardCharsets.UTF_8.name());
+    }
 
     @Async
     public void sendVerificationEmail(String to, String token) {
@@ -53,7 +50,7 @@ public class EmailService {
 
         try {
             MimeMessage message = emailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_NO, StandardCharsets.UTF_8.name());
+            MimeMessageHelper helper = createMimeMessageHelper(message);
 
             helper.setTo(to);
             helper.setSubject(subject);
@@ -79,7 +76,7 @@ public class EmailService {
 
         try {
             MimeMessage message = emailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_NO, StandardCharsets.UTF_8.name());
+            MimeMessageHelper helper = createMimeMessageHelper(message);
 
             helper.setTo(to);
             helper.setSubject(subject);
