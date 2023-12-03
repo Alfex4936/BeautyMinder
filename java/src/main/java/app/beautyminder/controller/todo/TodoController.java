@@ -9,7 +9,6 @@ import app.beautyminder.dto.todo.TodoUpdateDTO;
 import app.beautyminder.service.MongoService;
 import app.beautyminder.service.TodoService;
 import app.beautyminder.util.AuthenticatedUser;
-import io.lettuce.core.dynamic.annotation.Param;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +38,7 @@ public class TodoController {
         return createResponse("Here are the todos", existingTodos.isEmpty() ? Collections.emptyList() : existingTodos);
     }
 
-    @Operation(summary = "Retrieve all todos of a day", parameters = {@Parameter(name="date", description = "a valid date ex) 2023-12-23")}, description = "특정 날짜의 모든 Todo 항목을 검색합니다. [User 권한 필요]", tags = {"Todo Operations"})
+    @Operation(summary = "Retrieve all todos of a day", parameters = {@Parameter(name = "date", description = "a valid date ex) 2023-12-23")}, description = "특정 날짜의 모든 Todo 항목을 검색합니다. [User 권한 필요]", tags = {"Todo Operations"})
     @GetMapping("/{date}")
     public Map<String, Object> getTodosOfDay(@Parameter(hidden = true) @AuthenticatedUser User user, @PathVariable LocalDate date) {
         List<Todo> existingTodos = todoService.findTodosByUserIdAndDate(user.getId(), date);
@@ -101,15 +100,11 @@ public class TodoController {
     public ResponseEntity<String> deleteTodo(@PathVariable String todoId, @Parameter(hidden = true) @AuthenticatedUser User user) {
         todoService.checkUserAuthorizationForTodo(todoId, user.getId());
 
-        try {
-            boolean deleted = todoService.deleteTodoById(todoId);
-            if (deleted) {
-                return ResponseEntity.ok("Todo deleted successfully");
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Todo not found with id: " + todoId);
-            }
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        boolean deleted = todoService.deleteTodoById(todoId);
+        if (deleted) {
+            return ResponseEntity.ok("Todo deleted successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Todo not found with id: " + todoId);
         }
     }
 
@@ -118,15 +113,11 @@ public class TodoController {
     public ResponseEntity<String> deleteTask(@PathVariable String todoId, @PathVariable String taskId, @Parameter(hidden = true) @AuthenticatedUser User user) {
         todoService.checkUserAuthorizationForTodo(todoId, user.getId());
 
-        try {
-            boolean taskDeleted = todoService.deleteTaskFromTodoById(todoId, taskId);
-            if (taskDeleted) {
-                return ResponseEntity.ok("Task deleted successfully");
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Task or Todo not found");
-            }
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        boolean taskDeleted = todoService.deleteTaskFromTodoById(todoId, taskId);
+        if (taskDeleted) {
+            return ResponseEntity.ok("Task deleted successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Task or Todo not found");
         }
     }
 

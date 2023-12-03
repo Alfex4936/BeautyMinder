@@ -5,6 +5,7 @@ import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.service.auth.UserService;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,12 +22,14 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles({"awsBasic", "test"})
 class TodoApiControllerTest {
 
-    private static final String TEST_USER_EMAIL = "usertest@gmail.com";
+    private static final String TEST_USER_EMAIL = "todotest@gmail.com";
     private static final String TEST_USER_PASSWORD = "test";
     private static final String CREATE_TEMPLATE = """
             {
@@ -152,6 +155,26 @@ class TodoApiControllerTest {
     }
 
     @Test
+    @Order(1)
+    @DisplayName("Test Todo Create Fail")
+    public void testCreateTodo_Fail() throws Exception {
+        // given
+        String url = "/todo/create";
+        String todoJson = String.format(CREATE_TEMPLATE, "2023-11-11");
+
+        // when
+        mockMvc.perform(post(url)
+                        .header("Authorization", "Bearer " + accessToken)
+//                        .cookie(new Cookie("XRT", refreshToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(todoJson.getBytes(StandardCharsets.UTF_8)))
+                // then
+                .andExpect(status().isBadRequest());
+
+    }
+
+
+    @Test
     @Order(2)
     @DisplayName("Test Todo Get")
     public void testGetTodo() throws Exception {
@@ -169,6 +192,23 @@ class TodoApiControllerTest {
     }
 
     @Test
+    @Order(2)
+    @DisplayName("Test Today Todo Get")
+    public void testGetTodayTodo() throws Exception {
+        // given
+        String url = "/todo/2023-11-11";
+        // when
+        mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+
+                // then
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.message").value("Here are the todos of the day"))
+                .andExpect(jsonPath("$.todos[0].date").value("2023-11-11"))
+                .andExpect(jsonPath("$.todos[*].user.id").exists());
+    }
+
+    @Test
     @Order(3)
     @DisplayName("Test Todo Update")
     public void testUpdateTodo() throws Exception {
@@ -177,7 +217,7 @@ class TodoApiControllerTest {
         String requestBody = String.format(UPDATE_TEMPLATE, taskIds.get(0), taskIds.get(2));
 
         // when
-        mockMvc.perform(put(url)
+        MvcResult result =mockMvc.perform(put(url)
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody.getBytes(StandardCharsets.UTF_8)))
@@ -187,7 +227,78 @@ class TodoApiControllerTest {
                 .andExpect(jsonPath("$.todo.tasks[0].description").value("세수해3"))
                 .andExpect(jsonPath("$.todo.tasks[1].description").value("세수해222"))
                 .andExpect(jsonPath("$.todo.tasks[2].description").value("세수해4"))
-                .andExpect(jsonPath("$.todo.user.id").exists());
+                .andExpect(jsonPath("$.todo.user.id").exists())
+                .andReturn();
+
+        // Extract the response body
+        String responseContent = result.getResponse().getContentAsString();
+
+        // Parse the response content to a JSON object
+        // Assuming you are using Jackson's ObjectMapper
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode rootNode = objectMapper.readTree(responseContent);
+
+        // Extract taskIds
+        JsonNode tasksNode = rootNode.path("todo").path("tasks");
+        for (JsonNode taskNode : tasksNode) {
+            String taskId = taskNode.path("taskId").asText();
+            taskIds.add(taskId);
+        }
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("Test Todo Task Delete Success")
+    public void testDeleteTodoTask() throws Exception {
+        // given
+        String url = "/todo/delete/" + todoId + "/task/" + taskIds.get(0);
+        // when
+        mockMvc.perform(delete(url)
+                        .header("Authorization", "Bearer " + accessToken))
+                // then
+                .andDo(print())
+                .andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    @Order(5)
+    @DisplayName("Test Todo Task Delete Fail")
+    public void testDeleteTodoTask_Fail() throws Exception {
+        // given
+        String url = "/todo/delete/" + todoId + "/task/" + taskIds.get(0) + "1";
+        // when
+        mockMvc.perform(delete(url)
+                        .header("Authorization", "Bearer " + accessToken))
+                // then
+                .andExpect(status().isNotFound());
+    }
+
+
+    @Test
+    @Order(6)
+    @DisplayName("Test Todo Delete Success")
+    public void testDeleteTodo() throws Exception {
+        // given
+        String url = "/todo/delete/" + todoId;
+        // when
+        mockMvc.perform(delete(url)
+                        .header("Authorization", "Bearer " + accessToken))
+                // then
+                .andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("Test Todo Delete Fail")
+    public void testDeleteTodo_Fail() throws Exception {
+        // given
+        String url = "/todo/delete/" + todoId + "1";
+
+        // when
+        mockMvc.perform(delete(url)
+                        .header("Authorization", "Bearer " + accessToken))
+                // then
+                .andExpect(status().isNotFound());
     }
 
     @AfterEach
