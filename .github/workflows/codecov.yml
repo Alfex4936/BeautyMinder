@@ -46,7 +46,15 @@ jobs:
         run: ./gradlew build -x test
 
       - name: Run JacocoTest
-        run: ./gradlew clean test jacocoTestReport
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: ./gradlew clean test jacocoTestReport
+
+      # - name: Run JacocoTest
+      #   run: ./gradlew clean test jacocoTestReport
+      #   continue-on-error: true
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

@@ -1,6 +1,10 @@
 package app.beautyminder.controller.cosmetic;
 
+import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.Cosmetic;
+import app.beautyminder.domain.User;
+import app.beautyminder.dto.user.AddUserRequest;
+import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -15,20 +19,23 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Slf4j
@@ -39,11 +46,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles({"awsBasic", "test"})
 class CosmeticApiControllerTest {
 
+    private static final Duration ACCESS_TOKEN_DURATION = Duration.ofMinutes(3);
+
+    private static final String TEST_ADMIN_EMAIL = "cosmeticadmin@beautyminder.com";
+    private static final String TEST_ADMIN_PASSWORD = "test";
+
     @Autowired
     protected MockMvc mockMvc;
     @Autowired
     protected ObjectMapper objectMapper;
-
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private TokenProvider tokenProvider;
+    private String accessToken;
+    private String userId;
 
     @Autowired
     private WebApplicationContext context;
@@ -64,6 +81,13 @@ class CosmeticApiControllerTest {
 
     @BeforeAll
     public void initialize() {
+        AddUserRequest addUserRequest = new AddUserRequest();
+        addUserRequest.setEmail(TEST_ADMIN_EMAIL);
+        addUserRequest.setPassword(TEST_ADMIN_PASSWORD);
+
+        User user = userService.saveAdmin(addUserRequest);
+        userId = user.getId();
+        accessToken = tokenProvider.generateToken(user, ACCESS_TOKEN_DURATION);
     }
 
     @Test
@@ -102,7 +126,7 @@ class CosmeticApiControllerTest {
         String url = "/cosmetic/page";
 
         // when
-        Mockito.when(cosmeticService.getAllCosmeticsInPage(Mockito.any(Pageable.class))).thenReturn(cosmeticPage);
+        Mockito.when(cosmeticService.getAllCosmeticsInPage(any(Pageable.class))).thenReturn(cosmeticPage);
         ResultActions result = mockMvc.perform(get(url));
 
         // then
@@ -159,6 +183,91 @@ class CosmeticApiControllerTest {
                 .andExpect(status().isOk());
     }
 
+
+    @Test
+    @DisplayName("Test CREATE cosmetic")
+    public void testCreateCosmetic() throws Exception {
+        // given
+        var cosmetic = createTestCosmetic();
+        String url = "/cosmetic";
+        Mockito.when(cosmeticService.saveCosmetic(any(Cosmetic.class))).thenReturn(cosmetic);
+
+        // when
+        ResultActions result = mockMvc.perform(post(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(cosmetic)));
+
+        // then
+        result.andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Test UPDATE cosmetic")
+    public void testUpdateCosmetic() throws Exception {
+        // given
+        var cosmetic = createTestCosmetic();
+        String url = "/cosmetic/" + cosmetic.getId();
+        Mockito.when(cosmeticService.updateCosmetic(eq(cosmetic.getId()), any(Cosmetic.class))).thenReturn(cosmetic);
+
+        // when
+        ResultActions result = mockMvc.perform(put(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(cosmetic)));
+
+        // then
+        result.andExpect(status().isOk());
+    }
+    @Test
+    @DisplayName("Test UPDATE cosmetic FAIL")
+    public void testUpdateCosmetic_ShouldFail() throws Exception {
+        // given
+        var cosmetic = createTestCosmetic();
+        String url = "/cosmetic/" + cosmetic.getId();
+        Mockito.when(cosmeticService.updateCosmetic(eq(cosmetic.getId()), any(Cosmetic.class))).thenReturn(null);
+
+        // when
+        ResultActions result = mockMvc.perform(put(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(cosmetic)));
+
+        // then
+        result.andExpect(status().isNotFound());
+    }
+    @Test
+    @DisplayName("Test DELETE cosmetic")
+    public void testDeleteCosmetic() throws Exception {
+        // given
+        var cosmetic = createTestCosmetic();
+        String url = "/cosmetic/" + cosmetic.getId();
+        Mockito.when(cosmeticService.deleteCosmetic(eq(cosmetic.getId()))).thenReturn(true);
+
+        // when
+        ResultActions result = mockMvc.perform(delete(url)
+                .header("Authorization", "Bearer " + accessToken));
+
+        // then
+        result.andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Test DELETE cosmetic FAIL")
+    public void testDeleteCosmetic_ShouldFail() throws Exception {
+        // given
+        var cosmetic = createTestCosmetic();
+        String url = "/cosmetic/" + cosmetic.getId();
+        Mockito.when(cosmeticService.deleteCosmetic(eq(cosmetic.getId()))).thenReturn(false);
+
+        // when
+        ResultActions result = mockMvc.perform(delete(url)
+                .header("Authorization", "Bearer " + accessToken));
+
+        // then
+        result.andExpect(status().isNotFound());
+    }
+
     @AfterEach
     public void cleanUp() {
         // Clean up logic to run after each test if needed
@@ -166,5 +275,11 @@ class CosmeticApiControllerTest {
 
     @AfterAll
     public void cleanUpAll() {
+        try {
+            // Final cleanup logic to run after all tests
+            userService.deleteUserAndRelatedData(userId);
+        } catch (Exception e) {
+            System.err.println("Cleanup failed: " + e.getMessage());
+        }
     }
 }

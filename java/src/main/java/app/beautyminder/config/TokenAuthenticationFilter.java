@@ -1,5 +1,6 @@
 package app.beautyminder.config;
 
+import app.beautyminder.config.api.ApiPatternService;
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
@@ -36,16 +37,17 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     public final static String ACCESS_TOKEN_COOKIE = "Access-Token";
     public final static String TOKEN_PREFIX = "Bearer ";
     private static final Pattern UNPROTECTED_SWAGGER_API =
-            Pattern.compile("^/(vision|swagger-ui|v3/api-docs|proxy|search/test)(/.*)?$");
-    private static final Pattern UNPROTECTED_API =
-            Pattern.compile("^/(test|cosmetic/hit|cosmetic/click|ws|user/email-verification)(/.*)?$");
-    private static final Pattern TEST_PROTECTED_API =
-            Pattern.compile("^/(chat|actuator|expiry|admin|gpt/review/summarize|es-index|data-view|todo|review|baumann|recommend|search|user|redis/eval|redis/batch|redis/product)(/.*)?$");
+            Pattern.compile("^/(swagger-ui|v3/api-docs|proxy)(/.*)?$");
+    private static final Pattern PUBLIC_API =
+            Pattern.compile("^/(search/test|vision|test|cosmetic/hit|cosmetic/click|ws|user/email-verification)(/.*)?$");
+
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
     @Value("${unprotected.routes}")
     private String[] unprotectedRoutes;
+
+    private final ApiPatternService apiPatternService;
 
     @Override
     protected void doFilterInternal(
@@ -53,18 +55,18 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             @NotNull HttpServletResponse response,
             @NotNull FilterChain filterChain) throws ServletException, IOException {
         response.setHeader("ngrok-skip-browser-warning", "true"); // add ngrok header for all
-        if (request.getRequestURI().equals("/")) {
+
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+
+        if (uri.equals("/") || isPublicRoute(uri)) {
+            log.debug("Accessing unprotected route: " + request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
 
-        if (!isProtectedRoute(request.getRequestURI())) { // early return
-            log.debug("Accessing unprotected route! " + request.getRequestURI());
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if (!isTestRoute(request.getRequestURI())) { // for now only checking admin route
+        // only set auth for protected apis
+        if (!apiPatternService.isRequestProtected(uri, method)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -151,15 +153,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private boolean isProtectedRoute(String uri) {
-        return
-                !UNPROTECTED_SWAGGER_API.matcher(uri).matches() &&
-                        !UNPROTECTED_API.matcher(uri).matches() &&
-                        Arrays.stream(unprotectedRoutes).noneMatch(uri::startsWith);
-    }
-
-    private boolean isTestRoute(String uri) {
-        return TEST_PROTECTED_API.matcher(uri).matches();
+    private boolean isPublicRoute(String uri) {
+        return UNPROTECTED_SWAGGER_API.matcher(uri).matches() ||
+                PUBLIC_API.matcher(uri).matches() ||
+                Arrays.stream(unprotectedRoutes).anyMatch(uri::startsWith);
     }
 
     private String getAccessToken(HttpServletRequest request) {

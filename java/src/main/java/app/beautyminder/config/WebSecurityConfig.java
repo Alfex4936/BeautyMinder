@@ -1,5 +1,6 @@
 package app.beautyminder.config;
 
+import app.beautyminder.config.api.ApiPatternService;
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
@@ -71,6 +72,7 @@ public class WebSecurityConfig {
     private final UserDetailService userDetailsService;
     private final MongoService mongoService;
     private final ObjectMapper objectMapper;
+    private final ApiPatternService apiPatternService;
 
     @Bean
     public StrictHttpFirewall httpFirewall() {
@@ -202,7 +204,7 @@ public class WebSecurityConfig {
 
     @Bean
     public TokenAuthenticationFilter tokenAuthenticationFilter() {
-        return new TokenAuthenticationFilter(tokenProvider, refreshTokenService, refreshTokenRepository);
+        return new TokenAuthenticationFilter(tokenProvider, refreshTokenService, refreshTokenRepository, apiPatternService);
     }
 
     @Bean

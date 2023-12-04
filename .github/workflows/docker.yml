@@ -1,16 +1,18 @@
 name: Docker Continuous Deployment (CD)
 
 on:
+  workflow_run:
+    workflows: ["Verify Test Cases with Codecov"]
+    types:
+      - completed
+
   push:
     branches: [main]
     paths:
       - "java/src/main/**/*"
       # - "java/**/build.gradle*"
       # - "java/**/settings.gradle*"
-  workflow_run:
-    workflows: ["Verify Test Cases with Codecov"]
-    types:
-      - completed
+
   workflow_dispatch:
 
 permissions:
@@ -19,7 +21,7 @@ permissions:
 jobs:
   docker_build_and_deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure' }}
+    # if: ${{ github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure' }}
     defaults:
       run:
         working-directory: java
