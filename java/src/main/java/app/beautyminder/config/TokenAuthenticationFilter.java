@@ -5,7 +5,6 @@ import app.beautyminder.domain.RefreshToken;
 import app.beautyminder.domain.User;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.service.auth.RefreshTokenService;
-import app.beautyminder.util.CookieUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -54,6 +53,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             @NotNull HttpServletResponse response,
             @NotNull FilterChain filterChain) throws ServletException, IOException {
         response.setHeader("ngrok-skip-browser-warning", "true"); // add ngrok header for all
+        if (request.getRequestURI().equals("/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (!isProtectedRoute(request.getRequestURI())) { // early return
             log.debug("Accessing unprotected route! " + request.getRequestURI());
