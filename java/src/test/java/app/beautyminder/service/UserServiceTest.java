@@ -23,7 +23,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -104,6 +103,7 @@ public class UserServiceTest {
         List<User> result = userService.findUsersWithProfileImage();
         assertEquals(mockUsers, result);
     }
+
     @Test
     public void testResetPassword_ValidToken() {
         PasswordResetToken resetToken = PasswordResetToken.builder().expiryDate(LocalDateTime.now().plusHours(1)).email("user@example.com").build();

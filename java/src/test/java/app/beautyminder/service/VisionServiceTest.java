@@ -32,7 +32,7 @@ class VisionServiceTest {
     }
 
     @Test
-    public void testExecuteWithUrl() throws Exception {
+    public void testExecuteWithUrl() {
         // Prepare a mock response
         AnnotateImageResponse annotateImageResponse = AnnotateImageResponse.newBuilder()
                 .addTextAnnotations(EntityAnnotation.newBuilder().setDescription("2019-12-13").build())
@@ -79,7 +79,7 @@ class VisionServiceTest {
     }
 
     @Test
-    public void testExecuteWithException() throws Exception {
+    public void testExecuteWithException() {
         // Setup to throw an exception
         when(mockClient.batchAnnotateImages(any(BatchAnnotateImagesRequest.class)))
                 .thenThrow(new RuntimeException("Test exception"));

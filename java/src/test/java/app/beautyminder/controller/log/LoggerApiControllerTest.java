@@ -4,9 +4,6 @@ import app.beautyminder.service.LogService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -113,6 +110,7 @@ public class LoggerApiControllerTest {
         mockMvc.perform(delete("/log/spring/delete"))
                 .andExpect(status().isOk());
     }
+
     @AfterEach
     public void cleanUp() {
         // Clean up logic to run after each test if needed

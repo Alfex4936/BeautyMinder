@@ -2,7 +2,6 @@ package app.beautyminder.service;
 
 import app.beautyminder.domain.Review;
 import app.beautyminder.repository.ReviewRepository;
-import app.beautyminder.service.chat.WebSocketSessionManager;
 import app.beautyminder.service.review.NlpService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,7 +18,6 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -56,7 +54,8 @@ public class NlpServiceTest {
         // Setup
         var review = Review.builder().build();
         when(reviewRepository.findById(anyString())).thenReturn(Optional.of(review));
-        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("Test exception") {});
+        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("Test exception") {
+        });
 
         // Execute
         nlpService.processFailedReviews();

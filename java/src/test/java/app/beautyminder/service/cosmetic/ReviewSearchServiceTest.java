@@ -1,7 +1,6 @@
 package app.beautyminder.service.cosmetic;
 
 import app.beautyminder.domain.Cosmetic;
-import app.beautyminder.domain.EsReview;
 import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
 import app.beautyminder.repository.ReviewRepository;
@@ -28,7 +27,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;

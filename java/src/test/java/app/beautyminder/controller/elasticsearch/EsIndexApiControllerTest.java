@@ -2,11 +2,9 @@ package app.beautyminder.controller.elasticsearch;
 
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.User;
-import app.beautyminder.dto.CosmeticMetricData;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.service.LogService;
 import app.beautyminder.service.auth.UserService;
-import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,9 +19,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.Duration;
-import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;

@@ -4,9 +4,7 @@ import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
 import app.beautyminder.repository.CosmeticRepository;
-import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.repository.elastic.EsCosmeticRepository;
-import app.beautyminder.repository.elastic.EsReviewRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
@@ -18,8 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.client.*;
+import org.opensearch.client.Request;
+import org.opensearch.client.Response;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.RestHighLevelClient;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
@@ -70,7 +69,7 @@ public class CosmeticSearchServiceTest {
     @BeforeEach
     public void setup() {
         cosmeticRepository = mock(CosmeticRepository.class);
-        esCosmeticRepository = mock(EsCosmeticRepository .class);
+        esCosmeticRepository = mock(EsCosmeticRepository.class);
         opensearchClient = mock(RestHighLevelClient.class);
         objectMapper = new ObjectMapper();
         cosmeticSearchService = new CosmeticSearchService(cosmeticRepository, esCosmeticRepository, opensearchClient, objectMapper);

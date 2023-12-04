@@ -1,17 +1,11 @@
 package app.beautyminder.service.cosmetic;
 
-import app.beautyminder.domain.Review;
 import app.beautyminder.dto.CosmeticMetricData;
 import app.beautyminder.dto.Event;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.KeywordRankRepository;
-import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.service.MongoService;
-import app.beautyminder.service.review.NlpService;
 import app.beautyminder.util.EventQueue;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vane.badwordfiltering.BadWordFiltering;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,12 +14,15 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class CosmeticRankServiceTest {

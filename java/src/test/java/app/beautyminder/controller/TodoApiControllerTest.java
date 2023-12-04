@@ -22,7 +22,6 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -217,7 +216,7 @@ class TodoApiControllerTest {
         String requestBody = String.format(UPDATE_TEMPLATE, taskIds.get(0), taskIds.get(2));
 
         // when
-        MvcResult result =mockMvc.perform(put(url)
+        MvcResult result = mockMvc.perform(put(url)
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody.getBytes(StandardCharsets.UTF_8)))

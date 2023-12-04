@@ -1,14 +1,8 @@
 package app.beautyminder.service;
 
-import app.beautyminder.domain.PasswordResetToken;
 import app.beautyminder.domain.Todo;
 import app.beautyminder.domain.TodoTask;
-import app.beautyminder.domain.User;
-import app.beautyminder.dto.PasswordResetResponse;
-import app.beautyminder.dto.sms.SmsResponseDTO;
 import app.beautyminder.repository.TodoRepository;
-import app.beautyminder.service.auth.SmsService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.result.DeleteResult;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,19 +14,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.http.HttpEntity;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestTemplate;
 
-import java.lang.reflect.Field;
-import java.net.URI;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;

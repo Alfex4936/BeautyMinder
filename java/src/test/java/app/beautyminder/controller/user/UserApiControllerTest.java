@@ -165,8 +165,8 @@ class UserApiControllerTest {
 
         // when
         mockMvc.perform(post(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
                 // then
                 .andExpect(status().isBadRequest());
     }
@@ -441,7 +441,7 @@ class UserApiControllerTest {
     public void testUpdatePassword() throws Exception {
         // given
         String url = "/user/update-password";
-        UpdatePasswordRequest  request = new UpdatePasswordRequest("1234", "newPassword"); // invalid token
+        UpdatePasswordRequest request = new UpdatePasswordRequest("1234", "newPassword"); // invalid token
         String requestBody = objectMapper.writeValueAsString(request);
 
         // when
