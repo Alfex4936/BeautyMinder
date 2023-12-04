@@ -104,6 +104,7 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 //        MvcRequestMatcher.Builder mvcMatcherBuilder = new MvcRequestMatcher.Builder(introspector).servletPath("/path");
         http.csrf(AbstractHttpConfigurer::disable);
+        http.cors(corsConfigurer -> corsConfigurer.configurationSource(corsConfigurationSource()));
 
         http.anonymous(AbstractHttpConfigurer::disable);
 //                http.httpBasic(AbstractHttpConfigurer::disable);
