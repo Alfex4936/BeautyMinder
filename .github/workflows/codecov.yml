@@ -50,7 +50,9 @@ jobs:
         with:
           timeout_minutes: 10
           max_attempts: 3
-          command: ./gradlew clean test jacocoTestReport
+          command: |
+            cd ${GITHUB_WORKSPACE}/java
+            ./gradlew clean test jacocoTestReport
 
       # - name: Run JacocoTest
       #   run: ./gradlew clean test jacocoTestReport
