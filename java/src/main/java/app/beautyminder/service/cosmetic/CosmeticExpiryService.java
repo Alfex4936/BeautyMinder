@@ -26,6 +26,12 @@ public class CosmeticExpiryService {
     private final CosmeticExpiryRepository cosmeticExpiryRepository;
     private final MongoService mongoService;
 
+    private static void validateAndSetDate(String dateString, DateTimeFormatter formatter,
+                                           java.util.function.Consumer<String> dateSetter) {
+        LocalDate.parse(dateString, formatter); // Will throw DateTimeParseException if invalid
+        dateSetter.accept(dateString);
+    }
+
     public CosmeticExpiry createCosmeticExpiry(String userId, AddExpiryProduct cosmeticExpiryDTO) {
         CosmeticExpiry.CosmeticExpiryBuilder builder = CosmeticExpiry.builder();
 
@@ -119,11 +125,5 @@ public class CosmeticExpiryService {
 
     public Optional<CosmeticExpiry> findByUserIdAndId(String userId, String expiryId) {
         return cosmeticExpiryRepository.findByUserIdAndId(userId, expiryId);
-    }
-
-    private static void validateAndSetDate(String dateString, DateTimeFormatter formatter,
-                                           java.util.function.Consumer<String> dateSetter) {
-        LocalDate.parse(dateString, formatter); // Will throw DateTimeParseException if invalid
-        dateSetter.accept(dateString);
     }
 }

@@ -27,7 +27,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 
 /**

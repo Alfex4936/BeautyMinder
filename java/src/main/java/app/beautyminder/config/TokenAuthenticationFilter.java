@@ -44,10 +44,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private final TokenProvider tokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ApiPatternService apiPatternService;
     @Value("${unprotected.routes}")
     private String[] unprotectedRoutes;
-
-    private final ApiPatternService apiPatternService;
 
     @Override
     protected void doFilterInternal(

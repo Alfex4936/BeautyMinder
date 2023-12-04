@@ -7,14 +7,11 @@ import app.beautyminder.repository.PasscodeTokenRepository;
 import app.beautyminder.repository.PasswordResetTokenRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Optional;
 import java.util.stream.IntStream;
 

@@ -2,7 +2,6 @@ package app.beautyminder.service.cosmetic;
 
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.EsCosmetic;
-import app.beautyminder.domain.EsReview;
 import app.beautyminder.repository.CosmeticRepository;
 import app.beautyminder.repository.elastic.EsCosmeticRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;

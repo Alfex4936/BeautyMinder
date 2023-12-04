@@ -19,11 +19,10 @@ import java.util.Optional;
 @Service
 public class CosmeticService {
 
+    private final MongoTemplate mongoTemplate;
+    private final CosmeticRepository cosmeticRepository;
     @Value("${server.default.cosmetic}")
     private String defaultCosmeticPic;
-    private final MongoTemplate mongoTemplate;
-
-    private final CosmeticRepository cosmeticRepository;
 
     public Optional<Cosmetic> findById(String cosmeticId) {
         return cosmeticRepository.findById(cosmeticId);

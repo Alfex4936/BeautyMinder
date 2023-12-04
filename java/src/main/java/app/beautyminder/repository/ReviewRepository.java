@@ -19,6 +19,7 @@ public interface ReviewRepository extends MongoRepository<Review, String> {
 
     @Query(value = "{ 'user.$id': ?0 }")
     List<Review> findByUserId(ObjectId userId);
+
     List<Review> findByUser(User user);
 
     List<Review> findByCosmetic(Cosmetic cosmetic);

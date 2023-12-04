@@ -35,6 +35,7 @@ public interface TodoRepository extends MongoRepository<Todo, String> {
     void deleteByUserId(ObjectId userId);
 
     boolean existsByDateAndUserId(LocalDate date, String userId);
+
     @Query("{ '_id': ?0, 'user.$id': ?1 }")
     Optional<Todo> findByTodoIdAndUserId(ObjectId todoId, ObjectId userId);
 }

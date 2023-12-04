@@ -34,10 +34,9 @@ public class NlpService {
     private final ReviewRepository reviewRepository;
     private final MongoService mongoService;
     private final BadWordFiltering badWordFiltering;
-
+    private final Set<String> processQueue = new HashSet<>();
     @Value("${server.python.review}")
     private String reviewProcessServer;
-    private final Set<String> processQueue = new HashSet<>();
 
     // every 10min it checks failed reviews and re-call analysis server.
     @Scheduled(cron = "0 0/10 * * * ?", zone = "Asia/Seoul")

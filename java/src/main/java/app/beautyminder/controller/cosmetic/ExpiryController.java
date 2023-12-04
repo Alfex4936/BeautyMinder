@@ -3,7 +3,6 @@ package app.beautyminder.controller.cosmetic;
 import app.beautyminder.domain.CosmeticExpiry;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.expiry.AddExpiryProduct;
-import app.beautyminder.repository.CosmeticExpiryRepository;
 import app.beautyminder.service.cosmetic.CosmeticExpiryService;
 import app.beautyminder.util.AuthenticatedUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,7 +19,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 

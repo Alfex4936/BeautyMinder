@@ -1,7 +1,6 @@
 package app.beautyminder.repository;
 
 import app.beautyminder.domain.Cosmetic;
-import app.beautyminder.domain.CosmeticExpiry;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

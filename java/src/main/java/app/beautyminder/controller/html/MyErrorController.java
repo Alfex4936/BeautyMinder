@@ -18,7 +18,7 @@ public class MyErrorController implements ErrorController {
         if (status != null) {
             int statusCode = Integer.parseInt(status.toString());
 
-            switch(statusCode) {
+            switch (statusCode) {
                 case 404:
                     model.addAttribute("error", "Page not found: " + errorMessage);
                     break;

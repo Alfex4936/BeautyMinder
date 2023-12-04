@@ -4,13 +4,7 @@ import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StopWatch;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -51,9 +45,9 @@ public class VisionService {
                     var ocrResult = annotation.getDescription();
 //                    for (var line : ocrResult.split("\\s")) {
 
-                        Optional<String> expirationDate = ExpirationDateExtractor.extractExpirationDate(ocrResult);
-                        if (expirationDate.isPresent()) {
-                            return expirationDate; // Returns the first found date from the method
+                    Optional<String> expirationDate = ExpirationDateExtractor.extractExpirationDate(ocrResult);
+                    if (expirationDate.isPresent()) {
+                        return expirationDate; // Returns the first found date from the method
 //                        }
                     }
                 }

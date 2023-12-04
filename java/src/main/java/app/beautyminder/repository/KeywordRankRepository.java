@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface KeywordRankRepository extends MongoRepository<KeywordRank, String> {
     // Find the latest KeywordRank by sorting the createdAt field in descending order and limit the result to 1
     Optional<KeywordRank> findTopByOrderByCreatedAtDesc();
+
     Optional<KeywordRank> findTopByOrderByUpdatedAtDesc();
 
     Optional<KeywordRank> findByDate(String today);

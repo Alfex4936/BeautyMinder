@@ -1,12 +1,8 @@
 package app.beautyminder.dto.expiry;
 
-import app.beautyminder.domain.TodoTask;
 import com.mongodb.lang.Nullable;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @Setter
 @Getter

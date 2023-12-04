@@ -2,19 +2,16 @@ package app.beautyminder.service;
 
 import app.beautyminder.domain.Todo;
 import app.beautyminder.domain.TodoTask;
-import app.beautyminder.dto.todo.AddTodoResponse;
 import app.beautyminder.dto.todo.TaskUpdateDTO;
 import app.beautyminder.dto.todo.TodoUpdateDTO;
 import app.beautyminder.repository.TodoRepository;
 import com.mongodb.client.result.DeleteResult;
 import lombok.RequiredArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -28,9 +25,9 @@ import java.util.UUID;
 public class TodoService {
 
     private final TodoRepository todoRepository;
+    private final MongoService mongoService;
     @Autowired
     private MongoTemplate mongoTemplate;
-    private final MongoService mongoService;
 
     public Todo createTodo(Todo todo) {
         return todoRepository.save(todo);

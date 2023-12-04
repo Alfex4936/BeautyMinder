@@ -3,13 +3,10 @@ package app.beautyminder.controller.search;
 import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
-import app.beautyminder.repository.UserRepository;
-import app.beautyminder.service.MongoService;
 import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.cosmetic.CosmeticSearchService;
 import app.beautyminder.service.cosmetic.ReviewSearchService;
 import app.beautyminder.util.AuthenticatedUser;
-import com.mongodb.BasicDBObject;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -32,12 +29,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static app.beautyminder.domain.User.MAX_HISTORY_SIZE;
 
 @Slf4j
 @RequiredArgsConstructor

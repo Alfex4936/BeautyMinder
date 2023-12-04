@@ -6,7 +6,6 @@ import app.beautyminder.domain.User;
 import app.beautyminder.repository.TodoRepository;
 import app.beautyminder.repository.UserRepository;
 import app.beautyminder.service.LogService;
-import app.beautyminder.service.auth.UserService;
 import app.beautyminder.service.cosmetic.CosmeticService;
 import app.beautyminder.service.vision.VisionService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -19,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,14 +27,16 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -61,22 +61,23 @@ public class MongoViewController {
             var jsonLogs = logs.stream()
                     .map(log -> {
                         try {
-                            Map<String, Object> logMap = objectMapper.readValue(log, new TypeReference<Map<String, Object>>() {});
-                            if(logMap.containsKey("document") && ((Map)logMap.get("document")).containsKey("@timestamp")) {
-                                String timestamp = (String)((Map)logMap.get("document")).get("@timestamp");
+                            Map<String, Object> logMap = objectMapper.readValue(log, new TypeReference<Map<String, Object>>() {
+                            });
+                            if (logMap.containsKey("document") && ((Map) logMap.get("document")).containsKey("@timestamp")) {
+                                String timestamp = (String) ((Map) logMap.get("document")).get("@timestamp");
                                 ZonedDateTime zdt = ZonedDateTime.parse(timestamp);
                                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withLocale(Locale.KOREA);
-                                ((Map)logMap.get("document")).put("@timestamp", zdt.format(formatter));
+                                ((Map) logMap.get("document")).put("@timestamp", zdt.format(formatter));
                             }
 
-                            String message = (String)((Map)logMap.get("document")).get("message");
+                            String message = (String) ((Map) logMap.get("document")).get("message");
                             Pattern pattern = Pattern.compile("(GET|POST|DELETE|PATCH|PUT)\\s(/[^\\s]+)");
                             Matcher matcher = pattern.matcher(message);
                             if (matcher.find()) {
                                 String httpMethodAndEndpoint = matcher.group(0);
                                 String formatted = "<b><u>" + httpMethodAndEndpoint + "</u></b>";
                                 message = message.replace(httpMethodAndEndpoint, formatted);
-                                ((Map)logMap.get("document")).put("message", message);
+                                ((Map) logMap.get("document")).put("message", message);
                             }
 
                             return logMap;

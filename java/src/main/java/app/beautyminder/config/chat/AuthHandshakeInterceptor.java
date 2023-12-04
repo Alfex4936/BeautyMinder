@@ -2,7 +2,6 @@ package app.beautyminder.config.chat;
 
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.service.chat.WebSocketSessionManager;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;

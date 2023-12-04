@@ -11,7 +11,6 @@ import app.beautyminder.service.cosmetic.GPTService;
 import app.beautyminder.service.review.ReviewService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vane.badwordfiltering.BadWordFiltering;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -232,7 +232,7 @@ public class BaumannController {
             summary = "Delete a baumann test",
             description = "바우만 결과 삭제하기 [User 권한 필요]",
             tags = {"Baumann Operations"},
-            parameters = { @Parameter(name="historyId", description = "바우만 테스트 DB 아이디")},
+            parameters = {@Parameter(name = "historyId", description = "바우만 테스트 DB 아이디")},
             responses = {
                     @ApiResponse(responseCode = "200", description = "내용 없음", content = @Content(
                             schema = @Schema(implementation = String.class)))

@@ -28,16 +28,12 @@ import java.util.concurrent.TimeUnit;
 @AllArgsConstructor
 @Service
 public class LocalFileService {
-    @Qualifier("webApplicationContext")
-    private final ResourceLoader resourceLoader;
-
-    private final ObjectMapper objectMapper;
-
     private static final String TEMP_DIR_JAVA = "java.io.tmpdir";
-
     private static final String TEMP_FILES_PATTERN = "upload_*";
     private static final long TEMP_FILE_LIFETIME = 1000 * 60 * 60; // 1 hour in milliseconds
-
+    @Qualifier("webApplicationContext")
+    private final ResourceLoader resourceLoader;
+    private final ObjectMapper objectMapper;
 
     public JsonNode readJsonFile(String filePath) throws IOException {
         Resource resource = resourceLoader.getResource(filePath);

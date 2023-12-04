@@ -23,6 +23,10 @@ public class ChatLog {
 
     // Inner class to represent individual messages
 
+    public void addMessage(Message msg) {
+        this.messages.add(msg);
+    }
+
     @Getter
     @Setter
     @Builder
@@ -32,9 +36,5 @@ public class ChatLog {
         private long timestamp;
         private ChatMessage.MessageType type; // 메시지 타입
 
-    }
-
-    public void addMessage(Message msg) {
-        this.messages.add(msg);
     }
 }
