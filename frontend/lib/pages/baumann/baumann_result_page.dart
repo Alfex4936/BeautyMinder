@@ -20,7 +20,7 @@ class _BaumannResultPageState extends State<BaumannResultPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(),
+      appBar: CommonAppBar(automaticallyImplyLeading: false, context: context,),
       body: SingleChildScrollView(
         child: baumannResultUI(),
       ),
@@ -125,7 +125,7 @@ class _BaumannResultPageState extends State<BaumannResultPage> {
           StringBuffer text = StringBuffer("");
           for (int i = 0; i < mapDataModels.length; i++) {
             text.write(
-                "${legendModels[i].name} : ${mapDataModels[i].toString()}");
+                "${mapDataModels[i].toString()}/${indicatorModel.maxValues}");
             if (i != mapDataModels.length - 1) {
               text.write("\n");
             }
@@ -455,6 +455,9 @@ class _BaumannResultPageState extends State<BaumannResultPage> {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xffe58731),
             elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5.0), // Adjust the radius as needed
+            ),
           ),
           child: Text(
             '홈으로 가기',

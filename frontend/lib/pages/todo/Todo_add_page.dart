@@ -134,34 +134,11 @@ class _TodoAddPage extends State<TodoAddPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(),
+      appBar: CommonAppBar(automaticallyImplyLeading: true, context: context,),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  onPressed: () async {
-                    createRoutine();
-
-                    if (tasks.length == 0) {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const CalendarPage()));
-                    } else {
-                      await TodoService.addTodo(todo!);
-
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const CalendarPage()));
-                    }
-                  },
-                  icon: const Icon(Icons.add_box_rounded,
-                      size: 50, color: Color(0xffd86a04)),
-                  label: const Text("완료",
-                      style: TextStyle(fontSize: 25, color: Color(0xffd86a04))),
-                )
-              ],
-            ),
+            SizedBox(height: 20,),
             Padding(
                 padding: const EdgeInsets.all(20),
                 child: GestureDetector(
@@ -173,8 +150,8 @@ class _TodoAddPage extends State<TodoAddPage> {
                       controller: _dateController,
                       decoration: InputDecoration(
                           prefixStyle: TextStyle(color: Color(0xffd86a04)),
-                          labelText: 'Date',
-                          hintText: 'Date',
+                          labelText: '날짜',
+                          hintText: '날짜 선택',
                           icon: const Icon(
                             Icons.calendar_month,
                             color: Color(0xffd86a04),
@@ -183,7 +160,7 @@ class _TodoAddPage extends State<TodoAddPage> {
                               borderRadius: BorderRadius.circular(10),
                               borderSide: const BorderSide(
                                   color: Colors.black, width: 1.0)),
-                          contentPadding: EdgeInsets.all(3)),
+                          contentPadding: EdgeInsets.all(10)),
                     ),
                   ),
                 )),
@@ -199,16 +176,16 @@ class _TodoAddPage extends State<TodoAddPage> {
                         child: TextField(
                           controller: controller,
                           decoration: InputDecoration(
-                              labelText: 'Todo $index',
-                              hintText: 'Enter Todo $index',
+                              labelText: '루틴 $index',
+                              hintText: '루틴 $index 입력',
                               icon: const Icon(Icons.add_task_sharp,
                                   color: Color(0xffd86a04)),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               focusedBorder: const OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                      color: Colors.amber, width: 2.0))),
+                                borderSide: BorderSide(
+                                  color: Colors.amber, width: 2.0))),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -228,28 +205,28 @@ class _TodoAddPage extends State<TodoAddPage> {
                         color: Colors.black,
                         borderRadius: BorderRadius.circular(10),
                         selectedColor: Colors.white,
-                        fillColor: const Color(0xffffecda),
+                        fillColor: Colors.orange,
                         borderColor: Colors.grey,
-                        selectedBorderColor: const Color(0xffffecda),
+                        selectedBorderColor: Colors.orange,
                         children: const <Widget>[
                           Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            padding: EdgeInsets.symmetric(horizontal: 10),
                             child: Text(
-                              'Dinner',
+                              '저녁',
                               style: TextStyle(color: Colors.black),
                             ),
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 8),
                             child: Text(
-                              'Morning',
+                              '아침',
                               style: TextStyle(color: Colors.black),
                             ),
                           ),
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 8),
                             child: Text(
-                              'Other',
+                              '기타',
                               style: TextStyle(color: Colors.black),
                             ),
                           ),
@@ -263,32 +240,36 @@ class _TodoAddPage extends State<TodoAddPage> {
               children: [
                 Padding(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
                   child: ElevatedButton(
                     style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xffffecda)),
+                      backgroundColor: const Color(0xffbbbbbb),
+                      elevation: 0
+                    ),
                     onPressed: _addNewTextField,
-                    child: const Icon(Icons.add, color: Color(0xffd86a04)),
+                    child: const Icon(Icons.add, color: Colors.white),
                   ),
                 ),
                 if (_controllers.length > 1)
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 20),
+                        horizontal: 40, vertical: 20),
                     child: ElevatedButton(
                       style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xffffecda)
+                          backgroundColor: const Color(0xffbbbbbb),
+                          elevation: 0
                           //Color(0xffffecda),
                           ),
                       onPressed: _removeTextField,
                       child: const Icon(
                         Icons.remove,
-                        color: Color(0xffd86a04),
+                        color: Colors.white,
                       ),
                     ),
                   ),
               ],
-            )
+            ),
+            SizedBox(height: 100,)
           ],
         ),
       ),
@@ -311,6 +292,31 @@ class _TodoAddPage extends State<TodoAddPage> {
                 .push(MaterialPageRoute(builder: (context) => const MyPage()));
           }
         },
+      ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5),
+        child: TextButton(
+          onPressed: () async {
+            createRoutine();
+            if (tasks.length == 0) {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const CalendarPage()));
+            } else {
+              await TodoService.addTodo(todo!);
+
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const CalendarPage()));
+            }
+          },
+          style: TextButton.styleFrom(
+            backgroundColor: Color(0xffd86a04), // 배경색
+            minimumSize: Size(MediaQuery.of(context).size.width - 50, 30),
+          ),
+          child: Text(
+            "등록",
+            style: TextStyle(fontSize: 20, color: Colors.white),
+          ),
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:beautyminder/pages/baumann/baumann_test_start_page.dart';
 import 'package:beautyminder/pages/my/my_page.dart';
 import 'package:beautyminder/pages/pouch/expiry_page.dart';
 import 'package:beautyminder/pages/recommend/recommend_bloc_screen.dart';
+import 'package:beautyminder/pages/start/welcome_page.dart';
 import 'package:beautyminder/pages/todo/todo_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +19,9 @@ import 'pages/start/register_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
-  }
+  //if (defaultTargetPlatform == TargetPlatform.android) {
+  //  await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
+  //}
 
   runApp(MultiBlocProvider(
       providers: [
@@ -50,7 +51,8 @@ class MyApp extends StatelessWidget {
         primaryColor: const Color(0xffffb876),
       ),
       // home: BaumannStartPage(),
-      home: const LoginPage(),
+      // home: const LoginPage(),
+      home: WelcomePage(),
       // home: const HomePage(),
       // home: CosmeticReviewPage(),
       // home: ProductDetailPage(),

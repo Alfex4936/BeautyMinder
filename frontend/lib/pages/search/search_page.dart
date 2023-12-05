@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../dto/cosmetic_model.dart';
-import '../../services/homeSearch_service.dart';
+import '../../services/search_service.dart';
+import '../../services/keywordRank_service.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({Key? key, required this.data, required this.data2})
@@ -23,6 +24,11 @@ class _SearchPageState extends State<SearchPage> {
   String searchQuery = ''; // 검색어를 저장할 변수
   final TextEditingController textController = TextEditingController();
 
+  bool isApiCallProcess = false;
+  bool isLoading = true;
+
+  List searchHistory = [];
+
   @override
   void dispose() {
     textController.dispose(); // 필요한 경우 컨트롤러를 해제합니다.
@@ -30,9 +36,44 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _getAllNeeds();
+  }
+
+  //필요한 서비스 호출
+  Future<void> _getAllNeeds() async {
+    // 이미 API 호출이 진행 중인지 확인
+    if (isApiCallProcess) {
+      return;
+    }
+    // API 호출 중임을 표시
+    setState(() {
+      isLoading = true;
+      isApiCallProcess = true;
+    });
+
+    try {
+      //검색어 히스토리
+      final loadedHistory = await KeywordRankService.getSearchHistory();
+      setState(() {
+        searchHistory = loadedHistory ?? [];
+      });
+
+    } catch (e) {
+      print('An error occurred while loading expiries: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+        isApiCallProcess = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: SearchAppBar(title: _title()),
+      appBar: SearchAppBar(title: _title(),context: context,),
       body: _searchPageUI(),
     );
   }
@@ -93,7 +134,6 @@ class _SearchPageState extends State<SearchPage> {
                           searchResults: result,
                         )),
               );
-              print('////////////searchQuery : $searchQuery');
             } catch (e) {
               print('Error searching anything: $e');
             }
@@ -108,12 +148,11 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _searchPageUI() {
-    print("hellohelloeveryone : ${widget.data?.keywords}");
-    print("hellohelloeveryone : ${widget.data2?.cosmetics}");
     if ((widget.data?.keywords?.length == 0) &&
         (widget.data2?.cosmetics.length == 0)) {
       return Column(
         children: [
+          _searchHistory(),
           _noKeywordRanking(),
           _noProductRanking(),
           // const SizedBox(height: 20),
@@ -126,9 +165,10 @@ class _SearchPageState extends State<SearchPage> {
         return SingleChildScrollView(
           child: Column(
             children: [
+              _searchHistory(),
               _keywordRankingIfMoreThanSix(),
               _noProductRanking(),
-              const SizedBox(height: 20),
+              // const SizedBox(height: 20),
             ],
           ),
         );
@@ -137,9 +177,10 @@ class _SearchPageState extends State<SearchPage> {
         return SingleChildScrollView(
           child: Column(
             children: [
+              _searchHistory(),
               _keywordRankingIfLessThanFive(),
               _noProductRanking(),
-              const SizedBox(height: 20),
+              // const SizedBox(height: 20),
             ],
           ),
         );
@@ -149,20 +190,21 @@ class _SearchPageState extends State<SearchPage> {
       return SingleChildScrollView(
           child: Column(
         children: [
+          _searchHistory(),
           _noKeywordRanking(),
           _productRanking(),
-          const SizedBox(height: 20),
+          // const SizedBox(height: 20),
         ],
       ));
     } else {
       if ((widget.data?.keywords?.length ?? 0) >= 6) {
-        print("length : ${widget.data?.keywords?.length}");
         return SingleChildScrollView(
           child: Column(
             children: [
+              _searchHistory(),
               _keywordRankingIfMoreThanSix(),
               _productRanking(),
-              const SizedBox(height: 20),
+              // const SizedBox(height: 20),
             ],
           ),
         );
@@ -171,9 +213,10 @@ class _SearchPageState extends State<SearchPage> {
         return SingleChildScrollView(
           child: Column(
             children: [
+              _searchHistory(),
               _keywordRankingIfLessThanFive(),
               _productRanking(),
-              const SizedBox(height: 20),
+              // const SizedBox(height: 20),
             ],
           ),
         );
@@ -181,9 +224,56 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
+  Widget _searchHistory() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: _buildHistoryButtons(),
+      ),
+    );
+  }
+
+  List<Widget> _buildHistoryButtons() {
+    if (searchHistory.isEmpty) {
+      return [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            '검색 히스토리가 없습니다.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+      ];
+    }
+    return [
+      for (int i = 0; i < (searchHistory.length < 5 ? searchHistory.length : 5); i++)
+        _buildHistoryButton(searchHistory[i]),
+    ];
+  }
+
+  Widget _buildHistoryButton(String keyword) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+      child: ElevatedButton(
+        onPressed: () {
+          _navigateToSearchResultPage(keyword);
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.grey[300], // Gray color
+          foregroundColor: Colors.black54, // Text color
+          elevation: 0,
+        ),
+        child: Text(keyword),
+      ),
+    );
+  }
+
   Widget _noKeywordRanking() {
     return Column(children: [
-      const SizedBox(height: 40),
+      const SizedBox(height: 30),
       const Padding(
         padding: EdgeInsets.symmetric(horizontal: 20),
         child: Row(
@@ -209,66 +299,11 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ),
       SizedBox(height: 40),
-      // const Padding(
-      //   padding: EdgeInsets.symmetric(horizontal: 20),
-      //   child: Row(
-      //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //     children: [
-      //       Text(
-      //         '실시간 제품 랭킹',
-      //         style: TextStyle(
-      //           fontSize: 18,
-      //           fontWeight: FontWeight.bold,
-      //           color: Color(0xffd86a04),
-      //         ),
-      //       ),
-      //     ],
-      //   ),
-      // ),
-      // _divider(),
-      // SizedBox(height: 40),
-      // const Center(
-      //   child: Text(
-      //     '실시간 랭킹 순위를 불러올 수 없습니다.',
-      //     style: TextStyle(
-      //         fontSize: 18,
-      //         color: Colors.grey
-      //     ),
-      //   ),
-      // ),
     ]);
   }
 
   Widget _noProductRanking() {
     return Column(children: [
-      // const SizedBox(height: 40),
-      // const Padding(
-      //   padding: EdgeInsets.symmetric(horizontal: 20),
-      //   child: Row(
-      //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //     children: [
-      //       Text(
-      //         '실시간 검색 랭킹',
-      //         style: TextStyle(
-      //           fontSize: 18,
-      //           fontWeight: FontWeight.bold,
-      //           color: Color(0xffd86a04),
-      //         ),
-      //       ),
-      //     ],
-      //   ),
-      // ),
-      // _divider(),
-      // SizedBox(height: 40),
-      // const Center(
-      //   child: Text(
-      //     '실시간 랭킹 순위를 불러올간 수 없습니다.',
-      //     style: TextStyle(
-      //         fontSize: 18,
-      //         color: Colors.grey
-      //     ),
-      //   ),
-      // ),
       SizedBox(height: 40),
       const Padding(
         padding: EdgeInsets.symmetric(horizontal: 20),
@@ -298,16 +333,15 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _keywordRankingIfMoreThanSix() {
-    print("dfjkdlsjafkldj: ${widget.data?.keywords}");
     final formattedDate = _formatDateTime(widget.data?.updatedAt);
 
     return Container(
-      height: 400,
+      height: MediaQuery.of(context).size.height/2-60,
       child: Column(
         children: [
-          const SizedBox(height: 40),
+          const SizedBox(height: 10),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 1),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -322,7 +356,7 @@ class _SearchPageState extends State<SearchPage> {
                 Text(
                   formattedDate,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 12,
                     fontWeight: FontWeight.normal,
                     color: Colors.grey,
                   ),
@@ -345,7 +379,7 @@ class _SearchPageState extends State<SearchPage> {
                       final keyword = widget.data?.keywords![index];
                       final rank = index + 1;
                       return ListTile(
-                        title: Text('${rank}순위 : $keyword'),
+                        title: Text('${rank}순위 : $keyword',overflow: TextOverflow.ellipsis,),
                         onTap: () async {
                           if (keyword != null) {
                             _navigateToSearchResultPage(keyword);
@@ -359,7 +393,7 @@ class _SearchPageState extends State<SearchPage> {
                 Expanded(
                   child: ListView.builder(
                     physics:
-                        const NeverScrollableScrollPhysics(), // Disable scrolling
+                        const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
                     itemCount: (widget.data?.keywords?.length ?? 0) ~/ 2,
                     itemBuilder: (context, index) {
@@ -368,7 +402,7 @@ class _SearchPageState extends State<SearchPage> {
                       final keyword = widget.data?.keywords![startIndex];
                       final rank = startIndex + 1;
                       return ListTile(
-                        title: Text('${rank}순위 : $keyword'),
+                        title: Text('${rank}순위 : $keyword',overflow: TextOverflow.ellipsis,),
                         onTap: () async {
                           if (keyword != null) {
                             _navigateToSearchResultPage(keyword);
@@ -387,14 +421,13 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _keywordRankingIfLessThanFive() {
-    print("dfjkdlsjafkldj: ${widget.data?.keywords}");
     final formattedDate = _formatDateTime(widget.data?.updatedAt);
 
     return Container(
-      height: 350,
+      height: MediaQuery.of(context).size.height/2-60,
       child: Column(
         children: [
-          const SizedBox(height: 40),
+          const SizedBox(height: 10),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: Row(
@@ -411,7 +444,7 @@ class _SearchPageState extends State<SearchPage> {
                 Text(
                   formattedDate,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 12,
                     fontWeight: FontWeight.normal,
                     color: Colors.grey,
                   ),
@@ -431,7 +464,8 @@ class _SearchPageState extends State<SearchPage> {
                 final keyword = widget.data?.keywords![index];
                 final rank = index + 1;
                 return ListTile(
-                  title: Text('$rank순위 : $keyword'),
+                  title: Text('$rank순위 : $keyword', overflow: TextOverflow.ellipsis,),
+
                   onTap: () async {
                     if (keyword != null) {
                       _navigateToSearchResultPage(keyword);
@@ -463,7 +497,6 @@ class _SearchPageState extends State<SearchPage> {
 
     return Column(
       children: [
-        const SizedBox(height: 40),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -481,10 +514,11 @@ class _SearchPageState extends State<SearchPage> {
                 Text(
                   formattedDate2,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 12,
                     fontWeight: FontWeight.normal,
                     color: Colors.grey,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
             ],
           ),
@@ -501,7 +535,6 @@ class _SearchPageState extends State<SearchPage> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
       ],
     );
   }
@@ -533,11 +566,12 @@ class _SearchPageState extends State<SearchPage> {
                       color: Colors.white,
                     ),
           title: Text(
-            '$rank순위 : ${product.name}',
+            '${product.name}',
             style: TextStyle(
               fontSize: 18,
               letterSpacing: 0,
             ),
+            overflow: TextOverflow.ellipsis,
           ), // Display product name
           // Add more information if needed
         ),
@@ -554,7 +588,6 @@ class _SearchPageState extends State<SearchPage> {
           searchResults: product,
         ),
       ));
-      print('////////////searchQuery : $searchQuery');
     } catch (e) {
       print('Error searching anything: $e');
     }
@@ -563,15 +596,19 @@ class _SearchPageState extends State<SearchPage> {
   void _navigateToSearchResultPage(String keyword) async {
     try {
       final result = await SearchService.searchAnything(keyword);
-      print(result);
 
-      Navigator.of(context).push(MaterialPageRoute(
+      final updatedHistory = await Navigator.of(context).push(MaterialPageRoute(
         builder: (context) => SearchResultPage(
           searchQuery: keyword,
           searchResults: result,
         ),
       ));
-      print('////////////searchQuery : $searchQuery');
+
+      if (updatedHistory != null && updatedHistory is List) {
+        setState(() {
+          searchHistory = updatedHistory;
+        });
+      }
     } catch (e) {
       print('Error searching anything: $e');
     }
@@ -588,13 +625,13 @@ class _SearchPageState extends State<SearchPage> {
   }
 }
 
-// 결과 클래스
-class Result<T> {
-  final T? value;
-  final String? error;
-
-  Result.success(this.value) : error = null; // 성공
-  Result.failure(this.error) : value = null; // 실패
-
-  bool get isSuccess => value != null;
-}
+// // 결과 클래스
+// class Result<T> {
+//   final T? value;
+//   final String? error;
+//
+//   Result.success(this.value) : error = null; // 성공
+//   Result.failure(this.error) : value = null; // 실패
+//
+//   bool get isSuccess => value != null;
+// }

@@ -94,7 +94,7 @@ class _RecPage extends State<RecPage> {
     return BlocProvider(
       create: (_) => RecommendPageBloc()..add(RecommendPageInitEvent()),
       child: Scaffold(
-          appBar: CommonAppBar(),
+          appBar: CommonAppBar(automaticallyImplyLeading: false,),
           body: Column(
             children: [
               Container(height: 30),

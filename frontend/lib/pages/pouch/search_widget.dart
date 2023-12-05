@@ -1,7 +1,7 @@
 import 'package:beautyminder/dto/cosmetic_model.dart';
 import 'package:flutter/material.dart';
 
-import '../../services/homeSearch_service.dart';
+import '../../services/search_service.dart';
 
 class CosmeticSearchWidget extends StatefulWidget {
   @override

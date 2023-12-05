@@ -180,28 +180,89 @@ class _BaumannStartPageState extends State<BaumannStartPage> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('알림'),
+              // backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(3.0),
+              ),
+              title: Text(
+                '알림',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               content: Text(
-                  '테스트를 보지 않으시면 정확한 추천 결과를 얻기 어렵습니다. 추후 마이페이지에서 테스트를 할 수 있습니다.'),
+                '테스트를 보지 않으시면 정확한 제품 추천을 받기 어렵습니다.\n\n*추후 홈 페이지에서 테스트 가능합니다.',
+                style: TextStyle(
+                  fontSize: 16,
+                ),
+              ),
               actions: <Widget>[
-                TextButton(
-                  child: Text('확인'),
-                  onPressed: () async {
-                    final userProfileResult = await APIService.getUserProfile();
-                    Navigator.pop(context); // 팝업 닫기
-                    Navigator.push(
+                Container(
+                  width: 70, // 수정된 부분: 가로 크기 조절
+                  height: 30, // 수정된 부분: 세로 크기 조절
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero, // 내용물과의 간격을 없애기 위해 추가
+                      backgroundColor: Color(0xffdc7e00),
+                      foregroundColor: Colors.white,
+                      side: BorderSide(color: Color(0xffdc7e00)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(2.0),
+                      ),
+                    ),
+                    child: Container(
+                      width: 60, // 추가된 부분: 가로 크기 조절
+                      height: 30, // 추가된 부분: 세로 크기 조절
+                      alignment: Alignment.center,
+                      child: Text(
+                        '확인',
+                        style: TextStyle(
+                          fontSize: 18,
+                          // fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final userProfileResult = await APIService.getUserProfile();
+                      Navigator.pop(context); // 팝업 닫기
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => HomePage(
-                                  user: userProfileResult.value,
-                                )));
-                  },
+                          builder: (context) => HomePage(
+                            user: userProfileResult.value,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-                TextButton(
-                  child: Text('취소'),
-                  onPressed: () {
-                    Navigator.pop(context); // 팝업 닫기
-                  },
+                Container(
+                  width: 70, // 수정된 부분: 가로 크기 조절
+                  height: 30, // 수정된 부분: 세로 크기 조절
+                  child: TextButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero, // 내용물과의 간격을 없애기 위해 추가
+                      // backgroundColor: Colors.white,
+                      foregroundColor: Color(0xffdc7e00),
+                      side: BorderSide(color: Color(0xffdc7e00)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(2.0),
+                      ),
+                    ),
+                    child: Container(
+                      width: 60, // 추가된 부분: 가로 크기 조절
+                      height: 30, // 추가된 부분: 세로 크기 조절
+                      alignment: Alignment.center,
+                      child: Text(
+                        '취소',
+                        style: TextStyle(
+                          fontSize: 18,
+                          // fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context); // 팝업 닫기
+                    },
+                  ),
                 ),
               ],
             );

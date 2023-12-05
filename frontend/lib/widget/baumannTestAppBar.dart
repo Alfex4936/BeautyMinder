@@ -9,7 +9,7 @@ class BaumannTestAppBar extends AppBar {
           centerTitle: false,
           title: const Text(
             "바우만 테스트 페이지",
-            style: TextStyle(color: Color(0xffd86a04)),
+            style: TextStyle(color: Color(0xffd86a04), fontWeight: FontWeight.bold),
           ),
           iconTheme: const IconThemeData(
             color: Color(0xffd86a04),

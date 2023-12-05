@@ -7,8 +7,9 @@ import '../../dto/cosmetic_expiry_model.dart';
 import '../../dto/cosmetic_model.dart';
 import '../../services/api_service.dart';
 import '../../services/expiry_service.dart';
-import '../../services/homeSearch_service.dart';
+import '../../services/search_service.dart';
 import '../../widget/commonBottomNavigationBar.dart';
+import 'cosmeticExpiryDetailCard.dart';
 import '../home/home_page.dart';
 import '../my/my_page.dart';
 import '../recommend/recommend_bloc_screen.dart';
@@ -25,6 +26,12 @@ class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
   int _currentIndex = 1;
   List<CosmeticExpiry> expiries = [];
   bool isLoading = true;
+
+  void updateCosmeticExpiryFromDialog(CosmeticExpiry updatedExpiry, int index) {
+    setState(() {
+      expiries[index] = updatedExpiry;
+    });
+  }
 
   String formatDate(DateTime? date) {
     if (date == null) return 'N/A'; // 날짜가 null인 경우 처리
@@ -64,6 +71,7 @@ class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
         expiries = expiryData;
         isLoading = false; // 로딩 완료
       });
+
     } catch (e) {
       print("Error loading cosmetic expiries: $e");
       setState(() {
@@ -89,43 +97,61 @@ class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
       context: context,
       builder: (context) => CosmeticSearchWidget(),
     );
+    print("dlwldms0 : ${selectedCosmetic!.toJson()}");
     if (selectedCosmetic != null) {
       final List<dynamic>? expiryInfo = await showDialog<List<dynamic>>(
         context: context,
         builder: (context) => ExpiryInputDialog(cosmetic: selectedCosmetic),
       );
+      print("dlwldms0 : ${expiryInfo}");
       if (expiryInfo != null) {
-        final bool isOpened = expiryInfo[0] as bool;
+        print("ooooo${expiryInfo}\n\n\n\n");
+        final bool opened = expiryInfo[0] as bool;
         final DateTime expiryDate = expiryInfo[1] as DateTime;
         final DateTime? openedDate = expiryInfo[2] as DateTime?;
 
         final CosmeticExpiry newExpiry = CosmeticExpiry(
           productName: selectedCosmetic.name,
           expiryDate: expiryDate,
-          isOpened: isOpened,
+          opened: opened,
           openedDate: openedDate,
-
-          // 다른 필드들 추가
+          brandName: selectedCosmetic.brand,
+          cosmeticId: selectedCosmetic.id,
         );
         final CosmeticExpiry addedExpiry =
             await ExpiryService.createCosmeticExpiry(newExpiry);
+
         setState(() {
           expiries.add(addedExpiry);
+          _loadExpiryData();
         });
       }
     }
   }
 
   void _editExpiry(CosmeticExpiry expiry, int index) async {
+    print("***Before updating: ${expiry.opened}");
+    print("\n\ndlwldms : ${expiry.cosmeticId}\n\n");
+    print("\n\ndlwldms : ${expiry.brandName}\n\n");
     final CosmeticExpiry? updatedExpiry = await showDialog<CosmeticExpiry>(
       context: context,
-      builder: (context) => ExpiryEditDialog(expiry: expiry),
+      builder: (context) => ExpiryEditDialog(
+        expiry: expiry,
+        onUpdate: (updated) {
+          setState(() {
+            expiries[index] = updated;
+          });
+        },
+      ),
     );
+    print("***After dialog: ${updatedExpiry?.opened}");
 
     if (updatedExpiry != null) {
       try {
+        print("***Before server update: ${updatedExpiry.opened}");
         final CosmeticExpiry updated =
             await ExpiryService.updateExpiry(expiry.id!, updatedExpiry);
+        print("***After server update: ${updated.opened}");
         setState(() {
           expiries[index] = updated;
         });
@@ -135,16 +161,35 @@ class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
     }
   }
 
+  void _showCosmeticDetailsCard(CosmeticExpiry cosmetic, int index) {
+    showDialog(
+      context: context,
+      builder: (context) => ExpiryContentCard(
+        cosmetic: cosmetic,
+        onDelete: () {
+          print("onDelete callback called");
+          _deleteExpiry(cosmetic.id!, index);
+        },
+        onEdit: () {
+          print("onEdit callback called");
+          _editExpiry(cosmetic, index);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Color(0xffffecda),
         elevation: 0,
         centerTitle: false,
         title: const Text(
           "BeautyMinder",
-          style: TextStyle(color: Color(0xffd86a04)),
+          style: TextStyle(color: Color(0xffd86a04), fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(
           color: Color(0xffd86a04),
@@ -170,84 +215,64 @@ class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
                 crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
-                childAspectRatio: 0.8,
+                childAspectRatio: 0.85,
               ),
               itemCount: expiries.length,
               itemBuilder: (context, index) {
                 final cosmetic = expiries[index];
-                final daysLeft =
-                    cosmetic.expiryDate.difference(DateTime.now()).inDays;
 
                 DateTime now = DateTime.now();
                 DateTime expiryDate = cosmetic.expiryDate ?? DateTime.now();
                 Duration difference = expiryDate.difference(now);
                 bool isDatePassed = difference.isNegative;
 
-                return Card(
-                  clipBehavior: Clip.antiAlias,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
+                return GestureDetector(
+                  onTap: () {
+                    _showCosmeticDetailsCard(cosmetic, index);
+                  },
+                  child: Card(
+                    clipBehavior: Clip.antiAlias,
+                    color: Color(0xffffffff),
                     child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // 이미지 표시
-                          cosmetic.imageUrl != null
-                              ? Image.network(cosmetic.imageUrl!,
-                                  width: 128, height: 128, fit: BoxFit.cover)
-                              : Image.asset('assets/images/noImg.jpg',
-                                  width: 128, height: 128, fit: BoxFit.cover),
-                          // 제품 이름
-                          Text(
-                            cosmetic.productName,
-                            style: TextStyle(fontSize: 16),
-                            textAlign: TextAlign.center,
-                          ),
-                          // 브랜드 이름
-                          Text('Brand: ${cosmetic.brandName ?? 'N/A'}',
-                              style: TextStyle(fontSize: 14)),
-                          // D-Day
-                          Text(
-                            isDatePassed
-                                ? 'D+${difference.inDays.abs() + 1}'
-                                : 'D-${difference.inDays}',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                        padding: const EdgeInsets.all(15.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // 이미지 표시
+                            cosmetic.imageUrl != null
+                                ? Image.network(cosmetic.imageUrl!,
+                                width: 120, height: 120, fit: BoxFit.cover)
+                                : Image.asset('assets/images/noImg.jpg',
+                                width: 120, height: 120, fit: BoxFit.cover),
+                            SizedBox(height: 8,),
+                            // 제품 이름
+                            Text(
+                              cosmetic.productName,
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                          // Text('D-${daysLeft}',
-                          //     style: TextStyle(
-                          //         fontSize: 20, fontWeight: FontWeight.bold)),
-                          // 만료일
-                          Text('유통기한: ${formatDate(cosmetic.expiryDate)}',
-                              style: TextStyle(fontSize: 14)),
-                          // 개봉 여부
-                          Text(
-                              '개봉여부: ${cosmetic.isOpened ? 'Yes' : 'No'}' +
-                                  (cosmetic.isOpened
-                                      ? ' \n개봉날짜: ${formatDate(cosmetic.openedDate)}'
-                                      : ''),
-                              style: TextStyle(fontSize: 14)),
-                          // 삭제 버튼
-                          IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () {
-                                if (cosmetic.id != null) {
-                                  _deleteExpiry(cosmetic.id!, index);
-                                } else {
-                                  print("Invalid data");
-                                }
-                              }),
-                          // 수정 버튼
-                          IconButton(
-                            icon: Icon(Icons.edit),
-                            onPressed: () => _editExpiry(cosmetic, index),
-                          ),
-                        ],
+
+                            SizedBox(height: 10,),
+
+                            // D-Day
+                            isDatePassed ?
+                                Text(
+                                  'D+${difference.inDays.abs()}',
+                                  style: TextStyle(fontSize: 25, color: Colors.deepOrangeAccent, fontWeight: FontWeight.bold),
+                                ) : Text(
+                                  'D-${difference.inDays+1}',
+                                  style: (difference.inDays+1<=100) ?
+                                    TextStyle(fontSize: 25, color: Colors.deepOrangeAccent, fontWeight: FontWeight.bold)
+                                    : TextStyle(fontSize: 25, color: Colors.black54, fontWeight: FontWeight.bold)
+                                ),
+                          ],
+                        ),
                       ),
-                    ),
+
                   ),
                 );
               },
@@ -275,3 +300,5 @@ class _CosmeticExpiryPageState extends State<CosmeticExpiryPage> {
     );
   }
 }
+
+

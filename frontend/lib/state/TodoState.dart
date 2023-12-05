@@ -1,17 +1,18 @@
 import 'package:beautyminder/dto/task_model.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/cupertino.dart';
 
 import '../dto/todo_model.dart';
 
 abstract class TodoState extends Equatable {
   // 필요한 요소 더 추가해야됨
-  final bool isError;
-  final List<Todo>? todos;
+  final bool isError; // error여부
+  final List<Todo>? todos; // 모든 todo를 담을 리스트
+  final Todo? intialTodo; // 맨처음 노출될 todo객체
   final Todo? todo; // 삭제, 수정에 사용될 객체
   final Task? task;
 
-
-  const TodoState({this.isError = false, this.todos, this.todo, this.task});
+  const TodoState({this.isError = false, this.todos, this.todo, this.task, this.intialTodo});
 }
 
 //Todo 초기 상태
@@ -32,10 +33,10 @@ class TodoDownloadedState extends TodoState {
 
 // Todo를 로딩 후 상태  --> Todo리스트가 노출되는 상태
 class TodoLoadedState extends TodoState {
-  TodoLoadedState({super.todos, super.isError, super.todo, super.task});
+  TodoLoadedState({super.todos, super.isError, super.todo, super.task, super.intialTodo});
 
   @override
-  List<Object?> get props => [todos, isError, task];
+  List<Object?> get props => [todos, isError, task,  todo, intialTodo];
 }
 
 // Todo를 추가하려는 상태
@@ -92,4 +93,22 @@ class TodoErrorState extends TodoState {
 
   @override
   List<Object?> get props => [isError];
+}
+
+// Calendar에서 day를 변경했을때의 상태
+class TodoChangeDayState extends TodoState{
+  TodoChangeDayState({super.todo, super.todos, super.task});
+
+  @override
+  List<Object?> get props => [todo, todos, task];
+}
+
+
+// Calendar에서 day 변경이 완료 되었을 때의 상태
+class TodoChangedDayState extends TodoState{
+  TodoChangedDayState({super.todo, super.todos, super.task});
+
+  @override
+  List<Object?> get props => [todo, todos, task];
+
 }

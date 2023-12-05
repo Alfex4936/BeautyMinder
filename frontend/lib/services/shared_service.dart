@@ -35,7 +35,6 @@ class SharedService {
         key: 'login_details',
         value: jsonEncode(loginDetails.toJson()),
       );
-      // Since login_details itself is updated, no need to update individual keys for accessToken and refreshToken
     }
   }
 

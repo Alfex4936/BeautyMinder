@@ -34,7 +34,7 @@ class _SplashPageState extends State<SplashPage> {
             ],
             color: Colors.white),
         child: Text(
-          'Login',
+          '로그인하기',
           style: TextStyle(fontSize: 20, color: Color(0xffffb876)),
         ),
       ),
@@ -56,7 +56,7 @@ class _SplashPageState extends State<SplashPage> {
           border: Border.all(color: Colors.white, width: 2),
         ),
         child: Text(
-          'Register now',
+          '회원가입하기',
           style: TextStyle(fontSize: 20, color: Colors.white),
         ),
       ),

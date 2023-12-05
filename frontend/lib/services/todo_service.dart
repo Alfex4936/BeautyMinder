@@ -1,48 +1,33 @@
 import 'dart:convert';
 
 import 'package:beautyminder/dto/task_model.dart';
-import 'package:beautyminder/services/auth_service.dart';
-import 'package:dio/dio.dart'; // DIO 패키지를 이용해 HTTP 통신
+import 'package:beautyminder/services/dio_client.dart';
+import 'package:intl/intl.dart';
+import 'package:beautyminder/services/api_service.dart';
 
 import '../../config.dart';
 import '../dto/todo_model.dart';
-import 'dio_client.dart';
 import 'shared_service.dart';
 
 class TodoService {
-
   // Get All Todos
-  // test 성공
-  // queryParmeter로 userId가 필요함
+  // 유저의 모둔 Routine(todo)를 가지고 오는 서비스
   static Future<Result<List<Todo>>> getAllTodos() async {
     final user = await SharedService.getUser();
+
     // AccessToken가지고오기
     final accessToken = await SharedService.getAccessToken();
     final refreshToken = await SharedService.getRefreshToken();
 
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
-    // Create the URI with the query parameter
-    // 형식 : todo/all
-    // 쿼리 파라미터 userId
-    // ?userId = 6522837112b53b37f109a508 형식으로 API 콜 뒤에 이어져야함
-    // ex) todo/all?userId = 6522837112b53b37f109a508
-    // todo model에서  userId를 넣어주면됨
-
     final url = Uri.http(Config.apiURL, Config.todoAPI).toString();
-
     try {
-      final response = await DioClient.sendRequest('GET',
-        url,
-        headers: headers,
-      );
-
-      print("response: ${response.data} ${response.statusCode}");
-      print("statusCode : ${response.statusCode}");
-      print("token: $accessToken | $refreshToken");
+      final response =
+          await DioClient.sendRequest('GET', url, headers: headers);
 
       if (response.statusCode == 200) {
         Map<String, dynamic> decodedResponse;
@@ -59,8 +44,6 @@ class TodoService {
           try {
             List<Todo> todos =
                 todoList.map((data) => Todo.fromJson(data)).toList();
-            print("todo length : ${todos.length}");
-            print("todo.task length : ${todos[0].tasks.length}");
             return Result.success(todos);
           } catch (e) {
             print("Error : ${e}");
@@ -75,20 +58,24 @@ class TodoService {
   }
 
   // Add a new Todo
-  // Todo를 추가
-  // 테스트 성공
+  // 새로운 루틴(Todo)를 추가
   static Future<Result<Todo>> addTodo(Todo todo) async {
+    final user = await SharedService.getUser();
+
+    // AccessToken가지고오기
+    final accessToken = await SharedService.getAccessToken();
+    final refreshToken = await SharedService.getRefreshToken();
 
     final url = Uri.http(Config.apiURL, Config.todoAddAPI).toString();
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     try {
-      final response = await DioClient.sendRequest('POST', url, body: todo.toJson(), headers: headers);
+      final response = await DioClient.sendRequest('POST', url,
+          body: todo.toJson(), headers: headers);
+
       print("response : ${response}");
       return Result.success(todo);
     } catch (e) {
@@ -96,39 +83,23 @@ class TodoService {
     }
   }
 
-  // Delete a Todo
-  // test성공
-  static Future<Result<String>> deleteTodo(String? todoId) async {
-    final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
-    };
-    final url = Uri.http(Config.apiURL, Config.todoDelAPI + todoId!).toString();
+  // 오늘의 Routine을 받아오는 함수
+  static Future<Result<Todo>> getTodoOf() async {
+    final user = await SharedService.getUser();
 
-    try {
-      final response = await DioClient.sendRequest('DELETE',
-        url,
-        headers: headers,
-      );
-      if (response.statusCode == 200) {
-        return Result.success("Todo deleted successfully");
-      }
-      return Result.failure("Failed to delete todo");
-    } catch (e) {
-      return Result.failure("An error occurred: $e");
-    }
-  }
+    // AccessToken가지고오기
+    final accessToken = await SharedService.getAccessToken();
+    final refreshToken = await SharedService.getRefreshToken();
 
-  // test성공
-  static Future<Result<Todo>> getTodoOf(String date) async {
-    final url = Uri.http(Config.apiURL, Config.Todo + date).toString();
+    final userId = user?.id ?? '-1';
+
+    String now = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    final url = Uri.http(Config.apiURL, Config.Todo + now).toString();
+    print(url);
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     try {
@@ -144,8 +115,6 @@ class TodoService {
         } else {
           return Result.failure("Unexpected response date Type");
         }
-        print(
-            "response : ${response.data}, statuscode : ${response.statusCode}");
         if (decodedResponse.containsKey('todos') &&
             decodedResponse['todos'] != []) {
           List<dynamic> todos = decodedResponse['todos'];
@@ -155,7 +124,7 @@ class TodoService {
             return Result.success(todo);
           } else {
             // todos가 비어 있을 때 빈 리스트 반환
-            Todo? todo;
+            Todo? todo = null;
             return Result.success(todo);
           }
         }
@@ -170,20 +139,23 @@ class TodoService {
     }
   }
 
-  // API 연동 성공
-  // task를 삭제
+  // rotutine의 task를 삭제
   static Future<Result<Map<String, dynamic>>> deleteTask(
       Todo? todo, Task? task) async {
+    final user = await SharedService.getUser();
+
+    // AccessToken가지고오기
+    final accessToken = await SharedService.getAccessToken();
+    final refreshToken = await SharedService.getRefreshToken();
+
     final url = Uri.http(
       Config.apiURL,
       Config.todoUpdateAPI + todo!.id!,
     ).toString();
 
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     Map<String, dynamic> delete = {
@@ -191,28 +163,32 @@ class TodoService {
     };
 
     try {
-      //print("task.id : ${task?.taskId}");
-      //print("todo.id : ${todo.id}");
-      final response = await DioClient.sendRequest('PUT', url, body: delete, headers: headers);
-      print("response : ${response}");
+      final response = await DioClient.sendRequest('PUT', url,
+          body: delete, headers: headers);
+
       return Result.success(response.data);
     } catch (e) {
       return Result.failure("An error occurred: $e");
     }
   }
 
+  //존
   static Future<Result<Map<String, dynamic>>> taskUpdateTodo(
       Todo? todo, Task? task) async {
+    final user = await SharedService.getUser();
+
+    // AccessToken가지고오기
+    final accessToken = await SharedService.getAccessToken();
+    final refreshToken = await SharedService.getRefreshToken();
+
     final url = Uri.http(
       Config.apiURL,
       Config.todoUpdateAPI + todo!.id!,
     ).toString();
 
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     Map<String, dynamic> taskUpdate = {
@@ -227,22 +203,13 @@ class TodoService {
     };
 
     try {
-      //print("task.id : ${task?.taskId}");
-      //print("todo.id : ${todo.id}");
-      final response = await DioClient.sendRequest('PUT', url, body: taskUpdate, headers: headers);
+      final response = await DioClient.sendRequest('PUT', url,
+          body: taskUpdate, headers: headers);
+
       print("response : ${response}");
       return Result.success(response.data);
     } catch (e) {
       return Result.failure("An error occurred: $e");
     }
   }
-}
-
-// 결과 클래스
-class Result<T> {
-  final T? value;
-  final String? error;
-
-  Result.success(this.value) : error = null; // 성공
-  Result.failure(this.error) : value = null; // 실패
 }

@@ -4,7 +4,7 @@ import 'package:beautyminder/dto/login_response_model.dart';
 import 'package:beautyminder/dto/register_request_model.dart';
 import 'package:beautyminder/dto/register_response_model.dart';
 import 'package:beautyminder/dto/update_request_model.dart';
-import 'package:dio/dio.dart'; // DIO 패키지를 이용해 HTTP 통신
+import 'package:dio/dio.dart';
 import 'package:http_parser/src/media_type.dart';
 import 'package:mime/src/mime_type.dart';
 
@@ -14,24 +14,18 @@ import 'dio_client.dart';
 import 'shared_service.dart';
 
 class APIService {
-  // 로그인 함수
+
   static Future<Result<bool>> login(LoginRequestModel model) async {
-    // URL 생성
     final url = Uri.http(Config.apiURL, Config.loginAPI).toString();
-    print("my url: $url");
-    // FormData 생성
     final formData = FormData.fromMap({
       'email': model.email ?? '',
       'password': model.password ?? '',
     });
 
     try {
-      // POST 요청
       final response = await DioClient.sendRequest('POST', url, body: formData);
-      print("response: $response");
       if (response.statusCode == 200) {
         await SharedService.setLoginDetails(loginResponseJson(response.data));
-
         return Result.success(true);
       }
       return Result.failure("Login failed");
@@ -40,7 +34,6 @@ class APIService {
     }
   }
 
-  // 회원가입 함수
   static Future<Result<RegisterResponseModel>> register(
       RegisterRequestModel model) async {
     // URL 생성
@@ -48,8 +41,7 @@ class APIService {
 
     try {
       // POST 요청
-      final response =
-          await DioClient.sendRequest('POST', url, body: model.toJson());
+      final response = await DioClient.sendRequest('POST', url, body: model.toJson());
       return Result.success(
           registerResponseJson(response.data as Map<String, dynamic>));
     } catch (e) {
@@ -61,7 +53,8 @@ class APIService {
   static Future<Result<bool>> delete(DeleteRequestModel model) async {
     // 로그인 상세 정보 가져오기
     final user = await SharedService.getUser();
-    // AccessToken가지고오기
+
+    // AccessToken 가지고오기
     final accessToken = await SharedService.getAccessToken();
     final refreshToken = await SharedService.getRefreshToken();
 
@@ -73,10 +66,8 @@ class APIService {
 
     // 헤더 설정
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     try {
@@ -90,6 +81,7 @@ class APIService {
   // 사용자 프로필 조회 함수
   static Future<Result<User>> getUserProfile() async {
     // 로그인 상세 정보 가져오기
+    // final user = await SharedService.getUser();
     final user = await SharedService.getUser();
     // AccessToken가지고오기
     final accessToken = await SharedService.getAccessToken();
@@ -102,10 +94,8 @@ class APIService {
 
     // 헤더 설정
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     try {
@@ -143,10 +133,8 @@ class APIService {
 
     // 헤더 설정
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     try {
@@ -158,11 +146,6 @@ class APIService {
       );
 
       if (response.statusCode == 200) {
-        // 사용자 정보 파싱
-        //print('res:' + response.data.toString());
-        //final favorites =
-        //    FavoriteModel.fromJson(response.data as Map<String, dynamic>);
-        //return Result.success(favorites);
 
         return Result.success(response.data);
       }
@@ -189,10 +172,8 @@ class APIService {
 
     // 헤더 설정
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     try {
@@ -229,10 +210,8 @@ class APIService {
 
     // 헤더 설정
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     try {
@@ -261,10 +240,8 @@ class APIService {
 
     // 헤더 설정
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     final MediaType contentType = MediaType.parse(
@@ -273,7 +250,6 @@ class APIService {
     final formData = FormData.fromMap({
       "image": MultipartFile.fromFileSync(
         image,
-        //filename: 'new_profile.jpg',
         contentType: contentType,
       ),
     });
@@ -308,15 +284,9 @@ class APIService {
     // URL 생성
     final url = Uri.http(Config.apiURL, Config.getReviewAPI + id).toString();
 
-    // final headers = {
-    //   'Authorization': 'Bearer $accessToken',
-    //   'Cookie': 'XRT=$refreshToken',
-    // };
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     try {
@@ -340,15 +310,9 @@ class APIService {
     // URL 생성
     final url = Uri.http(Config.apiURL, Config.getReviewAPI + id).toString();
 
-    // final headers = {
-    //   'Authorization': 'Bearer $accessToken',
-    //   'Cookie': 'XRT=$refreshToken',
-    // };
     final headers = {
-      'Authorization': 'Bearer ${Config.acccessToken}',
-      'Cookie': 'XRT=${Config.refreshToken}',
-      // 'Authorization': 'Bearer $accessToken',
-      // 'Cookie': 'XRT=$refreshToken',
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
     };
 
     try {
@@ -362,6 +326,106 @@ class APIService {
       return Result.failure("An error occurred: $e");
     }
   }
+
+
+
+  //비밀번호 변경
+  static Future<Result<bool>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    // AccessToken가지고오기
+    final accessToken = await SharedService.getAccessToken();
+    //refreshToken 가지고오기
+    final refreshToken = await SharedService.getRefreshToken();
+
+    final url = Uri.http(Config.apiURL, Config.changePassword).toString();
+
+    final headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
+    };
+
+    final Map<String, dynamic> passwords = {
+      'current_password': currentPassword,
+      'new_password': newPassword,
+    };
+
+    try {
+      final response = await DioClient.sendRequest(
+        'POST',
+        url,
+        body: passwords,
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        return Result.success(true);
+      }
+      return Result.failure("Failed to change password");
+    } catch (e) {
+      return Result.failure("An error occurred: $e");
+    }
+  }
+
+  //비밀번호 리셋
+  static Future<Result<bool>> requestResetPassword({
+    required String email,
+  }) async {
+    // AccessToken가지고오기
+    final accessToken = await SharedService.getAccessToken();
+    //refreshToken 가지고오기
+    final refreshToken = await SharedService.getRefreshToken();
+
+    final url = Uri.http(Config.apiURL, Config.requestResetPassword).toString();
+
+    final headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
+    };
+
+    try {
+      final response = await DioClient.sendRequest(
+        'POST',
+        url,
+        body: {'email': email},
+        headers: headers,
+      );
+      if (response.statusCode == 200) {
+        return Result.success(true);
+      }
+      return Result.failure("Failed to request reset password");
+    } catch (e) {
+      return Result.failure("An error occurred: $e");
+    }
+  }
+
+  //유저 정보 변경
+  static Future<Result<bool>> updateUserInfo(
+      Map<String, dynamic> userData) async {
+    // AccessToken가지고오기
+    final accessToken = await SharedService.getAccessToken();
+    //refreshToken 가지고오기
+    final refreshToken = await SharedService.getRefreshToken();
+
+    final url = Uri.http(Config.apiURL, Config.editUserInfo).toString();
+
+    final headers = {
+      'Authorization': 'Bearer $accessToken',
+      'Cookie': 'XRT=$refreshToken',
+    };
+
+    try {
+      final response = await DioClient.sendRequest('PATCH', url,
+          body: userData, headers: headers);
+      if (response.statusCode == 200) {
+        return Result.success(true);
+      }
+      return Result.failure("Failed to update user profile");
+    } catch (e) {
+      return Result.failure("An error occurred: $e");
+    }
+  }
+
 }
 
 // 결과 클래스

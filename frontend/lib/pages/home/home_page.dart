@@ -1,23 +1,28 @@
 import 'package:beautyminder/pages/baumann/baumann_history_page.dart';
+
 import 'package:beautyminder/pages/todo/todo_page.dart';
 import 'package:beautyminder/services/Cosmetic_Recommend_Service.dart';
 import 'package:beautyminder/services/keywordRank_service.dart';
 import 'package:beautyminder/widget/homepageAppBar.dart';
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/cupertino.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:intl/intl.dart';
 import '../../dto/baumann_result_model.dart';
 import '../../dto/cosmetic_expiry_model.dart';
 import '../../dto/todo_model.dart';
 import '../../dto/user_model.dart';
 import '../../services/baumann_service.dart';
 import '../../services/expiry_service.dart';
-import '../../services/homeSearch_service.dart';
+import '../../services/search_service.dart';
+
 import '../../services/todo_service.dart';
 import '../../widget/commonBottomNavigationBar.dart';
 import '../baumann/baumann_test_start_page.dart';
 import '../chat/chat_page.dart';
 import '../my/my_page.dart';
+import '../my/user_info_page.dart';
 import '../pouch/expiry_page.dart';
 import '../recommend/recommend_bloc_screen.dart';
 import '../search/search_page.dart';
@@ -35,119 +40,81 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final int _currentIndex = 2;
   bool isApiCallProcess = false;
+  bool isLoading = true;
 
   List<CosmeticExpiry> expiries = [];
-
-  // List favorites = [];
   List recommends = [];
   Todo? todayTodos;
-
-  bool isLoading = true;
+  List<BaumannResult> baumannresultList = [];
 
   @override
   void initState() {
     super.initState();
-    _getExpiries();
-    // _getFavorites();
-    _getRecommends();
-    _getTodayTodos();
-    print("hello this is : ${recommends}");
-    print("hello this is : ${todayTodos}");
-    // futureTodoList = TodoService.getAllTodos();
+    _getAllNeeds();
   }
 
-  // Future<void> _getExpiries() async {
-  //   try {
-  //     expiries = await ExpiryService.getAllExpiries();
-  //     // Force a rebuild of the UI after fetching data
-  //     if (mounted) {
-  //       setState(() {});
-  //     }
-  //   } catch (e) {
-  //     print('An error occurred while loading expiries: $e');
-  //   }
-  // }
-
-  Future<void> _getExpiries() async {
+  //필요한 서비스 호출
+  Future<void> _getAllNeeds() async {
+    // 이미 API 호출이 진행 중인지 확인
+    if (isApiCallProcess) {
+      return;
+    }
+    // API 호출 중임을 표시
     setState(() {
       isLoading = true;
+      isApiCallProcess = true;
     });
 
     try {
-      List<CosmeticExpiry> loadedExpiries =
-          await ExpiryService.getAllExpiries();
+      //유저 정보 없데이트
 
-      // 각 expiry에 대한 이미지 URL 로드
+      //유통기한
+      List<CosmeticExpiry> loadedExpiries = await ExpiryService.getAllExpiries();
       for (var expiry in loadedExpiries) {
         try {
           // 예시: productName을 이용하여 관련 이미지 URL 검색
-          var cosmetic =
-              await SearchService.searchCosmeticsByName(expiry.productName);
+          var cosmetic = await SearchService.searchCosmeticsByName(expiry.productName);
           if (cosmetic.isNotEmpty) {
             expiry.imageUrl = cosmetic.first.images.isNotEmpty
                 ? cosmetic.first.images.first
                 : null;
           }
+          expiries = loadedExpiries;
         } catch (e) {
           print("Error loading image for ${expiry.productName}: $e");
         }
       }
 
-      setState(() {
-        expiries = loadedExpiries;
-        isLoading = false;
-      });
-    } catch (e) {
-      print('An error occurred while loading expiries: $e');
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
+      //추천제품
+      final loadedRecommends = await CosmeticSearchService.getAllCosmetics();
 
-  // Future<void> _getFavorites() async {
-  //   try {
-  //     final info = await APIService.getFavorites();
-  //     setState(() {
-  //       favorites = info.value!;
-  //       isLoading = false;
-  //     });
-  //   } catch (e) {
-  //     print('An error occurred while loading expiries: $e');
-  //   }
-  // }
-
-  Future<void> _getRecommends() async {
-    try {
-      final info = await CosmeticSearchService.getAllCosmetics();
-      setState(() {
-        recommends = info.value!;
-        isLoading = false;
-      });
-    } catch (e) {
-      print('An error occurred while loading expiries: $e');
-    }
-  }
-
-  Future<void> _getTodayTodos() async {
-    try {
+      //루틴
       String todayFormatted = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final loadedTodos = await TodoService.getTodoOf();
 
-      final info = await TodoService.getTodoOf(todayFormatted);
+      //바우만
+      final loadedBaumannResult = await BaumannService.getBaumannHistory();
+
       setState(() {
-        todayTodos = info.value!;
-        isLoading = false;
+        expiries = loadedExpiries ?? [];
+        recommends = loadedRecommends.value ?? [];
+        todayTodos = loadedTodos.value ?? null;
+        baumannresultList = loadedBaumannResult.value ?? [];
       });
+
     } catch (e) {
       print('An error occurred while loading expiries: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+        isApiCallProcess = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    print("Here is Home Page : ${widget.user?.id}");
-    print("Here is Home Page : ${widget.user}");
-
+    print("hihi this is homePage : ${widget.user?.baumann}");
     return Scaffold(
       appBar: HomepageAppBar(actions: <Widget>[
         IconButton(
@@ -165,11 +132,7 @@ class _HomePageState extends State<HomePage> {
               final result = await KeywordRankService.getKeywordRank();
               final result2 = await KeywordRankService.getProductRank();
 
-              print('fdsfd keyword rank : ${result.value}');
-              print('dkdkd product rank : ${result2.value}');
-
               if (result.isSuccess) {
-                // SearchPage로 이동하고 가져온 데이터를 전달합니다.
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -180,7 +143,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 );
               } else {
-                // API 호출 실패를 처리합니다.
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -207,8 +169,16 @@ class _HomePageState extends State<HomePage> {
           },
         ),
       ]),
-      body: SingleChildScrollView(
-        child: _homePageUI(),
+      body: Center(
+        child: isApiCallProcess || isLoading
+            ? SpinKitThreeInOut(
+                color: Color(0xffd86a04),
+                size: 50.0,
+                duration: Duration(seconds: 2),
+              )
+            : SingleChildScrollView(
+          child: _homePageUI(),
+        ),
       ),
       bottomNavigationBar: _underNavigation(),
     );
@@ -216,24 +186,20 @@ class _HomePageState extends State<HomePage> {
 
   Widget _homePageUI() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: 25, vertical: 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
-          SizedBox(
-            height: 40,
-          ),
           _invalidProductBtn(),
           SizedBox(
             height: 20,
           ),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              Expanded(child: _recommendProductBtn()),
-              SizedBox(
-                width: 30,
-              ),
+              _recommendProductBtn(),
+              Spacer(),
               Column(
                 // mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: <Widget>[
@@ -250,17 +216,18 @@ class _HomePageState extends State<HomePage> {
             height: 20,
           ),
           _routineBtn(),
-          // _label()
         ],
       ),
     );
   }
 
+
+  //유통기한
   Widget _invalidProductBtn() {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return ElevatedButton(
-      onPressed: () async {
+      onPressed: () {
         if (isApiCallProcess) {
           return;
         }
@@ -271,10 +238,9 @@ class _HomePageState extends State<HomePage> {
           Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => CosmeticExpiryPage()));
         } catch (e) {
-          // Handle the error case
           print('An error occurred: $e');
-        } finally {
-          // API 호출 상태를 초기화합니다.
+        }
+        finally {
           setState(() {
             isApiCallProcess = false;
           });
@@ -282,11 +248,8 @@ class _HomePageState extends State<HomePage> {
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: Color(0xffffb876),
-        // 버튼의 배경색을 검정색으로 설정
         foregroundColor: Colors.white,
-        // 버튼의 글씨색을 하얀색으로 설정
         elevation: 0,
-        // 그림자 없애기
         minimumSize: Size(screenWidth, 200.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0), // 모서리를 더 둥글게 설정
@@ -294,8 +257,7 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Align(
           alignment: Alignment.topLeft,
-          child: (expiries.isNotEmpty && expiries.length != 0)
-              ? Center(
+          child: Center(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -315,35 +277,24 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
-                      _buildExpiryInfo(),
+                      _selectExpiryScreen(),
                     ],
                   ),
                 )
-              : Center(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "유통기한 임박 화장품 ",
-                            style: TextStyle(
-                              // fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 15,
-                          ),
-                        ],
-                      ),
-                      _buildDefaultText(),
-                    ],
-                  ),
-                )),
+      ),
     );
+  }
+
+  Widget _selectExpiryScreen() {
+    if (!isApiCallProcess && !isLoading) {
+      if (expiries != null && expiries.isNotEmpty && expiries.length != 0) {
+        return _buildExpiryInfo();
+      } else {
+        return _buildDefaultText();
+      }
+    } else {
+      return SpinKitCircle(color: Colors.white, duration: Duration(seconds: 3),);
+    }
   }
 
   Widget _buildExpiryInfo() {
@@ -389,8 +340,8 @@ class _HomePageState extends State<HomePage> {
                 // Display D-day or any other information here
                 Text(
                   isDatePassed
-                      ? 'D+${difference.inDays.abs() + 1}'
-                      : 'D-${difference.inDays}',
+                      ? 'D+${difference.inDays.abs()}'
+                      : 'D-${difference.inDays+1}',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -404,18 +355,27 @@ class _HomePageState extends State<HomePage> {
   Widget _buildDefaultText() {
     return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(height: 5),
-          Text(
-            "등록된 화장품이 없습니다.\n화장품 등록하기",
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          Container(
+            height: 130,
+            alignment: Alignment.center,
+            child: Text(
+              "등록된 화장품이 없습니다.\n화장품 등록하기",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
     );
   }
 
+
+
+  //추천 버튼
   Widget _recommendProductBtn() {
     final screenWidth = MediaQuery.of(context).size.width / 2 - 40;
 
@@ -423,16 +383,11 @@ class _HomePageState extends State<HomePage> {
       onPressed: () {
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (context) => const RecPage()));
-        // Navigator.of(context)
-        //     .push(MaterialPageRoute(builder: (context) => const MyFavoritePage()));
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: Color(0xffffecda),
-        // 버튼의 배경색을 검정색으로 설정
         foregroundColor: Color(0xffff820e),
-        // 버튼의 글씨색을 하얀색으로 설정
         elevation: 0,
-        // 그림자 없애기
         minimumSize: Size(screenWidth, 200.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0), // 모서리를 더 둥글게 설정
@@ -440,8 +395,7 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Align(
           alignment: Alignment.topLeft,
-          child: (recommends.isNotEmpty && recommends.length != 0)
-              ? Center(
+          child: Center(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -464,117 +418,26 @@ class _HomePageState extends State<HomePage> {
                       SizedBox(
                         height: 15,
                       ),
-                      _buildRecommendText(),
+                      _selectRecommendScreen(),
                     ],
                   ),
                 )
-              : Center(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "추천 제품 ",
-                            style: TextStyle(
-                              // fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 15,
-                          ),
-                        ],
-                      ),
-                      _buildRecommendDefaultText(),
-                    ],
-                  ),
-                )),
+              ),
     );
   }
 
-  // Widget _buildFavoriteText(){
-  //   return Column(
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       children: favorites.take(3).map((item) {
-  //         return Container(
-  //           margin: EdgeInsets.all(8.0),
-  //           child: Row(
-  //             mainAxisAlignment: MainAxisAlignment.start,
-  //             children: [
-  //               SizedBox(width: 10,),
-  //               Container(
-  //                 width: MediaQuery.of(context).size.width / 2 - 100,
-  //                 child: Text(
-  //                   item['name'],
-  //                   style: TextStyle(fontSize: 15),
-  //                   overflow: TextOverflow.ellipsis,
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         );
-  //       }).toList(),
-  //     );
-  // }
-  //
-  // Widget _buildFavoriteDefaultText() {
-  //   return Center(
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.center,
-  //       children: [
-  //         SizedBox(height: 5),
-  //         Text(
-  //           "즐겨찾기된 화장품이 없습니다.\n화장품 등록하기",
-  //           style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
+  Widget _selectRecommendScreen() {
+    if (!isApiCallProcess && !isLoading) {
+      if (recommends != null && recommends.isNotEmpty && recommends.length != 0) {
+        return _buildRecommendText();
+      } else {
+        return _buildRecommendDefaultText();
+      }
+    } else {
+      return SpinKitCircle(color: Colors.white, duration: Duration(seconds: 3),);
+    }
+  }
 
-  // Widget _buildRecommendText(){
-  //   return Row(
-  //     mainAxisAlignment: MainAxisAlignment.center,
-  //     children: recommends.take(1).map((item) {
-  //       return Container(
-  //         margin: EdgeInsets.all(8.0),
-  //         child: Column(
-  //           mainAxisAlignment: MainAxisAlignment.start,
-  //           children: [
-  //             Container(
-  //                 decoration: BoxDecoration(
-  //                   color: Colors.grey, // 네모 박스의 색상
-  //                   borderRadius: BorderRadius.circular(8.0),
-  //                 ),
-  //                 child:
-  //                 (item.images[0] != null)
-  //                     ? Image.network(
-  //                   item.images[0],
-  //                   width: 90,
-  //                   height: 90,
-  //                   fit: BoxFit.cover,
-  //                 )
-  //                     :
-  //                 Image.asset('assets/images/noImg.jpg', fit: BoxFit.cover,)// 이미지가 없는 경우
-  //             ),
-  //             SizedBox(height: 5,),
-  //             Container(
-  //               width: MediaQuery.of(context).size.width / 2 - 100,
-  //               child: Text(
-  //                 item.name,
-  //                 style: TextStyle(color: Colors.black, fontSize: 15),
-  //                 overflow: TextOverflow.ellipsis,
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       );
-  //     }).toList(),
-  //   );
-  // }
   Widget _buildRecommendText() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -596,7 +459,7 @@ class _HomePageState extends State<HomePage> {
                 width: MediaQuery.of(context).size.width / 2 - 100,
                 child: Text(
                   item.name,
-                  style: TextStyle(color: Colors.black, fontSize: 15),
+                  style: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -614,66 +477,39 @@ class _HomePageState extends State<HomePage> {
         children: [
           SizedBox(height: 5),
           Text(
-            "추천 화장품이 없습니다.\n화장품 추천받기",
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            "피부 타입 테스트를\n진행해주세요.",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
+
+  //피부타입 버튼
   Widget _personalSkinTypeBtn() {
     final screenWidth = MediaQuery.of(context).size.width / 2 - 30;
-    BaumResult<List<BaumannResult>> result =
-        BaumResult<List<BaumannResult>>.success([]);
 
     return ElevatedButton(
-      onPressed: () async {
-        // 이미 API 호출이 진행 중인지 확인
-        if (isApiCallProcess) {
-          return;
-        }
-        // API 호출 중임을 표시
-        setState(() {
-          isApiCallProcess = true;
-        });
-        try {
-          result = await BaumannService.getBaumannHistory();
-
-          print("This is Baumann Button in Home Page : ${result.value}");
-
-          if (result.isSuccess && result.value!.isNotEmpty) {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) =>
-                    BaumannHistoryPage(resultData: result.value)));
-            print("This is BaumannButton in HomePage2 : ${result.value}");
-          } else {
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => BaumannStartPage()));
-            print("This is Baumann Button in Home Page2 : ${result.isSuccess}");
-          }
-        } catch (e) {
-          // Handle the error case
-          print('An error occurred: $e');
-        } finally {
-          // API 호출 상태를 초기화합니다.
-          setState(() {
-            isApiCallProcess = false;
-          });
+      onPressed: () {
+        if (baumannresultList.isNotEmpty) {
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) =>
+                  BaumannHistoryPage(resultData: baumannresultList)));
+        } else {
+          Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => BaumannStartPage()));
         }
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: Color(0xfffe9738),
-        // 버튼의 배경색을 검정색으로 설정
         foregroundColor: Colors.white,
-        // 버튼의 글씨색을 하얀색으로 설정
         elevation: 0,
-        // 그림자 없애기
         minimumSize: Size(screenWidth, 90.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0), // 모서리를 더 둥글게 설정
         ),
-        // padding: EdgeInsets.zero,
       ),
       child: Align(
         alignment: Alignment.topLeft,
@@ -694,12 +530,11 @@ class _HomePageState extends State<HomePage> {
                   Icon(
                     Icons.arrow_forward_ios,
                     size: 15,
-                    // Add any other styling properties as needed
                   ),
                 ],
               ),
               SizedBox(height: 5),
-              Text((result.value != null) ? "${widget.user?.baumann}" : "테스트하기",
+              Text((baumannresultList.isEmpty) ? "테스트하기":"${baumannresultList.last.baumannType}",
                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
             ],
           ),
@@ -708,6 +543,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  //소통방 버튼
   Widget _chatBtn() {
     final screenWidth = MediaQuery.of(context).size.width / 2 - 30;
 
@@ -718,11 +554,8 @@ class _HomePageState extends State<HomePage> {
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: Color(0xffffd1a6),
-        // 버튼의 배경색을 검정색으로 설정
         foregroundColor: Color(0xffd86a04),
-        // 버튼의 글씨색을 하얀색으로 설정
         elevation: 0,
-        // 그림자 없애기
         minimumSize: Size(screenWidth, 90.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0), // 모서리를 더 둥글게 설정
@@ -751,6 +584,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
+  //오늘의 루틴 버튼
   Widget _routineBtn() {
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -761,11 +596,8 @@ class _HomePageState extends State<HomePage> {
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: Color(0xffe7e4e1),
-        // 버튼의 배경색을 검정색으로 설정
         foregroundColor: Color(0xffff820e),
-        // 버튼의 글씨색을 하얀색으로 설정
         elevation: 0,
-        // 그림자 없애기
         minimumSize: Size(screenWidth, 200.0),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10.0), // 모서리를 더 둥글게 설정
@@ -773,8 +605,7 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Align(
           alignment: Alignment.topLeft,
-          child: (recommends.isNotEmpty && recommends.length != 0)
-              ? Center(
+          child: Center(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -782,7 +613,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "나의 루틴 확인하기 ",
+                            "오늘의 루틴 확인하기 ",
                             style: TextStyle(
                               // fontWeight: FontWeight.bold,
                               fontSize: 18,
@@ -794,67 +625,57 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
-                      SizedBox(
-                        height: 15,
-                      ),
-                      _buildTodoText(),
+                      _selectTodocreen(),
                     ],
                   ),
                 )
-              : Center(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "나의 루틴 확인하기 ",
-                            style: TextStyle(
-                              // fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 15,
-                          ),
-                        ],
-                      ),
-                      _buildTodoDefaultText(),
-                    ],
-                  ),
-                )),
+      ),
     );
+  }
+
+  Widget _selectTodocreen() {
+    if (!isApiCallProcess && !isLoading) {
+      if (todayTodos != null && todayTodos?.tasks != null && todayTodos!.tasks.isNotEmpty && todayTodos!.tasks.length != 0) {
+        return _buildTodoText();
+      } else {
+        return _buildTodoDefaultText();
+      }
+    } else {
+      return SpinKitCircle(color: Colors.white, duration: Duration(seconds: 3),);
+    }
   }
 
   Widget _buildTodoText() {
     print("hello this is 2: ${todayTodos}");
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
+          height: 120,
           margin: EdgeInsets.all(8.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center, // 세로축을 기준으로 중앙 정렬
             children: [
-              SizedBox(height: 5),
               Container(
-                width: MediaQuery.of(context).size.width / 2 - 60,
+                width: MediaQuery.of(context).size.width / 2 - 50,
                 child: todayTodos != null && todayTodos!.tasks.isNotEmpty
                     ? Column(
-                        children: todayTodos!.tasks
-                            .map((task) => Text(
-                                  task.description,
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 15),
-                                ))
-                            .toList(),
-                      )
-                    : Text(
-                        '등록된 루틴이 없습니다',
-                        style: TextStyle(fontSize: 15),
+                  children: todayTodos!.tasks
+                      .take(3)
+                      .map((task) => Column(
+                    children: [
+                      Text(
+                        task.description,
+                        style: TextStyle(
+                            color: Colors.black, fontSize: 18),
                       ),
+                      SizedBox(height: 10)
+                    ],
+                  ))
+                      .toList(),
+                )
+                    : _buildTodoDefaultText(),
               ),
             ],
           ),
@@ -863,15 +684,22 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
   Widget _buildTodoDefaultText() {
     return Center(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(height: 5),
-          Text(
-            "등록된 루틴이 없습니다.\n화장품 사용 루틴 등록하기",
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          Container(
+            height: 130,
+            alignment: Alignment.center,
+            child: Text(
+              "등록된 루틴이 없습니다.\n화장품 사용 루틴 등록하기",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
@@ -889,6 +717,7 @@ class _HomePageState extends State<HomePage> {
           } else if (index == 1) {
             Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => CosmeticExpiryPage()));
+
           } else if (index == 3) {
             Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const CalendarPage()));

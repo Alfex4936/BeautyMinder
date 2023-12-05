@@ -9,7 +9,7 @@ class LoginAppBar extends AppBar {
           centerTitle: false,
           title: const Text(
             "BeautyMinder 로그인",
-            style: TextStyle(color: Color(0xffd86a04)),
+            style: TextStyle(color: Color(0xffd86a04), fontWeight: FontWeight.bold),
           ),
           iconTheme: const IconThemeData(
             color: Color(0xffd86a04),

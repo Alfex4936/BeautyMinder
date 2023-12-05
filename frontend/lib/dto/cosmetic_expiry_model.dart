@@ -5,10 +5,10 @@ class CosmeticExpiry {
   final String productName;
   final String? brandName;
   DateTime expiryDate;
-  final bool isExpiryRecognized;
+  final bool expiryRecognized;
   String? imageUrl;
   final String? cosmeticId;
-  bool isOpened;
+  final bool opened;
   DateTime? openedDate;
 
   CosmeticExpiry({
@@ -16,10 +16,10 @@ class CosmeticExpiry {
     required this.productName,
     this.brandName,
     required this.expiryDate,
-    this.isExpiryRecognized = false,
+    this.expiryRecognized = false,
     this.imageUrl,
     this.cosmeticId,
-    this.isOpened = false,
+    required this.opened,
     this.openedDate,
   });
 
@@ -29,10 +29,10 @@ class CosmeticExpiry {
       productName: json['productName'] as String,
       brandName: json['brandName'] as String?,
       expiryDate: DateTime.parse(json['expiryDate'] as String),
-      isExpiryRecognized: (json['isExpiryRecognized'] as bool?) ?? false,
+      expiryRecognized: (json['expiryRecognized'] as bool),
       imageUrl: json['imageUrl'] as String?,
       cosmeticId: json['cosmeticId'] as String?,
-      isOpened: (json['opened'] as bool?) ?? false,
+      opened: (json['opened'] as bool),
       openedDate: json['openedDate'] != null
           ? DateTime.parse(json['openedDate'] as String)
           : null,
@@ -46,10 +46,10 @@ class CosmeticExpiry {
       'productName': productName,
       'brandName': brandName,
       'expiryDate': formatter.format(expiryDate),
-      'isExpiryRecognized': isExpiryRecognized,
+      'isExpiryRecognized': expiryRecognized,
       'imageUrl': imageUrl,
       'cosmeticId': cosmeticId,
-      'opened': isOpened,
+      'opened': opened,
       'openedDate': openedDate != null ? formatter.format(openedDate!) : null,
     };
   }

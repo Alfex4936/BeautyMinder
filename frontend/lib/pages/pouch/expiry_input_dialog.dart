@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../dto/cosmetic_model.dart';
@@ -28,11 +32,15 @@ class _ExpiryInputDialogState extends State<ExpiryInputDialog> {
 
   Future<void> _selectDate(BuildContext context,
       {bool isExpiryDate = true}) async {
+
+    Locale myLocale = Localizations.localeOf(context);
+
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: (isExpiryDate ? expiryDate : openedDate) ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      locale: myLocale,
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData.light().copyWith(
@@ -56,45 +64,104 @@ class _ExpiryInputDialogState extends State<ExpiryInputDialog> {
   }
 
   // OCR 페이지로 이동하고 결과를 받아오는 함수
-  Future<void> _navigateAndProcessOCR() async {
-    final PlatformFile? pickedFile = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['png', 'jpg', 'jpeg'],
-    ).then((result) => result?.files.first);
+  Future<void> _navigateAndProcessOCR(ImageSource source) async {
+    final pickedFile = await ImagePicker().pickImage(source: source);
 
     if (pickedFile != null) {
-      // OCR 처리를 요청하고 결과를 받습니다.
-      try {
-        final response = await OCRService.selectAndUploadImage(pickedFile);
-        if (response != null) {
-          final VisionResponseDTO result = VisionResponseDTO.fromJson(response);
-          final expiryDateFromOCR = DateFormat('yyyy-MM-dd').parse(result.data);
+      // 이미지 자르기
+      CroppedFile? croppedFile = await ImageCropper().cropImage(
+          sourcePath: pickedFile.path,
+          aspectRatioPresets: [
+            CropAspectRatioPreset.square,
+            CropAspectRatioPreset.ratio3x2,
+            CropAspectRatioPreset.original,
+            CropAspectRatioPreset.ratio4x3,
+            CropAspectRatioPreset.ratio16x9
+          ],
+          uiSettings: [
+            AndroidUiSettings(
+                toolbarTitle: 'Crop Image',
+                toolbarColor: Colors.orange,
+                toolbarWidgetColor: Colors.white,
+                initAspectRatio: CropAspectRatioPreset.original,
+                lockAspectRatio: false),
+            IOSUiSettings(
+              title: 'Crop Image',
+            )
+          ]
+      );
 
-          // 받아온 유통기한으로 상태 업데이트
-          setState(() {
-            expiryDate = expiryDateFromOCR;
-          });
+      if (croppedFile != null) {
+        final file = File(croppedFile.path);
+        final fileName = file.path.split('/').last;
+        final fileSize = await file.length();
+        final fileBytes = await file.readAsBytes();
+
+        try {
+          // OCR 서비스 호출
+          final response = await OCRService.selectAndUploadImage(PlatformFile(
+            name: fileName,
+            bytes: fileBytes,
+            size: fileSize,
+            path: croppedFile.path,
+          ));
+
+          if (response != null) {
+            // OCR 결과 처리
+            final VisionResponseDTO result = VisionResponseDTO.fromJson(response);
+            final expiryDateFromOCR = DateFormat('yyyy-MM-dd').parse(result.data);
+
+            setState(() {
+              expiryDate = expiryDateFromOCR;
+            });
+          }
+        } catch (e) {
+          // 오류 처리
+          _showErrorDialog("이미지 인식에 실패하였습니다.");
         }
-      } catch (e) {
-        // 오류 처리
-        _showErrorDialog(e.toString());
       }
     } else {
-      _showErrorDialog("No image selected for OCR.");
+      _showErrorDialog("이미지가 선택되지 않았습니다.");
     }
   }
 
   // 에러 메시지를 보여주는 함수
   void _showErrorDialog(String message) {
+    print("error in OCR : $message");
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Error'),
-        content: Text(message),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(3.0),
+        ),
+        title: Text(
+          '오류',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          '$message',
+          style: TextStyle(
+            fontSize: 16,
+          ),
+        ),
         actions: [
-          TextButton(
-            child: Text('OK'),
-            onPressed: () => Navigator.of(context).pop(),
+          Container(
+            width: 70,
+            height: 30,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero, // 내용물과의 간격을 없애기 위해 추가
+                backgroundColor: Color(0xffdc7e00),
+                foregroundColor: Colors.white,
+                side: BorderSide(color: Color(0xffdc7e00)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(2.0),
+                ),
+              ),
+              child: Text('확인'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
           ),
         ],
       ),
@@ -106,13 +173,29 @@ class _ExpiryInputDialogState extends State<ExpiryInputDialog> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('유통기한 입력 방법 선택'),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        title: Text(
+          '유통기한 입력 방법 선택',
+          style: TextStyle(
+            fontWeight: FontWeight.normal,
+            fontSize: 24,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             ListTile(
               leading: Icon(Icons.edit),
-              title: Text('직접 입력'),
+              title: Text(
+                '직접 입력',
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
+              ),
               onTap: () {
                 Navigator.of(context).pop();
                 _selectDate(context);
@@ -120,10 +203,30 @@ class _ExpiryInputDialogState extends State<ExpiryInputDialog> {
             ),
             ListTile(
               leading: Icon(Icons.camera_alt),
-              title: Text('OCR 입력'),
+              title: Text(
+                '카메라로 촬영',
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
+              ),
               onTap: () {
                 Navigator.of(context).pop();
-                _navigateAndProcessOCR();
+                _navigateAndProcessOCR(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_album),
+              title: Text(
+                '앨범에서 선택',
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              onTap: () {
+                Navigator.of(context).pop();
+                _navigateAndProcessOCR(ImageSource.gallery);
               },
             ),
           ],
@@ -135,12 +238,66 @@ class _ExpiryInputDialogState extends State<ExpiryInputDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('${widget.cosmetic.name}의 유통기한 정보를 입력해주세요'),
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      titlePadding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 50.0),
+      title: Text(
+        '제품 정보를 입력해주세요',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 24,
+        ),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          ListTile(
+            title: Text(
+              '제품명',
+              style: TextStyle(
+                fontSize: 18,
+              ),
+            ),
+            trailing: Container(
+              width: 150,
+              child: Text(
+                '${widget.cosmetic.name}',
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.end,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          ListTile(
+            title: Text(
+              '브랜드',
+              style: TextStyle(
+                fontSize: 18,
+              ),
+            ),
+            trailing: Container(
+              width: 150,
+              child: Text(
+                '${widget.cosmetic.brand}',
+                style: TextStyle(
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.end,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
           SwitchListTile(
-            title: Text('개봉여부'),
+            title: Text(
+              '개봉 여부',
+              style: TextStyle(
+                fontSize: 18,
+              ),
+            ),
             value: isOpened,
             onChanged: (bool value) {
               setState(() {
@@ -150,22 +307,55 @@ class _ExpiryInputDialogState extends State<ExpiryInputDialog> {
                 }
               });
             },
-            activeColor: Colors.orange,
-            activeTrackColor: Colors.orangeAccent,
+            activeColor: Colors.white,
+            activeTrackColor: Colors.orange,
           ),
           ListTile(
-            title: Text(expiryDate != null
-                ? '유통기한: ${formatDate(expiryDate!)}'
-                : '유통기한 선택'),
+            title: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '유통기한',
+                  style: TextStyle(
+                    fontSize: 18,
+                  ),
+                ),
+                Spacer(),// 조절 가능한 간격
+                Text(
+                  expiryDate != null
+                      ? formatDate(expiryDate!)
+                      : '유통기한 선택',
+                  style: TextStyle(
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
             trailing: Icon(Icons.calendar_today),
-            onTap: () =>
-                _showExpiryDateChoiceDialog(), // 유통기한 선택 방법을 선택하는 다이얼로그를 표시하는 함수 호출
+            onTap: () => _showExpiryDateChoiceDialog(),
           ),
           if (isOpened)
             ListTile(
-              title: Text(openedDate != null
-                  ? '개봉 날짜: ${formatDate(openedDate!)}'
-                  : '개봉 날짜 선택'),
+              title: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '개봉일',
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                  Spacer(),// 조절 가능한 간격
+                  Text(
+                    openedDate != null
+                        ? formatDate(openedDate!)
+                        : '개봉일 선택',
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
               trailing: Icon(Icons.calendar_today),
               onTap: () => _selectDate(context, isExpiryDate: false),
             ),
@@ -175,7 +365,14 @@ class _ExpiryInputDialogState extends State<ExpiryInputDialog> {
         TextButton(
           onPressed: () =>
               Navigator.of(context).pop([isOpened, expiryDate, openedDate]),
-          child: Text('Submit'),
+          child: Text(
+            '등록',
+            style: TextStyle(
+              color: Colors.orange,
+              fontSize: 20,
+              fontWeight: FontWeight.bold
+            ),
+          ),
           style: TextButton.styleFrom(foregroundColor: Colors.orange),
         ),
       ],

@@ -9,7 +9,7 @@ class RegisterAppBar extends AppBar {
           centerTitle: false,
           title: const Text(
             "BeautyMinder 회원가입",
-            style: TextStyle(color: Color(0xffd86a04)),
+            style: TextStyle(color: Color(0xffd86a04), fontWeight: FontWeight.bold),
           ),
           iconTheme: const IconThemeData(
             color: Color(0xffd86a04),

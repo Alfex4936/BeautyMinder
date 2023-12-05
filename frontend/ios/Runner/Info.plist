@@ -2,22 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>NSAppTransportSecurity</key>
-    	<dict>
-    	    <key>NSAllowsLocalNetworking</key>
-    	    <true/>
-    	    <key>NSAllowsArbitraryLoads</key>
-            <true/>
-            <key>NSAllowsArbitraryLoadsInWebContent</key>
-            <true/>
-    	</dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	    <!-- Permission options for the `camera` group -->
-        <key>NSCameraUsageDescription</key>
-        <string>camera</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -36,6 +24,17 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>camera</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>I need Photos access to allow users to update their Profile Picture.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
@@ -58,7 +57,6 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-
 	<false/>
 </dict>
 </plist>

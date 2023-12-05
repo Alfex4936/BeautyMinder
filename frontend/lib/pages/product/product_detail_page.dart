@@ -1,6 +1,7 @@
 import 'package:beautyminder/dto/cosmetic_model.dart';
 import 'package:beautyminder/pages/product/review_page.dart';
 import 'package:beautyminder/services/gptReview_service.dart';
+import 'package:beautyminder/services/api_service.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -8,23 +9,30 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../dto/gptReview_model.dart';
+import '../../services/api_service.dart';
 import '../../services/favorites_service.dart';
 import '../../widget/commonAppBar.dart';
 
 class ProductDetailPage extends StatefulWidget {
-  const ProductDetailPage({Key? key, required this.searchResults})
+  const ProductDetailPage({Key? key, required this.searchResults, this.updateFavorites})
       : super(key: key);
 
   final Cosmetic searchResults;
+  final Function(bool)? updateFavorites;
 
   @override
   _ProductDetailPageState createState() => _ProductDetailPageState();
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
+
   late Future<Result<GPTReviewInfo>> _gptReviewInfo;
+  List favorites = [];
   bool showPositiveReview = true;
   bool isFavorite = false;
+
+  bool isApiCallProcess = false;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -32,6 +40,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     super.initState();
     _gptReviewInfo = GPTReviewService.getGPTReviews(widget.searchResults.id);
     _loadFavoriteState(widget.searchResults.id);
+    _getFavoriteList();
   }
 
   Future<void> _loadFavoriteState(String prouctId) async {
@@ -43,10 +52,38 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     await FavoriteManager().setFavoriteState(prouctId, isFavorite);
   }
 
+  Future<void> _getFavoriteList() async {
+    // 이미 API 호출이 진행 중인지 확인
+    if (isApiCallProcess) {
+      return;
+    }
+    // API 호출 중임을 표시
+    setState(() {
+      isLoading = true;
+      isApiCallProcess = true;
+    });
+
+    try {
+      //검색어 히스토리
+      final loadedFavoriteList = await APIService.getFavorites();
+      setState(() {
+        favorites = loadedFavoriteList.value ?? [];
+      });
+
+    } catch (e) {
+      print('An error occurred while loading expiries: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+        isApiCallProcess = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(),
+      appBar: CommonAppBar(automaticallyImplyLeading: true, context: context,),
       body: SingleChildScrollView(
         child: _productDetailPageUI(),
       ),
@@ -119,38 +156,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  // Widget _likesBtn() {
-  //   return IconButton(
-  //     onPressed: () async {
-  //       setState(() {
-  //         isFavorite  = !isFavorite;
-  //       });
-  //       await _saveFavoriteState(widget.searchResults.id);
-  //       // Call FavoritesService to upload favorites when the heart icon is pressed
-  //       if (isFavorite) {
-  //         try {
-  //           // Assuming you have the cosmeticId from your widget
-  //           String cosmeticId = widget.searchResults.id;
-  //
-  //           // Call the uploadFavorites method from FavoritesService
-  //           String result = await FavoritesService.uploadFavorites(cosmeticId);
-  //
-  //           if (result == "success") {
-  //             print("Favorites uploaded successfully! : $isFavorite");
-  //           } else {
-  //             print("Failed to upload favorites");
-  //           }
-  //         } catch (e) {
-  //           print("An error occurred while uploading favorites: $e");
-  //         }
-  //       }
-  //     },
-  //     icon: Icon(
-  //       isFavorite ? Icons.favorite : Icons.favorite_border,
-  //       color: isFavorite ? Colors.red : null,
-  //     ),
-  //   );
-  // }
   Widget _likesBtn() {
     return IconButton(
       onPressed: () async {
@@ -184,9 +189,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               print("Failed to delete favorites");
             }
           }
+          if (widget.updateFavorites != null) {
+            widget.updateFavorites!(isFavorite);
+            print("@@@@1 : $isFavorite");
+          }
         } catch (e) {
           print("An error occurred while handling favorites: $e");
         }
+        // Navigator.pop(context, isFavorite);
       },
       icon: Icon(
         isFavorite ? Icons.favorite : Icons.favorite_border,
@@ -225,42 +235,94 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
+  // Widget _displayRatingStars() {
+  //
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: Expanded(
+  //       child: Row(
+  //         children: [
+  //           Text(
+  //             '별점: ',
+  //             style: TextStyle(fontSize: 18),
+  //           ),
+  //           AbsorbPointer(
+  //             absorbing: true, // Set absorbing to true
+  //             child: RatingBar.builder(
+  //               initialRating: widget.searchResults.averageRating,
+  //               minRating: 1,
+  //               direction: Axis.horizontal,
+  //               allowHalfRating: true,
+  //               itemCount: 5,
+  //               itemSize: 20,
+  //               itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
+  //               itemBuilder: (context, _) => Icon(
+  //                 Icons.star,
+  //                 color: Colors.amber,
+  //               ),
+  //               onRatingUpdate: (rating) {},
+  //             ),
+  //           ),
+  //           Text(
+  //             '(${widget.searchResults.averageRating})',
+  //             style: TextStyle(fontSize: 18),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
   Widget _displayRatingStars() {
+    double averageRating = widget.searchResults.averageRating;
+    int fullStar = averageRating.toInt();
+    double halfStar = averageRating - fullStar;
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Expanded(
-        child: Row(
-          children: [
-            Text(
-              '별점: ',
-              style: TextStyle(fontSize: 18),
-            ),
-            AbsorbPointer(
-              absorbing: true, // Set absorbing to true
-              child: RatingBar.builder(
-                initialRating: widget.searchResults.averageRating,
-                minRating: 1,
-                direction: Axis.horizontal,
-                allowHalfRating: true,
-                itemCount: 5,
-                itemSize: 20,
-                itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
-                itemBuilder: (context, _) => Icon(
+      child: Row(
+        children: [
+          Text(
+            '별점: ',
+            style: TextStyle(fontSize: 18),
+          ),
+          RatingBar.builder(
+            initialRating: averageRating,
+            minRating: 1,
+            direction: Axis.horizontal,
+            allowHalfRating: true,
+            itemCount: 5,
+            itemSize: 20,
+            itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
+            itemBuilder: (context, index) {
+              if (index < fullStar) {
+                return Icon(
                   Icons.star,
                   color: Colors.amber,
-                ),
-                onRatingUpdate: (rating) {},
-              ),
-            ),
-            Text(
-              '(${widget.searchResults.averageRating})',
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
-        ),
+                );
+              } else if (index == fullStar && halfStar > 0) {
+                return Icon(
+                  Icons.star_half_outlined,
+                  color: Colors.amber,
+                );
+              } else {
+                return Icon(
+                  Icons.star_border,
+                  color: Colors.grey,
+                );
+              }
+            },
+            onRatingUpdate: (rating) {},
+          ),
+          Text(
+            '(${widget.searchResults.averageRating})',
+            style: TextStyle(fontSize: 18),
+          ),
+        ],
       ),
     );
   }
+
+
 
   Widget _displayGPTReview(GPTReviewInfo gptReviewInfo, bool isPositive) {
     // bool isPositive = showPositiveReview;

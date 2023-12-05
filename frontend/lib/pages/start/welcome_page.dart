@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:beautyminder/pages/start/splash_page.dart';
 import 'package:flutter/material.dart';
 
 class WelcomePage extends StatefulWidget {
@@ -10,6 +13,17 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends State<WelcomePage> {
+
+  @override
+  void initState() {
+    Timer(Duration(milliseconds: 1500), () {
+      Navigator.push(context, MaterialPageRoute(
+          builder: (context) => SplashPage()
+      )
+      );
+    });
+  }
+
   Widget _title() {
     return Center(
       child: RichText(

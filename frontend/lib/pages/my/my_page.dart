@@ -56,7 +56,7 @@ class _MyPageState extends State<MyPage> {
             duration: Duration(seconds: 2),
           )
         : Scaffold(
-            appBar: CommonAppBar(),
+            appBar: CommonAppBar(automaticallyImplyLeading: false,),
             body: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: ListView(

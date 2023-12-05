@@ -1,9 +1,12 @@
 import 'package:beautyminder/pages/baumann/baumann_test_start_page.dart';
 import 'package:beautyminder/pages/baumann/watch_result_page.dart';
+import 'package:beautyminder/services/baumann_service.dart';
 import 'package:flutter/material.dart';
 
 import '../../dto/baumann_result_model.dart';
+import '../../services/api_service.dart';
 import '../../widget/commonAppBar.dart';
+import '../home/home_page.dart';
 
 class BaumannHistoryPage extends StatelessWidget {
   final List<BaumannResult>? resultData;
@@ -15,19 +18,70 @@ class BaumannHistoryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     print("This is History Page : $resultData");
     return Scaffold(
-      appBar: CommonAppBar(),
+      appBar: CommonAppBar(automaticallyImplyLeading: false,),
       body: Column(
         children: [
           _baumannHistoryUI(),
           _divider(),
-          _retestButton(context),
+          Stack(
+            children: [
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: AnimatedTrainText(),
+                ),
+              ),
+              Row(
+                children: [
+                  Spacer(),
+                  _retestButton(context),
+                ],
+              ),
+            ],
+          ),
           SizedBox(
             height: 10,
           ),
           Expanded(
             child: _baumannHistoryListView(),
           ),
+          SizedBox(
+            height: 100,
+          ),
         ],
+      ),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.symmetric(vertical: 50, horizontal: 20),
+        child: Container(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () async {
+              final userProfileResult = await APIService.getUserProfile();
+              // 버튼을 클릭했을 때 홈페이지로 이동하는 함수 호출
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => HomePage(
+                      user: userProfileResult.value,
+                    )),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xffe58731),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5.0), // Adjust the radius as needed
+              ),
+            ),
+            child: Text(
+              '홈으로 가기',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -73,81 +127,115 @@ class BaumannHistoryPage extends StatelessWidget {
     );
   }
 
-  Widget _resultButton(
-      BuildContext context, BaumannResult result, bool isEven) {
-    Color buttonColor = isEven ? Colors.white : Color(0xffffb876);
+  Widget _resultButton(BuildContext context, BaumannResult result, bool isEven) {
+    Color buttonColor = isEven ? Colors.white : Color(0xffffca97);
     Color textColor = isEven ? Colors.black : Colors.white;
+    print("\n\nhello ::::: ${result}:::::\n\n");
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 10),
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 8),
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => WatchResultPage(resultData: result)));
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: buttonColor,
-            side: BorderSide(color: Color(0xffffb876)),
-            elevation: 0,
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: Dismissible(
+        key: UniqueKey(),
+        direction: DismissDirection.endToStart, // Set direction to right-to-left
+        background: Container(
+          color: Colors.red,
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          alignment: AlignmentDirectional.centerEnd,
+          child: Icon(
+            Icons.delete,
+            color: Colors.white,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('피부타입: ${result.baumannType}',
-                      style: TextStyle(
-                          color: textColor,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold)),
-                  SizedBox(width: 16),
-                  Text('테스트 일시: ${result.date}',
-                      style: TextStyle(color: textColor, fontSize: 18)),
-                ],
+        ),
+        onDismissed: (direction) async {
+          // Implement your delete logic here
+          print("HelloHelloHello");
+
+          print(":!:!: : ${result.id} :!:!:");
+          final deletionResult = await BaumannService.deleteBaumannHistory(result.id);
+
+          if (deletionResult == "Success to Delete") {
+            resultData?.remove(result);
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("삭제되었습니다."),
               ),
-              _baumannResultContent(result, isEven),
-            ],
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("삭제에 실패했습니다."),
+              ),
+            );
+          }
+        },
+
+        confirmDismiss: (direction) async {
+
+          return await showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text("정말로 삭제하시겠습니까?"),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(false);
+                    },
+                    child: Text("취소"),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                    },
+                    child: Text("삭제"),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: Container(
+          height: 100,
+          margin: EdgeInsets.symmetric(vertical: 5),
+          child: ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => WatchResultPage(resultData: result)));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: buttonColor,
+              side: BorderSide(color: Color(0xffffca97)),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5.0),
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('피부타입: ${result.baumannType}',
+                        style: TextStyle(
+                            color: textColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold)),
+                    SizedBox(width: 16),
+                    Text('일시: ${result.date}',
+                        style: TextStyle(color: textColor, fontSize: 12)),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _baumannResultContent(BaumannResult result, bool isEven) {
-    Color cardColor = isEven ? Colors.white : Color(0xffffb876);
-    Color textColor = isEven ? Color(0xff6e6e6e) : Colors.white;
 
-    return Card(
-      color: cardColor,
-      elevation: 0,
-      child: Column(
-        children: [
-          ListTile(
-            subtitle: Column(
-              children: [
-                SizedBox(height: 5),
-                Text('색소침착도: ${result.baumannScores['pigmentation']}/57',
-                    style: TextStyle(color: textColor)),
-                Text('유수분 밸런스: ${result.baumannScores['hydration']}/44',
-                    style: TextStyle(color: textColor)),
-                Text('탄력: ${result.baumannScores['elasticity']}/85',
-                    style: TextStyle(color: textColor)),
-                Text('수분 보유력: ${result.baumannScores['moistureRetention']}/65',
-                    style: TextStyle(color: textColor)),
-                Text('민감도: ${result.baumannScores['sensitivity']}/64',
-                    style: TextStyle(color: textColor)),
-                SizedBox(height: 10),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _retestButton(BuildContext context) {
     return Padding(
@@ -193,5 +281,60 @@ class BaumannHistoryPage extends StatelessWidget {
       endIndent: 20,
       color: Colors.grey,
     );
+  }
+}
+
+
+
+
+
+//글씨 애니메이션
+class AnimatedTrainText extends StatefulWidget {
+  @override
+  _AnimatedTrainTextState createState() => _AnimatedTrainTextState();
+}
+
+class _AnimatedTrainTextState extends State<AnimatedTrainText>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<Offset> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      duration: Duration(seconds: 10), // Adjust the duration as needed
+      vsync: this,
+    );
+
+    _animation = Tween<Offset>(
+      begin: Offset(1, 0),
+      end: Offset(-1, 0),
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.linear, // Adjust the curve for a linear motion
+      ),
+    );
+
+    _animationController.repeat();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SlideTransition(
+      position: _animation,
+      child: Text(
+        "* 결과 삭제를 원하실 경우 좌측으로 슬라이드 해주세요",
+        style: TextStyle(fontSize: 16),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 }

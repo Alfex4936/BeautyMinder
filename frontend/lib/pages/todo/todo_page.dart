@@ -1,22 +1,43 @@
-import 'package:beautyminder/pages/recommend/recommend_bloc_screen.dart';
+import 'dart:io';
+
+import 'package:beautyminder/Bloc/TodoPageBloc.dart';
+import 'package:beautyminder/dto/task_model.dart';
+import 'package:beautyminder/event/TodoPageEvent.dart';
+import 'package:beautyminder/pages/home/home_page.dart';
+import 'package:beautyminder/pages/todo/skin_Album_page.dart';
+import 'package:beautyminder/pages/todo/skin_timeline.dart';
+
+import 'package:beautyminder/widget/commonAppBar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:gallery_saver/gallery_saver.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:local_image_provider/device_image.dart';
+import 'package:local_image_provider/local_image.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:table_calendar/table_calendar.dart';
-
-import '../../Bloc/TodoPageBloc.dart';
+import 'package:local_image_provider/local_image_provider.dart' as lip;
 import '../../State/TodoState.dart';
-import '../../dto/task_model.dart';
+import 'package:path/path.dart' as path;
 import '../../dto/todo_model.dart';
-import '../../event/TodoPageEvent.dart';
 import '../../services/api_service.dart';
-import '../../widget/commonAppBar.dart';
 import '../../widget/commonBottomNavigationBar.dart';
-import '../home/home_page.dart';
 import '../my/my_page.dart';
 import '../pouch/expiry_page.dart';
+import '../recommend/recommend_bloc_screen.dart';
+import 'FullScreenImagePage.dart';
 import 'Todo_add_page.dart';
+
+
+class CalendarPage extends StatefulWidget {
+  const CalendarPage({Key? key}) : super(key: key);
+
+  @override
+  _CalendarPageState createState() => _CalendarPageState();
+}
 
 class _CalendarPageState extends State<CalendarPage> {
   int _currentIndex = 3;
@@ -33,54 +54,57 @@ class _CalendarPageState extends State<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
-    // String todayFormatted = DateFormat('yyyy-MM-dd').format(_focusedDay); 하면 될 듯?
-
     return BlocProvider(
         create: (_) => TodoPageBloc()..add(TodoPageInitEvent()),
         lazy: false,
         child: Scaffold(
-            appBar: CommonAppBar(),
+            appBar: CommonAppBar(automaticallyImplyLeading: false,),
             body: Column(
               children: [
                 BlocBuilder<TodoPageBloc, TodoState>(builder: (context, state) {
                   return Expanded(child: todoListWidget());
-                })
+                }),
+                // Expanded(child: imageWidget()),
               ],
             ),
-            bottomNavigationBar: CommonBottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: (int index) async {
-                // 페이지 전환 로직 추가
-                if (index == 0) {
-                  Navigator.of(context)
-                      .push(MaterialPageRoute(builder: (context) => RecPage()));
-                } else if (index == 1) {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => CosmeticExpiryPage()));
-                } else if (index == 2) {
-                  final userProfileResult = await APIService.getUserProfile();
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) =>
-                          HomePage(user: userProfileResult.value)));
-                } else if (index == 4) {
-                  Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const MyPage()));
-                }
+            floatingActionButton: FloatingActionButton(
+              //foregroundColor: Color(0xffffecda),
+              backgroundColor: Color(0xffd86a04),
+              // elevation: 0,
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => const TodoAddPage()));
               },
-            )));
+              tooltip: '등록',
+              child: Icon(Icons.add),
+              shape: CircleBorder(),
+            ),
+            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+            bottomNavigationBar: CommonBottomNavigationBar(
+                currentIndex: _currentIndex,
+                onTap: (int index) async {
+                  // 페이지 전환 로직 추가
+                  if (index == 0) {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const RecPage()));
+                  } else if (index == 1) {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => CosmeticExpiryPage()));
+                  } else if (index == 2) {
+                    final userProfileResult = await APIService.getUserProfile();
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => HomePage(user: userProfileResult.value)));
+                  } else if (index == 4) {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const MyPage()));
+                  }
+                })));
   }
 }
 
 class todoListWidget extends StatefulWidget {
   @override
   _todoListWidget createState() => _todoListWidget();
-}
-
-class CalendarPage extends StatefulWidget {
-  const CalendarPage({Key? key}) : super(key: key);
-
-  @override
-  _CalendarPageState createState() => _CalendarPageState();
 }
 
 class _todoListWidget extends State<todoListWidget> {
@@ -104,61 +128,72 @@ class _todoListWidget extends State<todoListWidget> {
     super.dispose();
   }
 
-  Widget _todoList(List<Todo>? todos) {
+  Widget _todoList(List<Todo>? todos, Todo? todo) {
+    // Todos
     return Padding(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          children: _buildChildren(todos),
+          children: _buildChildren(todos, todo),
         ));
   }
 
-  List<Widget> _buildChildren(List<Todo>? todos) {
-    List<Widget> _children = [];
-    List<Widget> _morningTasks = [];
-    List<Widget> _dinnerTasks = [];
-    List<Widget> _otherTasks = [];
+  List<Widget> _buildChildren(List<Todo>? todos, Todo? todo) {
+    List<Widget> children = [];
+    List<Widget> morningTasks = [];
+    List<Widget> dinnerTasks = [];
+    List<Widget> otherTasks = [];
+
+
+    //debugPrint("todo.id : ${todo?.id} ");
 
     if (todos == null || todos.isEmpty) {
-      return _children;
+      return children;
     }
 
-    taskList = todos!.expand((todo) => todo.tasks).toList();
+    //taskList = todos!.expand((todo) => todo.tasks).toList();
+
+    taskList = [];
+
+    if (todo != null || todo?.tasks != null) {
+      for (Task task in todo!.tasks) {
+        taskList.add(task);
+      }
+    }
 
     // taskList를 순회하며 작업 수행
     for (var task in taskList) {
       if (task.category == 'morning') {
         print(task.taskId);
-        _morningTasks.add(_todo(task, todos[0], todos));
+        morningTasks.add(_todo(task, todo!, todos));
       } else if (task.category == 'dinner') {
         print(task.taskId);
-        _dinnerTasks.add(_todo(task, todos[0], todos));
+        dinnerTasks.add(_todo(task, todo!, todos));
       } else {
-        _otherTasks.add(_todo(task, todos[0], todos));
+        otherTasks.add(_todo(task, todo!, todos));
       }
     }
 
-    if (_morningTasks.length != 0) {
-      _children.add(_row('morning'));
-      _children.addAll(_morningTasks);
+    if (morningTasks.isNotEmpty) {
+      children.add(_row('아침'));
+      children.addAll(morningTasks);
     }
 
-    if (_dinnerTasks.length != 0) {
-      _children.add(_row('dinner'));
-      _children.addAll(_dinnerTasks);
+    if (dinnerTasks.isNotEmpty) {
+      children.add(_row('저녁'));
+      children.addAll(dinnerTasks);
     }
 
-    if (_otherTasks.length != 0) {
-      _children.add(_row('other'));
-      _children.addAll(_otherTasks);
+    if (otherTasks.isNotEmpty) {
+      children.add(_row('기타'));
+      children.addAll(otherTasks);
     }
 
-    return _children;
+    return children;
   }
 
   Widget _calendar(List<Todo>? todos) {
     List<Todo> _getTodosForDay(DateTime day) {
-      return todos?.where((todo) => isSameDay(todo.createdAt, day)).toList() ??
-          [];
+      return todos?.where((todo) => isSameDay(todo.date!, day)).toList() ?? [];
     }
 
     return TableCalendar(
@@ -172,6 +207,17 @@ class _todoListWidget extends State<todoListWidget> {
         setState(() {
           _selectedDay = selectedDay;
           _focusedDay = focusedDay;
+          print("_selectedDay : ${_selectedDay}");
+          print("_focusedDay : ${_focusedDay}");
+
+          List<Todo> dayList = _getTodosForDay(_selectedDay!);
+
+          for (Todo todo in dayList) {
+            print("todo in dayList:${todo.toString()}");
+          }
+
+          BlocProvider.of<TodoPageBloc>(context)
+              .add(TodoDayChangeEvent(todo: dayList[0], todos: todos));
         });
       },
       eventLoader: _getTodosForDay,
@@ -191,7 +237,7 @@ class _todoListWidget extends State<todoListWidget> {
     return Row(
       children: [
         Padding(
-          padding: EdgeInsets.zero,
+          padding: const EdgeInsets.only(left: 10.0),
           child: Container(
             width: 100,
             height: 35,
@@ -209,6 +255,8 @@ class _todoListWidget extends State<todoListWidget> {
   }
 
   Widget _todo(Task task, Todo todo, List<Todo>? todos) {
+    late String newCategory;
+
     return Slidable(
       startActionPane: ActionPane(
         motion: const DrawerMotion(),
@@ -216,7 +264,7 @@ class _todoListWidget extends State<todoListWidget> {
         dragDismissible: false,
         children: [
           SlidableAction(
-            label: 'Update',
+            label: '수정',
             backgroundColor: Colors.orange,
             icon: Icons.archive,
             onPressed: (context) {
@@ -234,9 +282,9 @@ class _todoListWidget extends State<todoListWidget> {
                     return BlocProvider.value(
                         value: BlocProvider.of<TodoPageBloc>(context),
                         child:
-                            StatefulBuilder(builder: (context, setDialogState) {
+                        StatefulBuilder(builder: (context, setDialogState) {
                           return AlertDialog(
-                            title: Text('Update Todo'),
+                            title: Text('수정'),
                             content: SingleChildScrollView(
                               child: Column(
                                 children: [
@@ -245,17 +293,18 @@ class _todoListWidget extends State<todoListWidget> {
                                     onPressed: (int index) {
                                       setDialogState(() {
                                         for (int buttonIndex = 0;
-                                            buttonIndex < isSelected.length;
-                                            buttonIndex++) {
+                                        buttonIndex < isSelected.length;
+                                        buttonIndex++) {
                                           isSelected[buttonIndex] =
                                               buttonIndex == index;
                                         }
+
                                         if (index == 0) {
-                                          task.category = 'morning';
+                                          newCategory = 'morning';
                                         } else if (index == 1) {
-                                          task.category = 'dinner';
+                                          newCategory = 'dinner';
                                         } else {
-                                          task.category = 'other';
+                                          newCategory = 'other';
                                         }
                                       });
                                     },
@@ -263,17 +312,17 @@ class _todoListWidget extends State<todoListWidget> {
                                       Padding(
                                         padding: EdgeInsets.symmetric(
                                             horizontal: 10),
-                                        child: Text('Morning'),
+                                        child: Text('아침'),
                                       ),
                                       Padding(
                                         padding: EdgeInsets.symmetric(
                                             horizontal: 10),
-                                        child: Text('Dinner'),
+                                        child: Text('저녁'),
                                       ),
                                       Padding(
                                         padding: EdgeInsets.symmetric(
                                             horizontal: 10),
-                                        child: Text('Other'),
+                                        child: Text('기타'),
                                       ),
                                     ],
                                   ),
@@ -281,25 +330,21 @@ class _todoListWidget extends State<todoListWidget> {
                                     children: [
                                       Expanded(
                                           child: TextField(
-                                        controller: _controller,
-                                        onChanged: (value) {},
-                                      )),
+                                            controller: _controller,
+                                            onChanged: (value) {},
+                                          )),
                                       IconButton(
                                         icon: Icon(Icons.edit),
                                         onPressed: () {
                                           task.description = _controller.text;
+                                          task.category = newCategory;
+                                          print("update todos : ${todos}");
 
                                           context
                                               .read<TodoPageBloc>()
                                               .onCloseCallback = () {
                                             Navigator.of(context).pop();
                                           };
-
-                                          print(
-                                              "task.description : ${task.description}, task.category : ${task.category}");
-                                          print(
-                                              "task type : ${task.runtimeType}");
-                                          print("task : ${task.toString()}");
                                           context.read<TodoPageBloc>().add(
                                               TodoPageTaskUpdateEvent(
                                                   task: task,
@@ -311,7 +356,7 @@ class _todoListWidget extends State<todoListWidget> {
                                   ),
                                   const Padding(
                                       padding:
-                                          EdgeInsets.symmetric(vertical: 10)),
+                                      EdgeInsets.symmetric(vertical: 10)),
                                   TextButton.icon(
                                       onPressed: () {
                                         Navigator.of(context).pop();
@@ -335,13 +380,12 @@ class _todoListWidget extends State<todoListWidget> {
         dismissible: DismissiblePane(onDismissed: () {}),
         children: [
           SlidableAction(
-            label: 'Delete',
+            label: '삭제',
             backgroundColor: Colors.red,
             icon: Icons.delete,
             onPressed: (context) async {
-              context
-                  .read<TodoPageBloc>()
-                  .add(TodoPageDeleteEvent(task: task, todo: todo));
+              context.read<TodoPageBloc>().add(
+                  TodoPageDeleteEvent(task: task, todo: todo, todos: todos));
             },
           ),
         ],
@@ -374,12 +418,12 @@ class _todoListWidget extends State<todoListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return SingleChildScrollView(
       child: BlocBuilder<TodoPageBloc, TodoState>(
         builder: (context, state) {
           if (state is TodoInitState || state is TodoDownloadedState) {
-            return SizedBox(
-                height: MediaQuery.of(context).size.height,
+            return Container(
+                height: MediaQuery.of(context).size.height-200,
                 width: MediaQuery.of(context).size.width,
                 child: const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -393,74 +437,121 @@ class _todoListWidget extends State<todoListWidget> {
                   ],
                 ));
           } else if (state is TodoLoadedState) {
-            return SingleChildScrollView(
-                child: Column(
-              mainAxisSize: MainAxisSize.min,
+            return Column(
+              mainAxisSize: MainAxisSize.max,
               children: [
                 _calendar(state.todos),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const TodoAddPage()));
-                  },
-                  icon: const Icon(Icons.add, color: Color(0xffd86a04)),
-                  label: const Text(
-                    "Todo Add",
-                    style: TextStyle(color: Color(0xffd86a04)),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                      foregroundColor: const Color(0xffffecda),
-                      backgroundColor: const Color(0xffffecda)),
-                ),
-                _todoList(state.todos),
+                Buttons(),
+                _todoList(state.todos, state.todo),
               ],
-            ));
+            );
           } else if (state is TodoDeletedState) {
             return Column(
               mainAxisSize: MainAxisSize.max,
               children: [
                 _calendar(state.todos),
                 Text("else"),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const TodoAddPage()));
-                  },
-                  icon: const Icon(Icons.add, color: Color(0xffd86a04)),
-                  label: const Text(
-                    "Todo Add",
-                    style: TextStyle(color: Color(0xffd86a04)),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                      foregroundColor: const Color(0xffffecda),
-                      backgroundColor: const Color(0xffffecda)),
-                ),
-                _todoList(state.todos),
+                Buttons(),
+                _todoList(state.todos, state.todo),
               ],
             );
           } else {
             return Column(
               children: [
                 _calendar(state.todos),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => const TodoAddPage()));
-                  },
-                  icon: const Icon(Icons.add, color: Color(0xffd86a04)),
-                  label: const Text(
-                    "Todo Add",
-                    style: TextStyle(color: Color(0xffd86a04)),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                      foregroundColor: const Color(0xffffecda),
-                      backgroundColor: const Color(0xffffecda)),
-                )
+                Buttons(),
               ],
             );
           }
         },
       ),
+    );
+  }
+}
+
+class Buttons extends StatelessWidget {
+  const Buttons({
+    super.key,
+  });
+
+  void _takePhoto() async {
+    final pickedFile =
+    await ImagePicker().pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      // 임시 파일 가져오기
+      final tempImageFile = File(pickedFile.path);
+
+      // 문서 디렉토리 경로 얻기
+      final directory = await getApplicationDocumentsDirectory();
+
+      // 새로운 파일명 생성 (예: Skinrecord_<timestamp>.jpg)
+      String newFileName = 'Skinrecord_${DateTime.now()}.jpg';
+      final newFilePath = path.join(directory.path, newFileName);
+
+      // 파일을 새 경로와 이름으로 이동
+      final newImageFile = await tempImageFile.copy(newFilePath);
+
+      print("새로운 사진이 저장된 경로: ${newImageFile.path}");
+
+      // 선택적: GallerySaver를 사용하여 갤러리에도 저장
+      GallerySaver.saveImage(newImageFile.path);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ElevatedButton.icon(
+          onPressed: () {
+            _takePhoto();
+          },
+          icon: const Icon(Icons.camera_alt_outlined, color: Color(0xffd86a04)),
+          label: const Text(
+            "피부촬영",
+            style: TextStyle(color: Color(0xffd86a04)),
+          ),
+          style: ElevatedButton.styleFrom(
+            foregroundColor: const Color(0xffffecda),
+            backgroundColor: const Color(0xffffecda)),
+        ),
+        const SizedBox(
+          width: 20,
+        ),
+        ElevatedButton.icon(
+          onPressed: () {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const skinAlbumPage()));
+          },
+          icon: const Icon(Icons.album_rounded, color: Color(0xffd86a04)),
+          label: const Text(
+            "앨범",
+            style: TextStyle(color: Color(0xffd86a04)),
+          ),
+          style: ElevatedButton.styleFrom(
+              foregroundColor: const Color(0xffffecda),
+              backgroundColor: const Color(0xffffecda)),
+        ),
+        const SizedBox(
+          width: 20,
+        ),
+        ElevatedButton.icon(
+          onPressed: () {
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const timeLine()));
+          },
+          icon: const Icon(Icons.album_rounded, color: Color(0xffd86a04)),
+          label: const Text(
+            "타임 라인",
+            style: TextStyle(color: Color(0xffd86a04)),
+          ),
+          style: ElevatedButton.styleFrom(
+              foregroundColor: const Color(0xffffecda),
+              backgroundColor: const Color(0xffffecda)),
+        )
+      ],
     );
   }
 }
