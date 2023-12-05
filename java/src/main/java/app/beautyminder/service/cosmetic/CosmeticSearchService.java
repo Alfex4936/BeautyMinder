@@ -16,6 +16,7 @@ import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.SearchHit;
 import org.opensearch.search.builder.SearchSourceBuilder;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -97,6 +98,7 @@ public class CosmeticSearchService {
         }
     }
 
+    @Cacheable(value = "searchHistories", key = "'name-' + #name")
     public List<Cosmetic> searchByName(String name) {
         var boolQueryBuilder = QueryBuilders.boolQuery()
                 .should(QueryBuilders.matchPhrasePrefixQuery("name", name).boost(2))
@@ -128,6 +130,7 @@ public class CosmeticSearchService {
 //        return convertEsCosmeticToCosmetic(esCosmetics);
     }
 
+    @Cacheable(value = "searchHistories", key = "'category-' + #category")
     public List<Cosmetic> searchByCategory(String category) {
         Pageable pageable = PageRequest.of(0, 10); // Page number 0, max 10 results
 
@@ -135,6 +138,7 @@ public class CosmeticSearchService {
         return convertEsCosmeticToCosmetic(esCosmetics);
     }
 
+    @Cacheable(value = "searchHistories", key = "'keyword-' + #keyword")
     public List<Cosmetic> searchByKeyword(String keyword) {
         Set<EsCosmetic> multipleQueries = new HashSet<>();
         Pageable pageable = PageRequest.of(0, 5); // Page number 0, max 5 results

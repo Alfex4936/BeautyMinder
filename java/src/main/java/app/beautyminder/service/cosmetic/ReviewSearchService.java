@@ -16,6 +16,7 @@ import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.index.query.QueryBuilders;
 import org.opensearch.search.SearchHit;
 import org.opensearch.search.builder.SearchSourceBuilder;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -103,6 +104,7 @@ public class ReviewSearchService {
         }
     }
 
+    @Cacheable(value = "searchHistories", key = "'review-' + #content")
     public List<Review> searchByContent(String content) {
         // Use match query for full-text search
         var matchQueryBuilder = QueryBuilders.matchQuery("content", content);
