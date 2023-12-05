@@ -30,7 +30,7 @@ public class CookieUtil {
             if (name.equals(cookie.getName())) {
                 cookie.setValue("");
                 cookie.setPath("/");
-                cookie.setSecure(true);
+//                cookie.setSecure(true);
                 cookie.setMaxAge(0);
                 response.addCookie(cookie);
             }
