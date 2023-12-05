@@ -112,11 +112,11 @@ public class UserController {
             return ResponseEntity.badRequest().body(new SignUpResponse("Email not verified.", null));
         }
 
-        tokenService.removePassCodeFor(request.getEmail());
-
         try {
             String userId = userService.saveUser(request).getId();
             User user = userService.findById(userId);
+
+            tokenService.removePassCodeFor(request.getEmail());
             return ResponseEntity.ok(new SignUpResponse("A user is created", user));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new SignUpResponse(e.getMessage(), null));
