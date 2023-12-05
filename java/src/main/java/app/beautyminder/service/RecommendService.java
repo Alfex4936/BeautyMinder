@@ -9,12 +9,11 @@ import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.review.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.MatchOperation;
-import org.springframework.data.mongodb.core.aggregation.SampleOperation;
+import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -115,7 +114,6 @@ public class RecommendService {
         return convertCosmeticsToStrings(cosmetics);
     }
 
-
     private Set<String> findSimilarProducts(String productId) {
         Cosmetic originalCosmetic = cosmeticRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cosmetic not found"));
@@ -136,14 +134,13 @@ public class RecommendService {
         AggregationResults<Cosmetic> results = mongoTemplate.aggregate(aggregation, Cosmetic.class, Cosmetic.class);
         List<Cosmetic> potentialMatches = results.getMappedResults();
 
-        // Filter and sort the potential matches
-        List<Cosmetic> similarProducts = potentialMatches.stream()
-                .filter(cosmetic -> countMatchingKeywords(cosmetic.getKeywords(), originalKeywords) >= MAX_MATCHING_KEYWORDS)
-                .sorted(Comparator.comparingInt(cosmetic -> countMatchingKeywords(cosmetic.getKeywords(), originalKeywords)))
+        // Filter and sort the potential matches using parallel streams
+        return potentialMatches.parallelStream()
+                .map(cosmetic -> new AbstractMap.SimpleEntry<>(cosmetic, countMatchingKeywords(cosmetic.getKeywords(), originalKeywords)))
+                .filter(entry -> entry.getValue() >= MAX_MATCHING_KEYWORDS)
+                .sorted(Comparator.comparingInt(Map.Entry::getValue))
                 .limit(7)
-                .toList();
-
-        return similarProducts.stream()
+                .map(Map.Entry::getKey)
                 .map(Cosmetic::getId)
                 .collect(Collectors.toSet());
     }
@@ -155,12 +152,9 @@ public class RecommendService {
     }
 
     private int countMatchingKeywords(List<String> keywords, List<String> originalKeywords) {
-        int count = 0;
-        for (String keyword : keywords) {
-            if (originalKeywords.contains(keyword)) {
-                count++;
-            }
-        }
-        return count;
+        Set<String> originalKeywordsSet = new HashSet<>(originalKeywords);
+        return (int) keywords.stream()
+                .filter(originalKeywordsSet::contains)
+                .count();
     }
 }

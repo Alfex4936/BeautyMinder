@@ -104,6 +104,15 @@ public class TokenService {
         return true; // Token is valid and email is marked as verified
     }
 
+    public void validateAgainAndRemove(String email) {
+        Optional<PasscodeToken> passcodeTokenOpt = passcodeTokenRepository.findByEmail(email);
+
+        if (passcodeTokenOpt.isEmpty() || passcodeTokenOpt.get().getExpiryDate().isBefore(LocalDateTime.now())) {
+            // Token is invalid or expired
+            passcodeTokenRepository.deleteByEmail(email);
+        }
+    }
+
     public PasswordResetToken validateResetToken(String token) {
         PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid reset token"));

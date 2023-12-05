@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 public class AddUserRequest {
     @NotNull(message = "Email cannot be null")
-    @Email
+//    @Email
     private String email;
     @NotNull(message = "Password cannot be null")
     private String password;

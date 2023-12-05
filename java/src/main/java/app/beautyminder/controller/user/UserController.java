@@ -119,6 +119,8 @@ public class UserController {
             tokenService.removePassCodeFor(request.getEmail());
             return ResponseEntity.ok(new SignUpResponse("A user is created", user));
         } catch (Exception e) {
+            // On error, check whether the token is expired, if so remove
+            tokenService.validateAgainAndRemove(request.getEmail());
             return ResponseEntity.badRequest().body(new SignUpResponse(e.getMessage(), null));
         }
     }
