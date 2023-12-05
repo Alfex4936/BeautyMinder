@@ -9,11 +9,16 @@ import app.beautyminder.service.cosmetic.CosmeticRankService;
 import app.beautyminder.service.review.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.springframework.data.domain.Sort;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.SampleOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -47,7 +52,13 @@ public class RecommendService {
                 .orElseThrow(() -> new IllegalStateException("Something went wrong while picking a random element."));
     }
 
-    public List<Cosmetic> recommendProducts(String userId) {
+    @Caching(
+            evict = {@CacheEvict(value = "productRecommendations", key = "#userHash", condition = "#forceRefresh", beforeInvocation = true)},
+            cacheable = {@Cacheable(value = "productRecommendations", key = "#userHash", condition = "!#forceRefresh", unless = "#result == null or #result.isEmpty()")},
+            put = {@CachePut(value = "productRecommendations", key = "#userHash", condition = "#forceRefresh")}
+    )
+    public List<Cosmetic> recommendProducts(String userId, String userHash, boolean forceRefresh) {
+        log.info("BEMINDER: Fetching recommendations for userId: {}, userHash: {}, refresh: {}", userId, userHash, forceRefresh);
         User user = userService.findById(userId);
 
         Set<String> combinedCosmeticIds = new HashSet<>();
@@ -71,9 +82,26 @@ public class RecommendService {
             combinedCosmeticIds.addAll(findSimilarProducts(getByRandomClass(userFavs)));
         }
 
-
         // Retrieve cosmetics by the combined IDs
         return cosmeticRepository.findAllById(combinedCosmeticIds);
+    }
+
+    // Manual cache eviction method
+//    private void evictCache(String userId) {
+//        User user = userService.findById(userId);
+//        String userHash = hashUserData(user);
+//        Cache cache = cacheManager.getCache("productRecommendations");
+//        if (cache != null) {
+//            cache.evict(new SimpleKey(userId, userHash));
+//        }
+//    }
+
+    // If user changes baumann or favourite items, it'll force refresh
+    public String hashUserData(User user) {
+        // Convert the set to a list, sort it to ensure order, and then calculate hash code
+        List<String> sortedFavs = new ArrayList<>(user.getCosmeticIds());
+        Collections.sort(sortedFavs);
+        return user.getId().hashCode() + "-" + user.getBaumann().hashCode() + "-" + sortedFavs.hashCode();
     }
 
     private Set<String> getCosmeticIdsByBaumann(String baumannSkinType) {
@@ -126,7 +154,7 @@ public class RecommendService {
 
         // Define the aggregation pipeline
         MatchOperation matchOperation = Aggregation.match(criteria);
-        SampleOperation sampleOperation = Aggregation.sample(10);
+        SampleOperation sampleOperation = Aggregation.sample(15);
 
         Aggregation aggregation = Aggregation.newAggregation(matchOperation, sampleOperation);
 

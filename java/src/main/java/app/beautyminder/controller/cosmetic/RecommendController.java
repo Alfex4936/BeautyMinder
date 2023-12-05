@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
@@ -32,8 +33,9 @@ public class RecommendController {
                             content = @Content(schema = @Schema(implementation = Cosmetic.class, type = "array"))),
             }
     )
-    @GetMapping()
-    public ResponseEntity<?> getRecommendation(@Parameter(hidden = true) @AuthenticatedUser User user) {
-        return ResponseEntity.ok(recommendService.recommendProducts(user.getId()));
+    @GetMapping
+    public ResponseEntity<?> getRecommendation(@Parameter(hidden = true) @AuthenticatedUser User user, @RequestParam(value = "refresh", defaultValue = "false") boolean forceRefresh) {
+        var userHashForCache = recommendService.hashUserData(user);
+        return ResponseEntity.ok(recommendService.recommendProducts(user.getId(), userHashForCache, forceRefresh));
     }
 }

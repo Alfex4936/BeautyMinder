@@ -1,10 +1,12 @@
 package app.beautyminder.controller.recommend;
 
 import app.beautyminder.config.jwt.TokenProvider;
+import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.User;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.service.MongoService;
 import app.beautyminder.service.auth.UserService;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
@@ -13,15 +15,20 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -56,14 +63,16 @@ class RecommendApiControllerTest {
 
     private String accessToken;
     private String userId;
+    private List<Cosmetic> firstRecommendations;
 
     @BeforeEach
-    public void mockMvcSetUp() {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+    public void beforeEach() {
     }
 
     @BeforeAll
     public void initialize() {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+
         AddUserRequest addUserRequest = new AddUserRequest();
         addUserRequest.setEmail(TEST_USER_EMAIL);
         addUserRequest.setPassword(TEST_USER_PASSWORD);
@@ -77,30 +86,72 @@ class RecommendApiControllerTest {
     }
 
     @Test
-    public void testRecommendationWithFav() throws Exception {
+    @Order(1)
+    public void testRepeatedRecommendationsAreSame() throws Exception {
         // given
         String url = "/recommend";
 
         // when
-        ResultActions result = mockMvc.perform(get(url)
-                .header("Authorization", "Bearer " + accessToken));
+        MvcResult firstResult = mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
 
         // then
-        result.andExpect(status().isOk());
+        String firstResponseContent = firstResult.getResponse().getContentAsString();
+        firstRecommendations = objectMapper.readValue(firstResponseContent, new TypeReference<>() {
+        });
+
+        // when again
+        MvcResult secondResult = mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // then again
+        String secondResponseContent = secondResult.getResponse().getContentAsString();
+        List<Cosmetic> secondRecommendations = objectMapper.readValue(secondResponseContent, new TypeReference<>() {
+        });
+
+        // assert both recommendations are the same
+        assertEquals(firstRecommendations, secondRecommendations, "Recommendations should be the same when fetched in quick succession");
     }
 
     @Test
+    @Order(2)
     public void testRecommendationWithoutFav() throws Exception {
         // given
         String url = "/recommend";
         userService.removeCosmeticById(userId, "652cdc2d2bf53d0109d1e210"); // empty fav list
 
         // when
-        ResultActions result = mockMvc.perform(get(url)
-                .header("Authorization", "Bearer " + accessToken));
-
+        MvcResult updatedResult = mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
         // then
-        result.andExpect(status().isOk());
+        String updatedResponseContent = updatedResult.getResponse().getContentAsString();
+        List<Cosmetic> updatedRecommendations = objectMapper.readValue(updatedResponseContent, new TypeReference<>() {
+        });
+
+        // when again with forceRefresh
+        MvcResult secondResult = mockMvc.perform(get(url + "?refresh=true")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // then again
+        String secondResponseContent = secondResult.getResponse().getContentAsString();
+        List<Cosmetic> secondRecommendations = objectMapper.readValue(secondResponseContent, new TypeReference<>() {
+        });
+
+        // assert that recommendations have changed after user update
+        assertNotEquals(firstRecommendations, updatedRecommendations, "Recommendations should change after user information is updated");
+        assertNotEquals(secondRecommendations, updatedRecommendations, "Recommendations should change after force refresh cache");
     }
 
     @AfterEach
