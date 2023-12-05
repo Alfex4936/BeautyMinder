@@ -21,6 +21,8 @@ concurrency:
 jobs:
   docker_build_and_deploy_to_ec2:
     runs-on: ubuntu-latest
+    outputs:
+      test-changed: ${{ steps.test_changes.outputs.test_changed }}
     defaults:
       run:
         working-directory: java
@@ -82,9 +84,19 @@ jobs:
             docker compose -f ELK-hub.yml build --no-cache
             docker compose -f ELK-hub.yml up --build --force-recreate -d
 
+      - name: Check for Test Changes
+        id: test_changes
+        uses: dorny/paths-filter@v2
+        with:
+          list-files: shell
+          filters: |
+            test:
+              - 'java/src/test/**/*'
+
   jacoco_codecov:
     runs-on: ubuntu-latest
-    needs: docker_build_and_deploy_to_ec2 # run the test whenever pushing to main
+    needs: docker_build_and_deploy_to_ec2
+    if: needs.docker_build_and_deploy_to_ec2.outputs.test-changed == 'true'
     defaults:
       run:
         working-directory: java
