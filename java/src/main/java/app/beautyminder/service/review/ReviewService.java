@@ -191,6 +191,9 @@ public class ReviewService {
     }
 
     public List<Review> getReviewsOfBaumann(Integer minRating, String userBaumann) {
+        if (userBaumann.isEmpty()) {
+            userBaumann = "OSNT"; // As default, user Koreans' average one.
+        }
         // First, find all users with the specified Baumann skin type.
         List<User> usersWithBaumann = userRepository.findRandomByBaumann(userBaumann);
 
@@ -205,6 +208,9 @@ public class ReviewService {
     }
 
     public List<Review> getReviewsForRecommendation(Integer minRating, String userBaumann) {
+        if (userBaumann.isEmpty()) {
+            userBaumann = "OSNT"; // As default, user Koreans' average one.
+        }
         // Split the user's Baumann skin type into individual characters
         String[] baumannTypes = userBaumann.split("");
 

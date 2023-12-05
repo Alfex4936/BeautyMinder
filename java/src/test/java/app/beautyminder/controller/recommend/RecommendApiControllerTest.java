@@ -67,12 +67,11 @@ class RecommendApiControllerTest {
 
     @BeforeEach
     public void beforeEach() {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
     }
 
     @BeforeAll
     public void initialize() {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
-
         AddUserRequest addUserRequest = new AddUserRequest();
         addUserRequest.setEmail(TEST_USER_EMAIL);
         addUserRequest.setPassword(TEST_USER_PASSWORD);

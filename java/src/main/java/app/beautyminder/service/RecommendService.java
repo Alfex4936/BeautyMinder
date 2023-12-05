@@ -58,16 +58,17 @@ public class RecommendService {
             put = {@CachePut(value = "productRecommendations", key = "#userHash", condition = "#forceRefresh")}
     )
     public List<Cosmetic> recommendProducts(String userId, String userHash, boolean forceRefresh) {
-        log.info("BEMINDER: Fetching recommendations for userId: {}, userHash: {}, refresh: {}", userId, userHash, forceRefresh);
         User user = userService.findById(userId);
 
         Set<String> combinedCosmeticIds = new HashSet<>();
 
+        String userBaumann = user.getBaumann();
+
         // Method 1: Reviews filtered by Baumann type
-        combinedCosmeticIds.addAll(getCosmeticIdsByBaumann(user.getBaumann()));
+        combinedCosmeticIds.addAll(getCosmeticIdsByBaumann(userBaumann));
 
         // Method 2: Reviews filtered by NLP probabilities
-        combinedCosmeticIds.addAll(getCosmeticIdsByProbability(user.getBaumann()));
+        combinedCosmeticIds.addAll(getCosmeticIdsByProbability(userBaumann));
 
         // Method 3: Trending cosmetics
         combinedCosmeticIds.addAll(getTrendingCosmeticIds());
