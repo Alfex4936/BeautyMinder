@@ -48,6 +48,11 @@ public class ExpirationDateExtractor {
             latestDate = findDatesWithPattern(text, OCR_ERROR_DATE_PATTERN);
         }
 
+        // handle partial information
+        if (latestDate.isEmpty()) {
+            latestDate = guessDateBasedOnPartialInfo(text);
+        }
+
         // Convert Optional<LocalDate> to Optional<String>
         return latestDate.map(LocalDate::toString);
     }
@@ -75,12 +80,7 @@ public class ExpirationDateExtractor {
             year = "20" + year;
         }
 
-        try {
-            var date = LocalDate.parse(String.format("%s-%s-%s", year, month, day));
-            return Optional.of(date);
-        } catch (Exception e) {
-            return Optional.empty();
-        }
+        return parseDate(year, month, day);
     }
 
     private static String normalizeYear(String year) {
@@ -104,6 +104,51 @@ public class ExpirationDateExtractor {
         }
 
         return year;
+    }
+
+    static Optional<LocalDate> guessDateBasedOnPartialInfo(String text) {
+        // Extract potential year and month
+        Optional<String> year = extractYear(text);
+        Optional<String> month = extractMonth(text);
+
+        LocalDate currentDate = LocalDate.now();
+        if (year.isPresent()) {
+            String guessedYear = year.get();
+            String guessedMonth = month.orElse(String.format("%02d", currentDate.getMonthValue()));
+            String guessedDay = month.isPresent() ? "01" : String.format("%02d", currentDate.getDayOfMonth());
+            return parseDate(guessedYear, guessedMonth, guessedDay);
+        } else if (month.isPresent()) {
+            String guessedYear = String.valueOf(currentDate.getYear());
+            String guessedMonth = month.get();
+            LocalDate lastDayOfMonth = currentDate.withMonth(Integer.parseInt(guessedMonth)).withDayOfMonth(currentDate.getMonth().length(currentDate.isLeapYear()));
+            String guessedDay = String.format("%02d", lastDayOfMonth.getDayOfMonth());
+            return parseDate(guessedYear, guessedMonth, guessedDay);
+        }
+
+        return Optional.empty();
+    }
+
+    static Optional<String> extractYear(String text) {
+        Pattern yearPattern = Pattern.compile("(20\\d{2})");
+        return yearPattern.matcher(text).results()
+                .map(match -> match.group(1))
+                .findFirst();
+    }
+
+    static Optional<String> extractMonth(String text) {
+        Pattern monthPattern = Pattern.compile("\\b(0[1-9]|1[0-2])\\b");
+        return monthPattern.matcher(text).results()
+                .map(match -> match.group(1))
+                .findFirst();
+    }
+
+    private static Optional<LocalDate> parseDate(String year, String month, String day) {
+        try {
+            var date = LocalDate.parse(String.format("%s-%s-%s", year, month, day));
+            return Optional.of(date);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
 }

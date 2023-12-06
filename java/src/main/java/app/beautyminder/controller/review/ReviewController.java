@@ -106,7 +106,6 @@ public class ReviewController {
     )
     @DeleteMapping(value = "/{id}")
     public ResponseEntity<?> deleteReview(@PathVariable("id") String id, @Parameter(hidden = true) @AuthenticatedUser User user) {
-        // TODO: Check if the authenticated user is allowed to delete this review
         // Perform the delete operation
         reviewService.deleteReview(user, id);
 

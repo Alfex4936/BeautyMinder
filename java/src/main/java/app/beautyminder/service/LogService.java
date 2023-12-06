@@ -33,7 +33,7 @@ public class LogService {
 
     public List<String> getTodaysLogs() throws IOException {
         // Format today's date as "YYYY.MM.dd"
-        String todaysDate = LocalDate.now(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("YYYY.MM.dd"));
+        String todaysDate = LocalDate.now(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
         // Construct the index name
         String todaysIndex = "logstash-logs-" + todaysDate;
 

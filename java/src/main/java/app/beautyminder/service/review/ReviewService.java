@@ -82,6 +82,10 @@ public class ReviewService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User has already reviewed this cosmetic.");
         }
 
+        if (reviewDTO.getContent().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Don't send empty content.");
+        }
+
         // Find the user and cosmetic, throwing exceptions if not found
         userRepository.findById(user.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));

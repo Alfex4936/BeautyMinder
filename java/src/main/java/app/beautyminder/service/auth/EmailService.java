@@ -27,7 +27,7 @@ public class EmailService {
     @Value("${spring.mail.username}")
 
     private String FROM_ADDRESS;
-    @Value("${server.ngrok-text}")
+    @Value("${server.https-text}")
     private String server;
 
     public MimeMessageHelper createMimeMessageHelper(MimeMessage message) throws MessagingException {

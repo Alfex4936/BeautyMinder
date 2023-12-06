@@ -70,7 +70,7 @@ public class LogController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping("/spring/delete")
     public ResponseEntity<String> dropLogDocuments() {
-        String todayDate = LocalDate.now(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("YYYY.MM.dd"));
+        String todayDate = LocalDate.now(ZoneId.of("UTC")).format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
         String todayIndex = "logstash-logs-" + todayDate;
 
         logService.deleteAllDocuments(todayIndex);

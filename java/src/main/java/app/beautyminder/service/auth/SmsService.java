@@ -49,7 +49,7 @@ public class SmsService {
     @Value("${naver.cloud.sms.sender-phone}")
     private String phone;
     @Setter
-    @Value("${server.ngrok-text}")
+    @Value("${server.https-text}")
     private String server;
 
     public String makeSignature(Long time) throws NoSuchAlgorithmException, InvalidKeyException {

@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -83,6 +84,61 @@ class OCRExpirationDateTest {
 
         assertTrue(extractedDate.isPresent());
         assertEquals("2025-05-20", extractedDate.get());
+    }
+    @Test
+    public void extractYear_ShouldExtractYearWhenPresent() {
+        String textWithYear = "Product made in 2023";
+        Optional<String> extractedYear = ExpirationDateExtractor.extractYear(textWithYear);
+        assertTrue(extractedYear.isPresent());
+        assertEquals("2023", extractedYear.get());
+    }
+
+    @Test
+    public void extractYear_ShouldReturnEmptyWhenYearNotPresent() {
+        String textWithoutYear = "Product made in May";
+        Optional<String> extractedYear = ExpirationDateExtractor.extractYear(textWithoutYear);
+        assertFalse(extractedYear.isPresent());
+    }
+
+    @Test
+    public void extractMonth_ShouldExtractMonthWhenPresent() {
+        String textWithMonth = "Best before 05";
+        Optional<String> extractedMonth = ExpirationDateExtractor.extractMonth(textWithMonth);
+        assertTrue(extractedMonth.isPresent());
+        assertEquals("05", extractedMonth.get());
+    }
+
+    @Test
+    public void extractMonth_ShouldReturnEmptyWhenMonthNotPresent() {
+        String textWithoutMonth = "Product made in 2023";
+        Optional<String> extractedMonth = ExpirationDateExtractor.extractMonth(textWithoutMonth);
+        assertFalse(extractedMonth.isPresent());
+    }
+
+    @Test
+    public void guessDateBasedOnPartialInfo_ShouldReturnDateForYearOnly() {
+        String textWithYear = "EXP Year: 2023";
+        LocalDate currentDate = LocalDate.now();
+        Optional<LocalDate> guessedDate = ExpirationDateExtractor.guessDateBasedOnPartialInfo(textWithYear);
+        assertTrue(guessedDate.isPresent());
+        assertEquals(LocalDate.of(2023, currentDate.getMonthValue(), currentDate.getDayOfMonth()), guessedDate.get());
+    }
+
+    @Test
+    public void guessDateBasedOnPartialInfo_ShouldReturnDateForMonthOnly() {
+        String textWithMonth = "EXP Month: 05";
+        LocalDate currentDate = LocalDate.now();
+        LocalDate lastDayOfMonth = currentDate.withMonth(5).withDayOfMonth(currentDate.getMonth().length(currentDate.isLeapYear()));
+        Optional<LocalDate> guessedDate = ExpirationDateExtractor.guessDateBasedOnPartialInfo(textWithMonth);
+        assertTrue(guessedDate.isPresent());
+        assertEquals(LocalDate.of(currentDate.getYear(), 5, lastDayOfMonth.getDayOfMonth()), guessedDate.get());
+    }
+
+    @Test
+    public void guessDateBasedOnPartialInfo_ShouldReturnEmptyForNoYearOrMonth() {
+        String textWithoutYearOrMonth = "No date information";
+        Optional<LocalDate> guessedDate = ExpirationDateExtractor.guessDateBasedOnPartialInfo(textWithoutYearOrMonth);
+        assertFalse(guessedDate.isPresent());
     }
 
     @AfterEach
