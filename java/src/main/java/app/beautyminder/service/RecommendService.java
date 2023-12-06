@@ -102,7 +102,9 @@ public class RecommendService {
         // Convert the set to a list, sort it to ensure order, and then calculate hash code
         List<String> sortedFavs = new ArrayList<>(user.getCosmeticIds());
         Collections.sort(sortedFavs);
-        return user.getId().hashCode() + "-" + user.getBaumann().hashCode() + "-" + sortedFavs.hashCode();
+
+        var userBaumann = user.getBaumann().isEmpty() ? "OSNT" : user.getBaumann();
+        return user.getId().hashCode() + "-" + userBaumann.hashCode() + "-" + sortedFavs.hashCode();
     }
 
     private Set<String> getCosmeticIdsByBaumann(String baumannSkinType) {
