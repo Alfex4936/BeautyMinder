@@ -84,6 +84,15 @@ jobs:
             docker compose -f ELK-hub.yml build --no-cache
             docker compose -f ELK-hub.yml up --build --force-recreate -d
 
+      - name: Send KakaoTalk notification of Docker success
+        uses: Alfex4936/kakaotalk-ci-action@main
+        if: success()
+        with:
+          kakao_access_token: ${{ secrets.KAKAO_ACCESS_TOKEN }}
+          function_name: send_to_me_custom
+          template_id: "101722"
+          template_args: '{"title": "EC2 도커 빌드 완료", "description": "Github Action에서 EC2 빌드를 완료하였습니다."}'
+
       - name: Check for Test Changes
         id: test_changes
         uses: dorny/paths-filter@v2
@@ -146,3 +155,12 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: build/reports/jacoco/test/jacocoTestReport.xml
           fail_ci_if_error: true
+
+      - name: Send KakaoTalk notification of CodeCov success
+        uses: Alfex4936/kakaotalk-ci-action@main'
+        if: success()
+        with:
+          kakao_access_token: ${{ secrets.KAKAO_ACCESS_TOKEN }}
+          function_name: send_to_me_custom
+          template_id: "101722"
+          template_args: '{"title": "Jacoco 테스트 완료", "description": "Github Action에서 코드 커버리지를 완료했습니다."}'
