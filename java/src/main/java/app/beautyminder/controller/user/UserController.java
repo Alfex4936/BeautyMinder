@@ -176,6 +176,9 @@ public class UserController {
         // 전화번호 미리 체크
         if (updates.containsKey("phoneNumber")) {
             String phoneNumber = (String) updates.get("phoneNumber");
+            if (!mongoService.isValidKoreanPhoneNumber(phoneNumber)) {
+                return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Phone number should be formatted.");
+            }
             boolean phoneNumberExists = userService.findUserByPhoneNumber(phoneNumber).isPresent();
             if (phoneNumberExists) {
                 return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Phone number already exists for another user.");
@@ -368,6 +371,9 @@ public class UserController {
             })
     @PostMapping("/update-password")
     public ResponseEntity<String> resetPassword(@RequestBody UpdatePasswordRequest request, @Parameter(hidden = true) @AuthenticatedUser User user) {
+        if (request.currentPassword().isEmpty() || request.newPassword().isEmpty()) {
+            return ResponseEntity.badRequest().body("Password should not be empty.");
+        }
         userService.updatePassword(user.getId(), request.currentPassword(), request.newPassword());
 
         return ResponseEntity.ok("Password successfully updated!");

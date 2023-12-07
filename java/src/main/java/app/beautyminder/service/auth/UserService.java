@@ -84,8 +84,13 @@ public class UserService {
             user.setNickname(dto.getNickname());
         }
         user.setProfileImage(dto.getProfileImage() != null ? dto.getProfileImage() : defaultProfilePic);
-        if (dto.getPhoneNumber() != null) {
-            user.setPhoneNumber(dto.getPhoneNumber().replace("-", ""));
+
+        var phoneNumber = dto.getPhoneNumber();
+        if (phoneNumber != null) {
+            phoneNumber = phoneNumber.replace("-", "");
+            if (isValidKoreanPhoneNumber(phoneNumber)) {
+                user.setPhoneNumber(phoneNumber);
+            }
         }
 
         if (user.getCosmeticIds() == null) {
@@ -255,5 +260,9 @@ public class UserService {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No user exists with the given ID.");
                 }
         );
+    }
+
+    public boolean isValidKoreanPhoneNumber(String phoneNumber) {
+        return phoneNumber != null && !phoneNumber.isEmpty() && phoneNumber.matches("^010\\d{8}$");
     }
 }

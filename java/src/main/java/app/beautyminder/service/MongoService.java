@@ -63,7 +63,8 @@ public class MongoService {
 
         var update = createUpdateOperation(updates, entityClass);
         if (update.getUpdateObject().isEmpty()) {
-            return Optional.ofNullable(mongoTemplate.findOne(query, entityClass));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Couldn't update anything.");
+//            return Optional.ofNullable(mongoTemplate.findOne(query, entityClass));
         }
 
         mongoTemplate.updateFirst(query, update, entityClass);
@@ -89,6 +90,7 @@ public class MongoService {
         return switch (entry.getKey()) {
             case "profileImage" -> isValidProfileImage((String) entry.getValue());
             case "phoneNumber" -> isValidKoreanPhoneNumber((String) entry.getValue());
+            case "nickname" -> isValidNickname((String) entry.getValue());
             default -> true;
         };
     }
@@ -121,6 +123,11 @@ public class MongoService {
     }
 
     public boolean isValidKoreanPhoneNumber(String phoneNumber) {
-        return phoneNumber != null && phoneNumber.matches("^010\\d{8}$");
+        return phoneNumber != null && !phoneNumber.isEmpty() && phoneNumber.matches("^010\\d{8}$");
     }
+
+    public boolean isValidNickname(String nickname) {
+        return nickname != null && nickname.matches("^[a-zA-Z0-9가-힣]+$");
+    }
+
 }

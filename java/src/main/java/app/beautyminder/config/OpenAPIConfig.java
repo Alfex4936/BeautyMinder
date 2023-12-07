@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter;
 @Configuration
 public class OpenAPIConfig {
 
-    @Value("${server.address-text}")
+    @Value("${server.https-text}")
     private String server;
 
     @Bean
