@@ -158,7 +158,7 @@ jobs:
           fail_ci_if_error: true
 
       - name: Send KakaoTalk notification of CodeCov success
-        uses: Alfex4936/kakaotalk-ci-action@main'
+        uses: Alfex4936/kakaotalk-ci-action@main
         if: success()
         continue-on-error: true
         with:
