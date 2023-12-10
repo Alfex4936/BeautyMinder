@@ -75,7 +75,7 @@ public class CustomLoggerFilter extends OncePerRequestFilter {
             if (wrappedResponse.getStatus() != HttpServletResponse.SC_OK) {
                 // Log the request body for non-200 responses
                 var requestBody = wrappedRequest.getBody();
-                log.info("BEMINDER: Error with request body: {}", requestBody);
+                log.info("BEMINDER: Error with request body: {} ({})", requestBody, wrappedResponse.getStatus());
             }
 
             log.info("BEMINDER: Outgoing response for {} {} with status {} for user {} took {}ms",

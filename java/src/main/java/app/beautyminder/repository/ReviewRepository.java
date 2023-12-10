@@ -4,6 +4,7 @@ import app.beautyminder.domain.Cosmetic;
 import app.beautyminder.domain.Review;
 import app.beautyminder.domain.User;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -15,7 +16,7 @@ import java.util.Optional;
 public interface ReviewRepository extends MongoRepository<Review, String> {
 
     @Query(value = "{ 'isFiltered': true }")
-    List<Review> findAllFiltered();
+    Page<Review> findAllFiltered(Pageable pageable);
 
     @Query(value = "{ 'user.$id': ?0 }")
     List<Review> findByUserId(ObjectId userId);
@@ -23,6 +24,10 @@ public interface ReviewRepository extends MongoRepository<Review, String> {
     List<Review> findByUser(User user);
 
     List<Review> findByCosmetic(Cosmetic cosmetic);
+
+    Page<Review> findByCosmetic(Cosmetic cosmetic, Pageable pageable);
+
+    Page<Review> findByCosmeticAndUserNot(Cosmetic cosmetic, User user, Pageable pageable);
 
     @Aggregation(pipeline = {
             "{ $match : { 'rating': {$gte: ?0, $lte: ?1} } }",

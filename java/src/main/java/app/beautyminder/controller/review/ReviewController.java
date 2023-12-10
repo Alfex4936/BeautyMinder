@@ -21,6 +21,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -48,13 +51,32 @@ public class ReviewController {
 
     // Retrieve all reviews of a specific cosmetic
     @Operation(summary = "Get all reviews of a cosmetic", description = "특정 화장품의 리뷰를 모두 가져옵니다. [User 권한 필요]", tags = {"Review Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Review.class, type = "array"))), @ApiResponse(responseCode = "404", description = "리뷰 없음", content = @Content(schema = @Schema(implementation = String.class)))})
-    @GetMapping("/{cosmeticId}")
+    @GetMapping("/all/{cosmeticId}")
     public ResponseEntity<?> getReviewsForCosmetic(@PathVariable String cosmeticId) {
         Cosmetic cosmetic = cosmeticService.getCosmeticById(cosmeticId);
         if (cosmetic == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Couldn't find such cosmetic.");
         }
         List<Review> reviews = reviewService.getAllReviewsByCosmetic(cosmetic);
+        return ResponseEntity.ok(reviews);
+    }
+
+    @Operation(summary = "Get all reviews of a cosmetic in pages", description = "특정 화장품의 리뷰를 모두 가져옵니다. (페이지) [User 권한 필요]", tags = {"Review Operations"}, parameters = {@Parameter(name = "cosmeticId", description = "화장품 ID")}, responses = {@ApiResponse(responseCode = "200", description = "성공", content = @Content(schema = @Schema(implementation = Review.class, type = "array"))), @ApiResponse(responseCode = "404", description = "리뷰 없음", content = @Content(schema = @Schema(implementation = String.class)))})
+    @GetMapping("/{cosmeticId}")
+    public ResponseEntity<Page<Review>> getReviewsForCosmeticInPage(
+            @PathVariable String cosmeticId,
+            @Parameter(hidden = true) @AuthenticatedUser User user,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Cosmetic cosmetic = cosmeticService.getCosmeticById(cosmeticId);
+        if (cosmetic == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Page.empty());
+        }
+        Page<Review> reviews = reviewService.getAllReviewsByCosmeticInPage(cosmetic, user, pageable);
+
         return ResponseEntity.ok(reviews);
     }
 

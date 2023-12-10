@@ -17,24 +17,26 @@ public class WebSocketSessionManagerTest {
 
     @Test
     public void testRegisterSession() {
-        webSocketSessionManager.registerSession("user1", "session1");
+        webSocketSessionManager.registerSession("session1", "user1");
         assertTrue(webSocketSessionManager.isAlreadyConnected("user1"));
     }
 
     @Test
     public void testIsAlreadyConnected() {
         assertFalse(webSocketSessionManager.isAlreadyConnected("user2"));
-        webSocketSessionManager.registerSession("user2", "session2");
+        webSocketSessionManager.registerSession("session2", "user2");
         assertTrue(webSocketSessionManager.isAlreadyConnected("user2"));
     }
 
     @Test
     public void testRemoveSession() {
-        webSocketSessionManager.registerSession("user3", "session3");
+        webSocketSessionManager.registerSession("session3", "user3");
         assertTrue(webSocketSessionManager.isAlreadyConnected("user3"));
 
-        webSocketSessionManager.removeSession("user3");
+        webSocketSessionManager.removeSession("session3");
         assertFalse(webSocketSessionManager.isAlreadyConnected("user3"));
+
+        assertTrue(webSocketSessionManager.getConnectedUsers().isEmpty());
     }
 
     @Test

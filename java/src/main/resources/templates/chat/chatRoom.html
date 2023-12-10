@@ -307,7 +307,7 @@
         const roomId = [[${room.roomId}]];
         const quitMsg = {"type": "QUIT", "roomId": roomId, "sender": nickname, "message": "Bye"};
         stompClient.send("/app/chat.quit/" + roomId, {}, JSON.stringify(quitMsg));
-        stompClient.disconnect(headers = {"TEST": "HEY"});
+        stompClient.disconnect();
         location.href = "/chat/list";
         return true;
     }

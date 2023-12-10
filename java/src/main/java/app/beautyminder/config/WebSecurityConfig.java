@@ -84,7 +84,12 @@ public class WebSecurityConfig {
 
     @Bean
     public WebSecurityCustomizer configure() {
-        return (web) -> web.ignoring().requestMatchers(antMatcher(toH2Console().toString())).requestMatchers(antMatcher("/img/**")).requestMatchers(antMatcher("/css/**")).requestMatchers(antMatcher("/js/**")).requestMatchers(antMatcher("/static/**"))
+        return (web) -> web.ignoring().requestMatchers(antMatcher(toH2Console().toString()))
+                .requestMatchers(antMatcher("/img/**"))
+                .requestMatchers(antMatcher("/css/**"))
+                .requestMatchers(antMatcher("/js/**"))
+                .requestMatchers(antMatcher("/static/**"))
+                .requestMatchers(antMatcher("/ws/chat/**"))
                 // swagger
                 .requestMatchers(antMatcher("/v3/api-docs/**")).requestMatchers(antMatcher("/proxy/**")).requestMatchers(antMatcher("/swagger-ui/**"));
     }
@@ -115,6 +120,7 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/*").permitAll() // preflight request: ex) POST -> OPTIONS -> POST
                 .requestMatchers(antMatcher("/")).permitAll().requestMatchers(antMatcher("/api/**")).permitAll()
 
+                .requestMatchers(antMatcher("/ws/chat/**")).permitAll()
                 .requestMatchers(antMatcher("/gpt/review/**")).permitAll()
                 .requestMatchers(antMatcher("/redis/**")).permitAll()
                 .requestMatchers(antMatcher("/cosmetic/hit/**")).permitAll()

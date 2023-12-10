@@ -2,10 +2,10 @@ package app.beautyminder.config.chat;
 
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.service.chat.WebSocketSessionManager;
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -15,7 +15,7 @@ import org.springframework.web.util.WebUtils;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 
 import static app.beautyminder.config.TokenAuthenticationFilter.*;
 
@@ -31,9 +31,18 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
         List<String> authorizationHeader = headers.get(HEADER_AUTHORIZATION);
         log.info("BEMINDER: TOKENS: {}", authorizationHeader);
 
-
         if (authorizationHeader != null && !authorizationHeader.isEmpty()) {
             String authHeader = authorizationHeader.get(0);
+            if (authHeader.startsWith(TOKEN_PREFIX)) {
+                return authHeader.substring(TOKEN_PREFIX.length());
+            }
+        }
+
+        List<String> authorizationHeader2 = headers.get("access-token");
+        log.info("BEMINDER: TOKENS: {}", authorizationHeader2);
+
+        if (authorizationHeader2 != null && !authorizationHeader2.isEmpty()) {
+            String authHeader = authorizationHeader2.get(0);
             if (authHeader.startsWith(TOKEN_PREFIX)) {
                 return authHeader.substring(TOKEN_PREFIX.length());
             }
@@ -42,10 +51,10 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
         // check for cookies too
         if (request instanceof ServletServerHttpRequest servletRequest) {
             var accessCookie = WebUtils.getCookie(servletRequest.getServletRequest(), ACCESS_TOKEN_COOKIE);
-            return Objects.requireNonNull(accessCookie).getValue();
+            return Optional.ofNullable(accessCookie).map(Cookie::getValue).orElse("");
         }
 
-        return null;
+        return "";
     }
 
     @Override
@@ -53,22 +62,15 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         if (request instanceof ServletServerHttpRequest servletRequest) {
             String token = getAccessToken(servletRequest);
-            if (token != null && tokenProvider.validToken(token)) {
-                String username = tokenProvider.getUserEmail(token);
-
-                // Check if user already has an active session
-                if (sessionManager.isAlreadyConnected(username)) {
-                    response.setStatusCode(HttpStatus.FORBIDDEN);
-                    response.getHeaders().add("message", "403 duplicated name,");
-                    return false; // Reject the handshake
-                }
-
-                var session = servletRequest.getServletRequest().getSession();
-                sessionManager.registerSession(username, session.getId());
-                attributes.put("username", username); // Storing the username in session attributes
-            } else {
-                return false; // Reject the handshake
-            }
+//            if (token != null && tokenProvider.validToken(token)) {
+//                response.setStatusCode(HttpStatus.UNAUTHORIZED);
+//                response.getHeaders().add("message", "401 Unknown token.");
+//                return false; // Reject the handshake
+//            }
+//            if (!token.isEmpty() && tokenProvider.validToken(token)) {
+//
+//            }
+            attributes.put("token", token);
         }
         return true; // Proceed with the handshake if valid
     }

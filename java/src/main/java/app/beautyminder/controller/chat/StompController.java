@@ -7,6 +7,7 @@ import app.beautyminder.dto.chat.ChatMessage;
 import app.beautyminder.dto.chat.ChatRoom;
 import app.beautyminder.repository.ChatLogRepository;
 import app.beautyminder.service.chat.ChatService;
+import app.beautyminder.service.chat.WebSocketSessionManager;
 import app.beautyminder.service.cosmetic.GPTService;
 import app.beautyminder.service.review.ReviewService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +19,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -40,6 +42,7 @@ public class StompController {
     private final ReviewService reviewService;
     private final GPTService gptService;
     private final ChatLogRepository chatLogRepository;
+    private final WebSocketSessionManager sessionManager;
 
     private final Random random = new Random();
     private final BadWordFiltering badWordFiltering;
@@ -48,32 +51,19 @@ public class StompController {
     private final Map<String, CompletableFuture<Void>> gptFutures = new ConcurrentHashMap<>();
 
 
-//    @org.springframework.context.event.EventListener
-//    public void handleSessionDisconnected(SessionDisconnectEvent event) {
-//        log.info("BEMINDER: {}", event.toString());
-//        String roomId = event.getSessionId();
-//
-//        chatService.userLeftRoom(roomId);
-//
-//        if (chatService.getRoomUserCount(roomId) == 0) {
-//            CompletableFuture<Void> future = roomFutures.remove(roomId);
-//            if (future != null && !future.isDone()) {
-//                future.cancel(true); // Attempt to cancel the ongoing task
-//            }
-//        }
-//    }
-
-
     @PreDestroy
     public void onDestroy() {
-        roomFutures.values().forEach(future -> {
-            if (future != null && !future.isDone()) {
-                future.cancel(true);
-            }
-        });
-        roomFutures.clear();
+        roomFutures.values().forEach(this::cancelFuture);
+        gptFutures.values().forEach(this::cancelFuture);
     }
 
+    public List<String> getCurrentUsers() {
+        ConcurrentHashMap<String, String> userSessionMap = sessionManager.getConnectedUsers();
+        return new ArrayList<>(userSessionMap.values());
+    }
+
+
+    // SimpMessageHeaderAccessor accessor
     // enter -> if BM, send to /chat.save -> send back to /topic/room
     @MessageMapping("/chat.save/{roomId}")
     public void sendSavedMsg(@DestinationVariable String roomId) {
@@ -132,14 +122,12 @@ public class StompController {
         ChatMessage chatMessage = objectMapper.readValue(messageJson, ChatMessage.class);
 
         chatMessage.setMessage(chatMessage.getSender() + " 님이 입장 하셨습니다.");
-
-        // Optionally, broadcast that a user has entered the room
-//        chatService.sendMessageToRoom(roomId, chatMessage);
         chatService.userEnteredRoom(roomId);
 
         addToDatabase(roomId, chatMessage);
 
         messagingTemplate.convertAndSend("/topic/room/name/" + roomId, Map.of("title", chatService.getRoomUserCount(roomId)));
+        messagingTemplate.convertAndSend("/topic/room/currentUsers", getCurrentUsers());
 
 
         return chatMessage;
@@ -147,7 +135,7 @@ public class StompController {
 
     @MessageMapping("/chat.quit/{roomId}")
     @SendTo("/topic/room/{roomId}")
-    public ChatMessage quitRoom(@DestinationVariable String roomId, @Payload String messageJson) throws Exception {
+    public ChatMessage quitRoom(@DestinationVariable String roomId, @Payload String messageJson, SimpMessageHeaderAccessor accessor) throws Exception {
         ChatMessage chatMessage = objectMapper.readValue(messageJson, ChatMessage.class);
 //        chatService.sendMessageToRoom(roomId, chatMessage);
 
@@ -156,40 +144,26 @@ public class StompController {
 
         addToDatabase(roomId, chatMessage);
 
+        // double check
+        sessionManager.removeSession(accessor.getSessionId());
         messagingTemplate.convertAndSend("/topic/room/name/" + roomId, Map.of("title", chatService.getRoomUserCount(roomId)));
+        messagingTemplate.convertAndSend("/topic/room/currentUsers", getCurrentUsers());
 
         return chatMessage;
     }
 
     @Scheduled(cron = "*/30 * * * * *") // sends recommended product every 30 seconds
     public void sendProductToWhole() {
-
-        // stream api
         chatService.findAllRoom().stream()
-                .filter(room -> !room.getName().equals("BeautyMinder"))
-                .filter(room -> room.getUserCounts() >= 1)
-                .forEach(room -> {
-                    CompletableFuture<Void> future = processRoom(room);
-                    roomFutures.put(room.getRoomId(), future);
-                });
-
-        // Wait for all futures to be done
-        CompletableFuture.allOf(roomFutures.values().toArray(new CompletableFuture[0])).join();
+                .filter(this::isEligibleForProductRecommendation)
+                .forEach(this::processRoomAndStoreFuture);
     }
 
     @Scheduled(cron = "*/30 * * * * *")
     public void processGPTnotice() {
-        // stream api
         chatService.findAllRoom().stream()
-                .filter(room -> !room.getName().equals("BeautyMinder"))
-                .filter(room -> room.getUserCounts() >= 1)
-                .forEach(room -> {
-                    CompletableFuture<Void> future = processGPT(room);
-                    gptFutures.put(room.getRoomId(), future);
-                });
-
-//        // Wait for all futures to be done
-//        CompletableFuture.allOf(gptFutures.values().toArray(new CompletableFuture[0])).join();
+                .filter(this::isEligibleForGPTNotice)
+                .forEach(this::processGPTAndStoreFuture);
     }
 
     @Async
@@ -238,6 +212,29 @@ public class StompController {
         }
     }
 
+    private void cancelFuture(CompletableFuture<Void> future) {
+        if (future != null && !future.isDone()) {
+            future.cancel(true);
+        }
+    }
+
+    private boolean isEligibleForProductRecommendation(ChatRoom room) {
+        return !room.getName().equals("BeautyMinder") && room.getUserCounts() >= 1;
+    }
+
+    private boolean isEligibleForGPTNotice(ChatRoom room) {
+        return !room.getName().equals("BeautyMinder") && room.getUserCounts() >= 1;
+    }
+
+    private void processRoomAndStoreFuture(ChatRoom room) {
+        CompletableFuture<Void> future = processRoom(room);
+        roomFutures.put(room.getRoomId(), future);
+    }
+
+    private void processGPTAndStoreFuture(ChatRoom room) {
+        CompletableFuture<Void> future = processGPT(room);
+        gptFutures.put(room.getRoomId(), future);
+    }
 
     private List<Cosmetic> getCosmeticIdsByProbability(String baumannSkinType) {
         // Get reviews filtered by the probability scores from the NLP analysis

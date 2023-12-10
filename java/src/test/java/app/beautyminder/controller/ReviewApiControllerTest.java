@@ -182,8 +182,8 @@ class ReviewApiControllerTest {
 
     @Test
     @Order(4)
-    @DisplayName("Test Get All reviews")
-    public void testGetAllReviews_Success() throws Exception {
+    @DisplayName("Test Get All reviews by pages")
+    public void testGetAllReviewsByPage_Success() throws Exception {
         // given
         String url = "/review/" + "652cdc2d2bf53d0109d1e210";
 
@@ -196,11 +196,42 @@ class ReviewApiControllerTest {
     }
 
     @Test
+    @Order(4)
+    @DisplayName("Test Get All reviews")
+    public void testGetAllReviews_Success() throws Exception {
+        // given
+        String url = "/review/all/" + "652cdc2d2bf53d0109d1e210";
+
+        // when
+        mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+
+                // then
+                .andExpect(status().is2xxSuccessful());
+    }
+
+
+    @Test
+    @Order(5)
+    @DisplayName("Test Get All reviews Page Fail")
+    public void testGetAllReviewsByPage_Fail() throws Exception {
+        // given
+        String url = "/review/" + "652cdc2d2bf53d0109d1e21Z";
+
+        // when
+        mockMvc.perform(get(url)
+                        .header("Authorization", "Bearer " + accessToken))
+
+                // then
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @Order(5)
     @DisplayName("Test Get All reviews Fail")
     public void testGetAllReviews_Fail() throws Exception {
         // given
-        String url = "/review/" + "652cdc2d2bf53d0109d1e21Z";
+        String url = "/review/all/" + "652cdc2d2bf53d0109d1e21Z";
 
         // when
         mockMvc.perform(get(url)

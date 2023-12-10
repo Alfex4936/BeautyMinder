@@ -87,6 +87,7 @@ jobs:
       - name: Send KakaoTalk notification of Docker success
         uses: Alfex4936/kakaotalk-ci-action@main
         if: success()
+        continue-on-error: true
         with:
           kakao_access_token: ${{ secrets.KAKAO_ACCESS_TOKEN }}
           function_name: send_to_me_custom
@@ -159,6 +160,7 @@ jobs:
       - name: Send KakaoTalk notification of CodeCov success
         uses: Alfex4936/kakaotalk-ci-action@main'
         if: success()
+        continue-on-error: true
         with:
           kakao_access_token: ${{ secrets.KAKAO_ACCESS_TOKEN }}
           function_name: send_to_me_custom

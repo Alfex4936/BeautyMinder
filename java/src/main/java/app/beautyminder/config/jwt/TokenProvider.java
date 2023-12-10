@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 
 @Slf4j
@@ -25,18 +26,14 @@ public class TokenProvider {
     private final UserRepository userRepository;
 
     public String generateToken(User user, Duration expiredAt) {
-        Date now = new Date();
-        return makeToken(new Date(now.getTime() + expiredAt.toMillis()), user);
-    }
-
-    private String makeToken(Date expiry, User user) {
-        Date now = new Date();
+        Instant now = Instant.now();
+        Date expiryDate = Date.from(now.plusMillis(expiredAt.toMillis()));
 
         return Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
                 .setIssuer(jwtProperties.getIssuer())
-                .setIssuedAt(now)
-                .setExpiration(expiry)
+                .setIssuedAt(Date.from(now))
+                .setExpiration(expiryDate)
                 .setSubject(user.getEmail())
                 .claim("id", user.getId())
                 .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecretKey())
@@ -51,6 +48,7 @@ public class TokenProvider {
 
             return true;
         } catch (Exception e) {
+            log.error("Token validation error", e);
             return false;
         }
     }

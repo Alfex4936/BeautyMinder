@@ -6,12 +6,14 @@ import app.beautyminder.dto.ReviewStatusUpdateRequest;
 import app.beautyminder.dto.chat.ChatKickDTO;
 import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.service.auth.UserService;
+import app.beautyminder.service.chat.WebSocketSessionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,6 +24,9 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.Duration;
 
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -51,6 +56,10 @@ class AdminApiControllerTest {
 
     @Autowired
     private WebApplicationContext context;
+
+    @MockBean
+    private WebSocketSessionManager webSocketSessionManager;
+
     private String accessToken;
     private String userId;
 
@@ -120,7 +129,7 @@ class AdminApiControllerTest {
 
         // then
         result.andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(any(Integer.class))));
+                .andExpect(jsonPath("$.content", hasSize(any(Integer.class))));
     }
 
     @Test
@@ -144,13 +153,32 @@ class AdminApiControllerTest {
 
 
     @Test
-    @DisplayName("Test POST /admin/chat/kick")
-    public void testKickUser() throws Exception {
+    @DisplayName("Test POST /admin/chat/kick empty user")
+    public void testKickUser_ShouldNotFind() throws Exception {
         // given
         String url = "/admin/chat/kick";
         ChatKickDTO request = new ChatKickDTO("testUser");
         String requestBody = objectMapper.writeValueAsString(request);
 
+        // when
+        ResultActions result = mockMvc.perform(post(url)
+                .header("Authorization", "Bearer " + accessToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody));
+
+        // then
+        result.andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Test POST /admin/chat/kick user")
+    public void testKickUser_ShouldKick() throws Exception {
+        // given
+        String url = "/admin/chat/kick";
+        ChatKickDTO request = new ChatKickDTO("testUser");
+        String requestBody = objectMapper.writeValueAsString(request);
+
+        when(webSocketSessionManager.isAlreadyConnected(eq("testUser"))).thenReturn(true);
         // when
         ResultActions result = mockMvc.perform(post(url)
                 .header("Authorization", "Bearer " + accessToken)

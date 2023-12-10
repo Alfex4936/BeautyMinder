@@ -35,7 +35,7 @@ class VisionServiceTest {
     public void testExecuteWithUrl() {
         // Prepare a mock response
         AnnotateImageResponse annotateImageResponse = AnnotateImageResponse.newBuilder()
-                .addTextAnnotations(EntityAnnotation.newBuilder().setDescription("2019-12-13").build())
+                .addTextAnnotations(EntityAnnotation.newBuilder().setDescription("2020-06-27").build())
                 .build();
         BatchAnnotateImagesResponse mockResponse = BatchAnnotateImagesResponse.newBuilder()
                 .addResponses(annotateImageResponse)
@@ -45,11 +45,11 @@ class VisionServiceTest {
         when(mockClient.batchAnnotateImages(any(BatchAnnotateImagesRequest.class))).thenReturn(mockResponse);
 
         // Execute the method under test
-        Optional<String> result = visionService.execute("https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAxNzExMDhfNjEg%2FMDAxNTEwMTA0NDE5NDA1.8BER8TU9fnZECZ09BjXeY2Khyyucxmys6awwVYlLmvQg.nFdrDoY-MxVB0zUQGSQOTSmRK1qLa5zxJ36YRtFOkqEg.JPEG.laykor%2FKakaoTalk_20171108_095704064.jpg&type=sc960_832");
+        Optional<String> result = visionService.execute("https://beautyminder-sw.s3.ap-northeast-2.amazonaws.com/test/%ED%85%8C%EC%8A%A4%ED%8A%B83.jpg");
 
         // Assertions
         assertTrue(result.isPresent());
-        assertEquals("2019-12-13", result.get());
+        assertEquals("2020-06-27", result.get());
     }
 
     @Test

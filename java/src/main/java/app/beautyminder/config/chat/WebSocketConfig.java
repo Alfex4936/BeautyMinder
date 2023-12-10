@@ -4,6 +4,7 @@ import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.service.chat.WebSocketSessionManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -20,7 +21,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Registering the endpoint and enabling SockJS
-        registry.addEndpoint("/ws/chat").setHandshakeHandler(new ClientHandshakeHandler()).setAllowedOriginPatterns("*").withSockJS()
+        // .setHandshakeHandler(new ClientHandshakeHandler())
+        registry.addEndpoint("/ws/chat")
+//                .setHandshakeHandler(new ClientHandshakeHandler())
+                .setAllowedOriginPatterns("*").withSockJS()
                 .setInterceptors(new AuthHandshakeInterceptor(tokenProvider, sessionManager));
     }
 
@@ -29,5 +33,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // Configure a message broker
         registry.enableSimpleBroker("/topic", "/queue");
         registry.setApplicationDestinationPrefixes("/app");
+    }
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(new StompAuthChannelInterceptor(tokenProvider, sessionManager));
     }
 }

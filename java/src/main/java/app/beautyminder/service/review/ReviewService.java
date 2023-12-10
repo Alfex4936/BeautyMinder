@@ -13,6 +13,8 @@ import app.beautyminder.service.cosmetic.CosmeticService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -188,6 +190,28 @@ public class ReviewService {
 
     public List<Review> getAllReviewsByCosmetic(Cosmetic cosmetic) {
         return reviewRepository.findByCosmetic(cosmetic);
+    }
+
+    public Page<Review> getAllReviewsByCosmeticInPage(Cosmetic cosmetic, User user, Pageable pageable) {
+        // Check if the user has reviewed the cosmetic
+        Optional<Review> userReview = reviewRepository.findByUserIdAndCosmeticId(new ObjectId(user.getId()), new ObjectId(cosmetic.getId()));
+
+        // Fetch other reviews, excluding the user's review if it exists
+        Page<Review> otherReviews = userReview.isPresent()
+                ? reviewRepository.findByCosmeticAndUserNot(cosmetic, user, pageable)
+                : reviewRepository.findByCosmetic(cosmetic, pageable);
+
+        // If the user's review is present, add it to the beginning of the list
+        if (userReview.isPresent()) {
+            List<Review> reviews = new ArrayList<>();
+            reviews.add(userReview.get());
+            reviews.addAll(otherReviews.getContent());
+
+            // Creating a new PageImpl to maintain pagination
+            return new PageImpl<>(reviews, pageable, otherReviews.getTotalElements() + 1);
+        }
+
+        return otherReviews;
     }
 
     public Optional<Review> getReviewById(String id) {
