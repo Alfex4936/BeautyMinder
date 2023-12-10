@@ -2,18 +2,22 @@ package app.beautyminder.controller.user;
 
 import app.beautyminder.config.jwt.TokenProvider;
 import app.beautyminder.domain.User;
+import app.beautyminder.dto.user.AddUserRequest;
 import app.beautyminder.dto.user.ResetPasswordRequest;
 import app.beautyminder.dto.user.UpdatePasswordRequest;
 import app.beautyminder.repository.RefreshTokenRepository;
 import app.beautyminder.repository.UserRepository;
+import app.beautyminder.service.auth.UserService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
@@ -35,6 +39,7 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.util.AssertionErrors.assertNotEquals;
@@ -52,6 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserApiControllerTest {
 
     private final String userEmail = "codecov@github.ci";
+    private final String adminEmail = "codecov@admin.ci";
     @Autowired
     protected MockMvc mockMvc;
     @Autowired
@@ -59,6 +65,8 @@ class UserApiControllerTest {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
@@ -68,6 +76,7 @@ class UserApiControllerTest {
     @Autowired
     private WebApplicationContext context;
     private String accessToken;
+    private String adminAccessToken;
     private String refreshToken;
     private String passCodeToken;
 
@@ -101,7 +110,6 @@ class UserApiControllerTest {
 
         // Convert the response content to a Map
         String jsonResponse = result.getResponse().getContentAsString();
-        ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> responseMap = objectMapper.readValue(jsonResponse, new TypeReference<>() {
         });
 
@@ -203,6 +211,27 @@ class UserApiControllerTest {
         assertNotEquals("1234", password, "The password should not be '1234'");
     }
 
+    @Order(3)
+    @DisplayName("Test Admin Registration")
+    @Test
+    public void testSignup_Admin() throws Exception {
+        // given
+        String url = "/user/signup-admin";
+
+        var map = new HashMap<>(Map.of("email", adminEmail));
+        map.put("password", "1234");
+
+        String requestBody = objectMapper.writeValueAsString(map);  // Convert map to JSON string
+
+        // when
+        mockMvc.perform(post(url)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                // then
+                .andExpect(status().isOk());
+
+    }
+
     @Order(4)
     @DisplayName("Request Forgot password via email")
     @Test
@@ -264,6 +293,34 @@ class UserApiControllerTest {
         // Extract the userId from the accessToken and perform assertions
         String userId = tokenProvider.getUserId(accessToken);
         assertTrue(userRepository.findById(userId).isPresent(), "User ID from token does not exist in repository");
+    }
+
+    @Order(5)
+    @DisplayName("Test Login Admin")
+    @Test
+    public void testLoginAdmin() throws Exception {
+        // given
+        RequestBuilder requestBuilder = formLogin().user("email", adminEmail).password("1234");
+
+        // when
+        // Perform login and capture the response
+        MvcResult result = mockMvc.perform(requestBuilder)
+                .andDo(print()) // This will print the request and response which is useful for debugging.
+
+                // then
+                .andExpect(status().isOk()) // Check if the status is OK.
+                .andExpect(cookie().exists("XRT")) // Check if the "XRT" cookie exists.
+                .andExpect(header().exists("Authorization")) // Check if the "Authorization" header exists.
+                .andReturn(); // Store the result for further assertions.
+
+        // Extract tokens for further use in other tests or assertions
+        String authorizationHeader = result.getResponse().getHeader("Authorization");
+        assertNotNull(authorizationHeader, "Authorization header is missing");
+
+        // Use the access token and refresh token in other tests
+        adminAccessToken = Objects.requireNonNull(result.getResponse().getHeader("Authorization")).split(" ")[1];
+        assertTrue(tokenProvider.validToken(adminAccessToken), "Access token is invalid");
+
     }
 
     @Order(6)
@@ -499,11 +556,32 @@ class UserApiControllerTest {
         }
         User user = optUser.get();
 
-        log.info("BEMINDER: Test delete {}", accessToken);
-
         // when
         mockMvc.perform(delete("/user/delete")
                         .header("Authorization", "Bearer " + accessToken))
+
+                // then
+                .andExpect(status().isOk())
+                .andExpect(content().string("a user is deleted successfully"));
+
+        assertFalse(userRepository.existsById(user.getId()));
+        assertFalse(refreshTokenRepository.findByUserId(user.getId()).isPresent());
+    }
+
+    @Order(16)
+    @DisplayName("Delete an admin")
+    @Test
+    public void testDeleteAdmin() throws Exception {
+        // given
+        Optional<User> optUser = userRepository.findByEmail(adminEmail);
+        if (optUser.isEmpty()) {
+            throw new Exception("Non existent user");
+        }
+        User user = optUser.get();
+
+        // when
+        mockMvc.perform(delete("/user/delete")
+                        .header("Authorization", "Bearer " + adminAccessToken))
 
                 // then
                 .andExpect(status().isOk())

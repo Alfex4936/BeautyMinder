@@ -7,7 +7,6 @@ import app.beautyminder.dto.chat.ChatMessage;
 import app.beautyminder.repository.ReviewRepository;
 import app.beautyminder.service.MongoService;
 import app.beautyminder.service.chat.WebSocketSessionManager;
-import app.beautyminder.service.cosmetic.GPTService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,7 +18,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -28,7 +26,6 @@ import java.util.Map;
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 public class AdminController {
 
-    private final GPTService gptService;
     private final ReviewRepository reviewRepository;
     private final MongoService mongoService;
     private final SimpMessageSendingOperations messagingTemplate;
@@ -76,5 +73,10 @@ public class AdminController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found or already disconnected.");
         }
+    }
+
+    @GetMapping("/chat/list")
+    public ResponseEntity<?> listUser() {
+        return ResponseEntity.ok(webSocketSessionManager.getConnectedUsers());
     }
 }
