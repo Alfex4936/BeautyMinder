@@ -58,7 +58,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         String method = request.getMethod();
 
-        if (uri.equals("/") || isPublicRoute(uri)) {
+        if (uri.equals("/") || uri.equals("/dashboard") || isPublicRoute(uri)) {
             log.debug("Accessing unprotected route: " + request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
