@@ -62,11 +62,11 @@ Flutter, Docker, ELK, Redis 등의 기술을 통합하여 사용자에게 맞춤
 | **Text Summarization** | [GPT API](https://platform.openai.com/docs/guides/text-generation)                                                                                                              |
 | **Image OCR**        | [Google Cloud Vision](https://cloud.google.com/vision?hl=ko)                                                                                                                    |
 | **Notification Svcs** | [Naver Cloud SMS API](https://api.ncloud-docs.com/docs/ai-application-service-sens-smsv2), SMTP Protocol                                                                        |
-| **DevOps**           | [JUnit5](https://junit.org/junit5/), [Locust](https://locust.io/), [GitHub Actions](https://github.com/features/actions)                                                        |
+| **DevOps**           | [JUnit5](https://junit.org/junit5/), [Locust](https://locust.io/), [GitHub Actions](https://github.com/features/actions), AWS Elastic LoadBalancer                                                        |
 
 ## System Architecture 🏗️
 ![Group 10](https://github.com/beminder/BeautyMinder/assets/2356749/ba7cbe30-a516-40aa-96e6-06656bc47068)
-![sa](https://github.com/beminder/BeautyMinder/assets/2356749/dec95e25-5b29-4a6e-a962-274c845f263b)
+![sa](https://github.com/beminder/BeautyMinder/assets/2356749/4fa9732d-3358-45e1-92a4-24c5c6f28382)
 
 ## Baumann Skin Type Survey
 ![types](https://cdn.shopify.com/s/files/1/0740/5984/1838/files/img_1_-_16-baumann-skin-types_800x.png?v=1689709313)
